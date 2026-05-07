@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AutoShop — Service Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f2ee; --surface:#ffffff; --surface2:#eceae5;
+  --border:#dedad3; --border2:#c8c3ba;
+  --text:#1c1a17; --text2:#6b6760; --text3:#a09c96;
+  --accent:#1c1a17; --accent-fg:#f5f0e8;
+  --red:#8b1a1a; --red-bg:#fdeaea; --red-border:#f5b8b8;
+  --amber:#7a4f00; --amber-bg:#fef6e4; --amber-border:#f5d78e;
+  --blue:#0f3460; --blue-bg:#e8f0fb; --blue-border:#9ab8ee;
+  --green:#1a4731; --green-bg:#e8f5ed; --green-border:#8fccaa;
+  --r:8px; --rlg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.05);
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;}
+
+/* SETUP MODAL */
+.setup-overlay{position:fixed;inset:0;background:rgba(28,26,23,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.setup-card{background:var(--surface);border-radius:var(--rlg);max-width:560px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.setup-card h2{font-size:20px;margin-bottom:8px;}
+.setup-card p{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;}
+.setup-card ol{padding-left:18px;margin:12px 0;font-size:13px;color:var(--text2);line-height:1.8;}
+.setup-card ol li{margin-bottom:4px;}
+.setup-card a{color:var(--blue);text-decoration:underline;}
+.setup-card input{margin:10px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.setup-btns{display:flex;gap:8px;margin-top:16px;}
+
+/* TOPBAR */
+.topbar{background:var(--accent);color:var(--accent-fg);height:54px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-logo{width:32px;height:32px;border-radius:7px;background:rgba(245,240,232,0.15);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;}
+.brand-sub{font-size:10px;opacity:0.5;letter-spacing:0.3px;text-transform:uppercase;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.share-btn{background:rgba(255,255,255,0.12);border:none;color:var(--accent-fg);padding:6px 12px;border-radius:20px;font-size:11px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;font-weight:500;}
+.share-btn:hover{background:rgba(255,255,255,0.2);}
+.share-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:11px;background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:20px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 54px);}
+.sidebar{width:230px;min-width:230px;background:var(--surface);border-right:1px solid var(--border);padding:16px 10px;display:flex;flex-direction:column;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);padding:0 8px;margin-bottom:4px;margin-top:8px;}
+.nav-label:first-child{margin-top:0;}
+.navbtn{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);font-size:13px;color:var(--text2);cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:'IBM Plex Sans',sans-serif;transition:background 0.1s,color 0.1s;}
+.navbtn:hover{background:var(--surface2);color:var(--text);}
+.navbtn.active{background:var(--accent);color:var(--accent-fg);}
+.navbtn svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.navcount{margin-left:auto;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;background:rgba(0,0,0,0.08);min-width:20px;text-align:center;}
+.navbtn.active .navcount{background:rgba(255,255,255,0.2);}
+.sidebar-footer{margin-top:auto;padding-top:12px;border-top:1px solid var(--border);}
+.sync-text{font-size:11px;text-align:center;color:var(--text3);padding:4px;}
+.main{flex:1;padding:20px;max-width:900px;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.statcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow);}
+.stat-n{font-size:24px;font-weight:600;letter-spacing:-1px;}
+.stat-n.a{color:var(--amber);} .stat-n.b{color:var(--blue);} .stat-n.g{color:var(--green);}
+.stat-l{font-size:11px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;}
+
+/* SECTION */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.sec-title{font-size:15px;font-weight:600;}
+.searchbox{position:relative;}
+.searchbox svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:2;pointer-events:none;}
+.searchbox input{padding:7px 10px 7px 30px;font-size:13px;width:210px;}
+
+/* FORM */
+.formcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:20px;box-shadow:var(--shadow);}
+.form-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin:18px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.form-section-title:first-child{margin-top:0;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg.full{grid-column:1/-1;}
+.fg label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);}
+input,select,textarea{font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:8px 11px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);width:100%;transition:border-color 0.15s,box-shadow 0.15s;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(28,26,23,0.08);background:var(--surface);}
+textarea{resize:vertical;min-height:80px;}
+.plate-inp{font-family:'IBM Plex Mono',monospace;letter-spacing:2px;text-transform:uppercase;}
+.field-hint{font-size:10px;color:var(--text3);margin-top:1px;}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a09c96' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+
+/* TAGS */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:6px;padding-top:2px;}
+.tag{padding:5px 11px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-weight:500;transition:all 0.12s;user-select:none;}
+.tag:hover{background:var(--surface2);}
+.tag.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
+
+/* PRIORITY */
+.prio-row{display:flex;gap:8px;}
+.priobtn{flex:1;padding:8px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-family:'IBM Plex Sans',sans-serif;transition:all 0.12s;}
+.priobtn.p-low{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+.priobtn.p-normal{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border);}
+.priobtn.p-high{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+
+/* BUTTONS */
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:18px;padding:11px;background:var(--accent);color:var(--accent-fg);border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;letter-spacing:-0.2px;transition:opacity 0.15s;}
+.btn-primary:hover{opacity:0.88;}
+.btn-primary:disabled{opacity:0.45;cursor:not-allowed;}
+.btn-secondary{padding:8px 14px;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:var(--r);font-size:13px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+.btn-secondary:hover{background:var(--surface2);}
+
+/* ORDER CARDS */
+.ocard{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:13px 15px;margin-bottom:9px;cursor:pointer;box-shadow:var(--shadow);transition:border-color 0.12s,box-shadow 0.12s;animation:fadeUp 0.18s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.ocard:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,0.09);}
+.ocard.urgent{border-left:3px solid var(--red);border-radius:0 var(--rlg) var(--rlg) 0;}
+.oc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:8px;}
+.oc-car{font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.plate-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;background:var(--bg);padding:2px 7px;border-radius:4px;border:1px solid var(--border);color:var(--text2);}
+.prio-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.pp-low{background:var(--green-bg);color:var(--green);}
+.pp-normal{background:var(--blue-bg);color:var(--blue);}
+.pp-high{background:var(--red-bg);color:var(--red);}
+.oc-cli{font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;gap:12px;flex-wrap:wrap;}
+.oc-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px;}
+.chip{font-size:11px;padding:2px 8px;background:var(--bg);border-radius:20px;color:var(--text2);border:1px solid var(--border);}
+.oc-foot{display:flex;align-items:center;justify-content:space-between;}
+.sbadge{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;}
+.sb-w{background:var(--amber-bg);color:var(--amber);}
+.sb-p{background:var(--blue-bg);color:var(--blue);}
+.sb-d{background:var(--green-bg);color:var(--green);}
+.sdot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.otime{font-size:11px;color:var(--text3);}
+.date-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);font-family:'IBM Plex Mono',monospace;letter-spacing:0.3px;}
+.date-badge svg{width:11px;height:11px;stroke:var(--text2);fill:none;stroke-width:2;}
+.date-badge.today{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border);}
+.date-badge.today svg{stroke:var(--blue);}
+.date-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.date-filter-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);font-weight:600;margin-right:4px;}
+.date-pill{padding:5px 11px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-weight:500;font-family:'IBM Plex Sans',sans-serif;transition:all 0.12s;}
+.date-pill:hover{background:var(--surface2);}
+.date-pill.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
+.date-range{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2);}
+.date-range input{padding:4px 8px;font-size:11px;width:130px;font-family:'IBM Plex Sans',sans-serif;}
+.empty{text-align:center;padding:3rem;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:10px;}
+
+/* DETAIL PANEL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(28,26,23,0.4);z-index:200;}
+.overlay.open{display:flex;align-items:flex-start;justify-content:flex-end;}
+.dpanel{width:420px;max-width:100vw;height:100vh;background:var(--surface);overflow-y:auto;display:flex;flex-direction:column;animation:slideIn 0.2s ease;box-shadow:-4px 0 20px rgba(0,0,0,0.12);}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:none}}
+.dp-head{background:var(--accent);color:var(--accent-fg);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.dp-title{font-size:14px;font-weight:600;letter-spacing:-0.2px;}
+.dp-sub{font-size:11px;opacity:0.55;margin-top:1px;}
+.closebtn{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.12);border:none;color:var(--accent-fg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.dp-body{padding:16px;flex:1;}
+.dsect{margin-bottom:16px;}
+.dsect-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.drow{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;font-size:13px;gap:12px;}
+.dk{color:var(--text2);flex-shrink:0;}
+.dv{font-weight:500;color:var(--text);text-align:right;word-break:break-word;}
+.dv.mono{font-family:'IBM Plex Mono',monospace;letter-spacing:1.5px;}
+.obs-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;}
+.status-btns{display:flex;gap:6px;}
+.sts-btn{flex:1;padding:9px;border-radius:var(--r);font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-family:'IBM Plex Sans',sans-serif;transition:all 0.12s;}
+.sts-btn.on-w{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border);}
+.sts-btn.on-p{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border);}
+.sts-btn.on-d{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+.del-btn{width:100%;margin-top:8px;padding:9px;background:none;border:1px solid var(--red-border);color:var(--red);border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:background 0.12s;}
+.del-btn:hover{background:var(--red-bg);}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--accent);color:var(--accent-fg);padding:9px 18px;border-radius:20px;font-size:12px;font-weight:500;z-index:999;transition:transform 0.22s ease;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* SHARE MODAL */
+.share-modal{display:none;position:fixed;inset:0;background:rgba(28,26,23,0.5);z-index:500;align-items:center;justify-content:center;padding:20px;}
+.share-modal.open{display:flex;}
+.share-card{background:var(--surface);border-radius:var(--rlg);max-width:480px;width:100%;padding:24px;}
+.share-card h3{font-size:17px;margin-bottom:6px;}
+.share-card p{font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;}
+.url-box{display:flex;gap:6px;margin-top:8px;}
+.url-box input{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:9px;}
+
+/* MOBILE */
+@media(max-width:680px){
+  .sidebar{display:none;}
+  .main{padding:12px;padding-bottom:80px;}
+  .stats{grid-template-columns:1fr 1fr;}
+  .fgrid{grid-template-columns:1fr;}
+  .fg.full{grid-column:1;}
+  .mob-nav{display:flex !important;}
+  .dpanel{width:100vw;}
+  .searchbox input{width:160px;}
+  .topbar{padding:0 12px;}
+  .brand-sub{display:none;}
+  .share-btn span{display:none;}
+}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:100;padding:8px 0 env(safe-area-inset-bottom,8px);}
+.mob-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--text2);cursor:pointer;border:none;background:none;padding:6px;font-family:'IBM Plex Sans',sans-serif;}
+.mob-btn.active{color:var(--accent);}
+.mob-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;}
+</style>
+</head>
+<body>
+
+<div id="setup-modal" class="setup-overlay" style="display:none;">
+  <div class="setup-card">
+    <h2>🔧 First-time setup</h2>
+    <p>To enable real-time sync across all devices, you need a free Firebase database. It takes 2 minutes:</p>
+    <ol>
+      <li>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> and sign in with Google</li>
+      <li>Click <strong>"Add project"</strong> → name it (e.g., <em>autoshop</em>) → Continue → Continue → Create</li>
+      <li>In the left menu, click <strong>"Build" → "Realtime Database"</strong> → Create Database</li>
+      <li>Choose a location → Select <strong>"Start in test mode"</strong> → Enable</li>
+      <li>Copy the URL shown at the top (looks like <code style="font-size:11px">https://abc-default-rtdb.firebaseio.com</code>)</li>
+      <li>Paste it below:</li>
+    </ol>
+    <input id="setup-url" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com" />
+    <div class="setup-btns">
+      <button class="btn-primary" style="margin:0;flex:1;" onclick="saveSetup()">Save & Continue</button>
+    </div>
+    <p style="font-size:11px;margin-top:10px;color:var(--text3);">This URL is saved on each device. Share the same URL with your team so everyone sees the same data.</p>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">🔧</div>
+    <div>
+      <div class="brand-name">AutoShop</div>
+      <div class="brand-sub">Service Orders</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="share-btn" onclick="openShare()">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </button>
+    <div class="live-pill">
+      <div class="live-dot" id="live-dot"></div>
+      <span id="live-txt">Live</span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="nav-label">Menu</div>
+    <button class="navbtn" id="n-new" onclick="gv('new')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      New Work Order
+    </button>
+    <button class="navbtn active" id="n-all" onclick="gv('all')">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      All Orders
+      <span class="navcount" id="nb-all">0</span>
+    </button>
+    <div class="nav-label" style="margin-top:12px;">By Status</div>
+    <button class="navbtn" id="n-waiting" onclick="gv('waiting')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Waiting
+      <span class="navcount" id="nb-w">0</span>
+    </button>
+    <button class="navbtn" id="n-progress" onclick="gv('progress')">
+      <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      In Progress
+      <span class="navcount" id="nb-p">0</span>
+    </button>
+    <button class="navbtn" id="n-done" onclick="gv('done')">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Completed
+      <span class="navcount" id="nb-d">0</span>
+    </button>
+    <div class="sidebar-footer">
+      <div class="sync-text" id="sync-txt">—</div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="overlay" id="overlay" onclick="maybeClose(event)">
+  <div class="dpanel">
+    <div class="dp-head">
+      <div>
+        <div class="dp-title" id="dp-title">Work Order</div>
+        <div class="dp-sub" id="dp-sub"></div>
+      </div>
+      <button class="closebtn" onclick="closeD()">✕</button>
+    </div>
+    <div class="dp-body" id="dp-body"></div>
+  </div>
+</div>
+
+<div class="share-modal" id="share-modal" onclick="if(event.target===this)closeShare()">
+  <div class="share-card">
+    <h3>📲 Share with your team</h3>
+    <p>Send this link to anyone who needs access to the system. They'll see the same work orders in real time on any device — phone, tablet, or computer.</p>
+    <div class="url-box">
+      <input id="share-url" type="text" readonly />
+      <button class="btn-secondary" onclick="copyUrl()">Copy</button>
+    </div>
+    <p style="margin-top:14px;font-size:11px;color:var(--text3);">All team members must use the same link. Bookmark it on each device for quick access.</p>
+    <div style="margin-top:14px;display:flex;gap:8px;">
+      <button class="btn-secondary" onclick="closeShare()" style="flex:1;">Close</button>
+      <button class="btn-primary" style="margin:0;flex:1;" onclick="copyUrl()">Copy Link</button>
+    </div>
+  </div>
+</div>
+
+<nav class="mob-nav">
+  <button class="mob-btn" onclick="gv('new')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    New
+  </button>
+  <button class="mob-btn active" onclick="gv('all')">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    All
+  </button>
+  <button class="mob-btn" onclick="gv('progress')">
+    <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+    Active
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let FIREBASE_URL = localStorage.getItem('autoshop_fb_url') || '';
+let orders = {}, view = 'all', detailId = null, prio = 'normal', q = '', pollT;
+let dateFilter = 'all';
+let dateFrom = '', dateTo = '';
+
+function checkSetup() {
+  if (!FIREBASE_URL) {
+    document.getElementById('setup-modal').style.display = 'flex';
+    return false;
+  }
+  return true;
+}
+
+function saveSetup() {
+  let url = document.getElementById('setup-url').value.trim().replace(/\/$/,'');
+  if (!url || !url.includes('firebaseio.com')) {
+    alert('Please enter a valid Firebase URL (must contain firebaseio.com)');
+    return;
+  }
+  FIREBASE_URL = url;
+  localStorage.setItem('autoshop_fb_url', url);
+  document.getElementById('setup-modal').style.display = 'none';
+  loadData();
+  pollT = setInterval(loadData, 6000);
+}
+
+const fbUrl = p => `${FIREBASE_URL}/${p}.json`;
+const fbGet = async p => { try { const r = await fetch(fbUrl(p)); return r.ok ? r.json() : null; } catch { return null; } };
+const fbPush = async (p, d) => { try { const r = await fetch(fbUrl(p), { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) }); if(r.ok){const j=await r.json();return j.name;} } catch{} return null; };
+const fbPatch = async (p, d) => { try { await fetch(fbUrl(p), { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) }); } catch{} };
+const fbDel = async p => { try { await fetch(fbUrl(p), { method:'DELETE' }); } catch{} };
+
+async function loadData() {
+  if (!FIREBASE_URL) return;
+  const data = await fbGet('orders');
+  const prev = JSON.stringify(orders);
+  orders = data || {};
+  if (JSON.stringify(orders) !== prev) { render(); counts(); }
+  setSync(data !== null || data === null);
+}
+
+function setSync(ok) {
+  const el = document.getElementById('sync-txt');
+  const dot = document.getElementById('live-dot');
+  const lt = document.getElementById('live-txt');
+  if (el) { el.textContent = ok ? '✓ Live sync active' : '⚠ Connection error'; el.style.color = ok ? 'var(--green)' : 'var(--red)'; }
+  if (dot) dot.style.background = ok ? '#4ade80' : '#f87171';
+  if (lt) lt.textContent = ok ? 'Live' : 'Offline';
+}
+
+function gv(v) {
+  view = v;
+  document.querySelectorAll('.navbtn,.mob-btn').forEach(b => b.classList.remove('active'));
+  const map = { new:'n-new', all:'n-all', waiting:'n-waiting', progress:'n-progress', done:'n-done' };
+  if (map[v]) document.getElementById(map[v])?.classList.add('active');
+  render();
+}
+
+function counts() {
+  const all = Object.values(orders);
+  const cw = all.filter(o=>o.s==='waiting').length;
+  const cp = all.filter(o=>o.s==='progress').length;
+  const cd = all.filter(o=>o.s==='done').length;
+  [['nb-all',all.length],['nb-w',cw],['nb-p',cp],['nb-d',cd]].forEach(([id,n])=>{
+    const el=document.getElementById(id); if(el)el.textContent=n;
+  });
+}
+
+function render() {
+  counts();
+  const el = document.getElementById('main');
+  if (view === 'new') { el.innerHTML = formHTML(); initForm(); return; }
+  const all = Object.values(orders);
+  const cw = all.filter(o=>o.s==='waiting').length;
+  const cp = all.filter(o=>o.s==='progress').length;
+  const cd = all.filter(o=>o.s==='done').length;
+  const list = getList();
+  const titles = { all:'All Work Orders', waiting:'Waiting', progress:'In Progress', done:'Completed' };
+  el.innerHTML = `
+    <div class="stats">
+      <div class="statcard"><div class="stat-n">${cw+cp}</div><div class="stat-l">Active</div></div>
+      <div class="statcard"><div class="stat-n a">${cw}</div><div class="stat-l">Waiting</div></div>
+      <div class="statcard"><div class="stat-n b">${cp}</div><div class="stat-l">In Progress</div></div>
+      <div class="statcard"><div class="stat-n g">${cd}</div><div class="stat-l">Completed</div></div>
+    </div>
+    <div class="sec-head">
+      <div class="sec-title">${titles[view]||'Orders'}</div>
+      <div class="searchbox">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search name, plate, vehicle..." value="${q}" oninput="q=this.value;renderList()" />
+      </div>
+    </div>
+    <div class="date-filters">
+      <span class="date-filter-label">Date:</span>
+      <button class="date-pill ${dateFilter==='all'?'on':''}" onclick="setDateFilter('all')">All time</button>
+      <button class="date-pill ${dateFilter==='today'?'on':''}" onclick="setDateFilter('today')">Today</button>
+      <button class="date-pill ${dateFilter==='week'?'on':''}" onclick="setDateFilter('week')">Last 7 days</button>
+      <button class="date-pill ${dateFilter==='month'?'on':''}" onclick="setDateFilter('month')">Last 30 days</button>
+      <button class="date-pill ${dateFilter==='custom'?'on':''}" onclick="setDateFilter('custom')">Custom</button>
+      ${dateFilter==='custom'?`<div class="date-range"><input type="date" value="${dateFrom}" onchange="dateFrom=this.value;renderList()" /> to <input type="date" value="${dateTo}" onchange="dateTo=this.value;renderList()" /></div>`:''}
+    </div>
+    <div id="list-body">${listHTML(list)}</div>`;
+}
+
+function renderList() {
+  const el = document.getElementById('list-body');
+  if (el) el.innerHTML = listHTML(getList());
+}
+
+function getList() {
+  const sq = q.toLowerCase();
+  return Object.entries(orders)
+    .filter(([,o]) => {
+      if (view !== 'all' && o.s !== view) return false;
+      if (sq && !((o.n||'').toLowerCase().includes(sq)||(o.lp||'').toLowerCase().includes(sq)||(o.c||'').toLowerCase().includes(sq))) return false;
+      if (!matchesDateFilter(o)) return false;
+      return true;
+    })
+    .sort((a,b) => {
+      const pm = { high:0, normal:1, low:2 };
+      const d = (pm[a[1].pr]||1)-(pm[b[1].pr]||1);
+      return d !== 0 ? d : new Date(b[1].at)-new Date(a[1].at);
+    });
+}
+
+function matchesDateFilter(o) {
+  if (dateFilter === 'all') return true;
+  if (!o.at) return false;
+  const d = new Date(o.at);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (dateFilter === 'today') return d >= today;
+  if (dateFilter === 'week') return (now - d) <= 7*24*60*60*1000;
+  if (dateFilter === 'month') return (now - d) <= 30*24*60*60*1000;
+  if (dateFilter === 'custom') {
+    if (dateFrom) { const f = new Date(dateFrom+'T00:00:00'); if (d < f) return false; }
+    if (dateTo) { const t = new Date(dateTo+'T23:59:59'); if (d > t) return false; }
+    return true;
+  }
+  return true;
+}
+
+function setDateFilter(f) {
+  dateFilter = f;
+  render();
+}
+
+function listHTML(list) {
+  if (!list.length) return `<div class="empty"><div class="empty-icon">📋</div>No work orders found</div>`;
+  return list.map(([id,o]) => {
+    const sc = {waiting:{c:'sb-w',l:'Waiting'},progress:{c:'sb-p',l:'In Progress'},done:{c:'sb-d',l:'Completed'}}[o.s]||{c:'sb-w',l:'Waiting'};
+    const pc = {low:'pp-low',normal:'pp-normal',high:'pp-high'}[o.pr]||'pp-normal';
+    const pl = {low:'Low',normal:'Normal',high:'URGENT'}[o.pr]||'Normal';
+    const svcs = o.sv||[];
+    const chips = svcs.slice(0,3).map(s=>`<span class="chip">${esc(s)}</span>`).join('')+(svcs.length>3?`<span class="chip">+${svcs.length-3}</span>`:'');
+    const isToday = o.at && new Date(o.at).toDateString() === new Date().toDateString();
+    const dateLabel = fmtCardDate(o.at);
+    return `<div class="ocard${o.pr==='high'?' urgent':''}" onclick="openD('${id}')">
+      <div class="oc-top">
+        <div class="oc-car">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v9a2 2 0 01-2 2h-2M9 17a2 2 0 100 4 2 2 0 000-4zM15 17a2 2 0 100 4 2 2 0 000-4z"/></svg>
+          ${esc(o.c)||'—'} <span class="plate-badge">${esc(o.lp)||''}${o.st?' · '+esc(o.st):''}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="date-badge${isToday?' today':''}">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${dateLabel}
+          </span>
+          <span class="prio-pill ${pc}">${pl}</span>
+        </div>
+      </div>
+      <div class="oc-cli">
+        <span>👤 ${esc(o.n)||'—'}</span>
+        ${o.ph ? `<span>📞 ${esc(o.ph)}</span>` : ''}
+        ${o.col ? `<span>🎨 ${esc(o.col)}</span>` : ''}
+      </div>
+      ${chips ? `<div class="oc-chips">${chips}</div>` : ''}
+      <div class="oc-foot">
+        <span class="sbadge ${sc.c}"><span class="sdot"></span>${sc.l}</span>
+        <span class="otime">${ft(o.at)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
+const YEARS = Array.from({length:35},(_,i)=>2025-i);
+const MAKES = ['Acura','Audi','BMW','Buick','Cadillac','Chevrolet','Chrysler','Dodge','Ford','Genesis','GMC','Honda','Hyundai','Infiniti','Jaguar','Jeep','Kia','Land Rover','Lexus','Lincoln','Mazda','Mercedes-Benz','Mitsubishi','Nissan','Porsche','Ram','Subaru','Tesla','Toyota','Volkswagen','Volvo','Other'];
+const SVCS = ['Full Inspection','Oil Change','Brake Service','Wheel Alignment','Tire Balancing','Tire Rotation','Tire Replacement','Suspension','Electrical','A/C Service','Transmission','Engine Repair','Exhaust','Clutch','Body Work','Paint','Glass / Windshield','State Inspection','Emissions Test','Diagnostic','Battery Service','Other'];
+
+function formHTML() {
+  return `<div class="formcard">
+    <div class="form-section-title">Customer Information</div>
+    <div class="fgrid">
+      <div class="fg"><label>First Name *</label><input id="f-fn" placeholder="John" autocomplete="given-name" /></div>
+      <div class="fg"><label>Last Name *</label><input id="f-ln" placeholder="Smith" autocomplete="family-name" /></div>
+      <div class="fg"><label>Phone Number</label>
+        <input id="f-ph" type="tel" placeholder="(555) 000-0000" oninput="fmtPhone(this)" maxlength="14" />
+        <span class="field-hint">Format: (555) 000-0000</span>
+      </div>
+      <div class="fg"><label>Email Address</label><input id="f-em" type="email" placeholder="john.smith@email.com" /></div>
+      <div class="fg full"><label>Street Address</label><input id="f-addr" placeholder="123 Main St" /></div>
+      <div class="fg"><label>City</label><input id="f-city" placeholder="Springfield" /></div>
+      <div class="fg"><label>ZIP Code</label><input id="f-zip" placeholder="01234" maxlength="10" /></div>
+    </div>
+
+    <div class="form-section-title">Vehicle Information</div>
+    <div class="fgrid">
+      <div class="fg"><label>Year *</label>
+        <select id="f-yr"><option value="">Select year</option>${YEARS.map(y=>`<option>${y}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label>Make *</label>
+        <select id="f-mk"><option value="">Select make</option>${MAKES.map(m=>`<option>${m}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label>Model *</label><input id="f-mo" placeholder="Camry, F-150, Civic..." /></div>
+      <div class="fg"><label>Color</label><input id="f-col" placeholder="Silver, Black..." /></div>
+      <div class="fg"><label>License Plate *</label><input id="f-lp" class="plate-inp" placeholder="ABC 1234" maxlength="10" /></div>
+      <div class="fg"><label>State</label>
+        <select id="f-st"><option value="">Select state</option>${US_STATES.map(s=>`<option>${s}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label>Mileage</label><input id="f-mi" type="number" placeholder="45000" /></div>
+      <div class="fg"><label>VIN <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
+        <input id="f-vin" placeholder="1HGBH41JXMN109186" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
+      </div>
+    </div>
+
+    <div class="form-section-title">Service Request</div>
+    <div class="fgrid">
+      <div class="fg full"><label>Service Type</label>
+        <div class="tags-wrap" id="svc-tags">
+          ${SVCS.map(s=>`<div class="tag" onclick="this.classList.toggle('on')">${s}</div>`).join('')}
+        </div>
+      </div>
+      <div class="fg full"><label>Priority</label>
+        <div class="prio-row">
+          <button class="priobtn" id="pb-low" onclick="sp('low')">🌿 Low</button>
+          <button class="priobtn p-normal" id="pb-normal" onclick="sp('normal')">⏱ Normal</button>
+          <button class="priobtn" id="pb-high" onclick="sp('high')">🔥 Urgent</button>
+        </div>
+      </div>
+      <div class="fg full"><label>Customer Complaint / Notes</label>
+        <textarea id="f-ob" placeholder="Describe the issue reported by the customer, noises, symptoms, previous repairs..."></textarea>
+      </div>
+      <div class="fg"><label>Drop-off Date</label><input id="f-dod" type="date" /></div>
+      <div class="fg"><label>Promised Date</label><input id="f-pd" type="date" /></div>
+      <div class="fg full"><label>Assigned Technician <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label><input id="f-tech" placeholder="Mike, Sarah..." /></div>
+    </div>
+
+    <button class="btn-primary" id="sbtn" onclick="submitOrder()">✓ &nbsp;Create Work Order</button>
+  </div>`;
+}
+
+function initForm() {
+  prio = 'normal';
+  const lp = document.getElementById('f-lp');
+  if (lp) lp.addEventListener('input', function(){ this.value = this.value.toUpperCase(); });
+  const dod = document.getElementById('f-dod');
+  if (dod) dod.value = new Date().toISOString().split('T')[0];
+  const zip = document.getElementById('f-zip');
+  if (zip) zip.addEventListener('input', function(){ this.value = this.value.replace(/[^0-9-]/g,'').slice(0,10); });
+}
+
+function fmtPhone(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,10);
+  if (v.length >= 7) v = `(${v.slice(0,3)}) ${v.slice(3,6)}-${v.slice(6)}`;
+  else if (v.length >= 4) v = `(${v.slice(0,3)}) ${v.slice(3)}`;
+  else if (v.length >= 1) v = `(${v}`;
+  el.value = v;
+}
+
+function sp(p) {
+  prio = p;
+  ['low','normal','high'].forEach(x => {
+    const b = document.getElementById('pb-'+x);
+    if (b) b.className = 'priobtn' + (x===p ? ' p-'+x : '');
+  });
+}
+
+async function submitOrder() {
+  const fn = (document.getElementById('f-fn')?.value||'').trim();
+  const ln = (document.getElementById('f-ln')?.value||'').trim();
+  const lp = (document.getElementById('f-lp')?.value||'').trim().toUpperCase();
+  const yr = document.getElementById('f-yr')?.value||'';
+  const mk = document.getElementById('f-mk')?.value||'';
+  const mo = (document.getElementById('f-mo')?.value||'').trim();
+
+  if (!fn || !ln) { toast('⚠ First Name and Last Name are required'); return; }
+  if (!lp) { toast('⚠ License Plate is required'); return; }
+  if (!yr || !mk || !mo) { toast('⚠ Year, Make and Model are required'); return; }
+
+  const btn = document.getElementById('sbtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+  const svcs = [...document.querySelectorAll('#svc-tags .tag.on')].map(t=>t.textContent);
+  const order = {
+    n: `${fn} ${ln}`, fn, ln,
+    ph: document.getElementById('f-ph')?.value||'',
+    em: document.getElementById('f-em')?.value||'',
+    addr: document.getElementById('f-addr')?.value||'',
+    city: document.getElementById('f-city')?.value||'',
+    zip: document.getElementById('f-zip')?.value||'',
+    lp, st: document.getElementById('f-st')?.value||'',
+    yr, mk, mo,
+    c: `${yr} ${mk} ${mo}`,
+    col: document.getElementById('f-col')?.value||'',
+    mi: document.getElementById('f-mi')?.value||'',
+    vin: document.getElementById('f-vin')?.value||'',
+    ob: document.getElementById('f-ob')?.value||'',
+    dod: document.getElementById('f-dod')?.value||'',
+    pd: document.getElementById('f-pd')?.value||'',
+    tech: document.getElementById('f-tech')?.value||'',
+    sv: svcs, pr: prio, s: 'waiting',
+    at: new Date().toISOString()
+  };
+
+  const key = await fbPush('orders', order);
+  if (key) {
+    orders[key] = order;
+    toast('✓ Work order created');
+    gv('all');
+  } else {
+    toast('⚠ Save failed — check connection');
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Create Work Order'; }
+  }
+}
+
+function openD(id) {
+  const o = orders[id]; if (!o) return;
+  detailId = id;
+  document.getElementById('dp-title').textContent = o.c||'Work Order';
+  document.getElementById('dp-sub').textContent = `${o.lp||'—'}${o.st?' · '+o.st:''}`;
+  document.getElementById('dp-body').innerHTML = `
+    <div class="dsect">
+      <div class="dsect-t">Customer</div>
+      <div class="drow"><span class="dk">Name</span><span class="dv">${esc(o.n)||'—'}</span></div>
+      ${o.ph?`<div class="drow"><span class="dk">Phone</span><span class="dv"><a href="tel:${esc(o.ph)}" style="color:var(--blue);text-decoration:none">${esc(o.ph)}</a></span></div>`:''}
+      ${o.em?`<div class="drow"><span class="dk">Email</span><span class="dv" style="font-size:12px"><a href="mailto:${esc(o.em)}" style="color:var(--blue);text-decoration:none">${esc(o.em)}</a></span></div>`:''}
+      ${o.addr||o.city||o.zip?`<div class="drow"><span class="dk">Address</span><span class="dv" style="font-size:12px">${esc(o.addr)}${o.addr&&(o.city||o.zip)?', ':''}${esc(o.city)}${o.city&&o.zip?' ':''}${esc(o.zip)}</span></div>`:''}
+    </div>
+    <div class="dsect">
+      <div class="dsect-t">Vehicle</div>
+      <div class="drow"><span class="dk">Year / Make / Model</span><span class="dv">${esc(o.c)||'—'}</span></div>
+      <div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)||'—'}${o.st?' · '+esc(o.st):''}</span></div>
+      ${o.col?`<div class="drow"><span class="dk">Color</span><span class="dv">${esc(o.col)}</span></div>`:''}
+      ${o.mi?`<div class="drow"><span class="dk">Mileage</span><span class="dv">${Number(o.mi).toLocaleString('en-US')} mi</span></div>`:''}
+      ${o.vin?`<div class="drow"><span class="dk">VIN</span><span class="dv mono" style="font-size:11px">${esc(o.vin)}</span></div>`:''}
+    </div>
+    ${(o.sv||[]).length?`<div class="dsect"><div class="dsect-t">Services Requested</div><div class="tags-wrap" style="padding-top:4px">${(o.sv||[]).map(s=>`<span class="tag on" style="pointer-events:none">${esc(s)}</span>`).join('')}</div></div>`:''}
+    ${o.ob?`<div class="dsect"><div class="dsect-t">Customer Notes</div><div class="obs-box">${esc(o.ob)}</div></div>`:''}
+    ${(o.dod||o.pd||o.tech)?`<div class="dsect">
+      <div class="dsect-t">Schedule</div>
+      ${o.dod?`<div class="drow"><span class="dk">Drop-off</span><span class="dv">${fmtDate(o.dod)}</span></div>`:''}
+      ${o.pd?`<div class="drow"><span class="dk">Promised</span><span class="dv">${fmtDate(o.pd)}</span></div>`:''}
+      ${o.tech?`<div class="drow"><span class="dk">Technician</span><span class="dv">${esc(o.tech)}</span></div>`:''}
+    </div>`:''}
+    <div class="dsect">
+      <div class="dsect-t">Status</div>
+      <div class="status-btns">
+        <button class="sts-btn${o.s==='waiting'?' on-w':''}" onclick="chS('waiting')">⏳ Waiting</button>
+        <button class="sts-btn${o.s==='progress'?' on-p':''}" onclick="chS('progress')">🔨 In Progress</button>
+        <button class="sts-btn${o.s==='done'?' on-d':''}" onclick="chS('done')">✓ Completed</button>
+      </div>
+    </div>
+    <div class="dsect">
+      <div class="dsect-t">Info</div>
+      <div class="drow"><span class="dk">Created</span><span class="dv" style="font-size:12px">${fdt(o.at)}</span></div>
+      <div class="drow"><span class="dk">Priority</span><span class="dv">${{low:'Low',normal:'Normal',high:'Urgent'}[o.pr]||'Normal'}</span></div>
+    </div>
+    <button class="del-btn" onclick="delO()">🗑 Delete Work Order</button>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function maybeClose(e){ if(e.target===document.getElementById('overlay')) closeD(); }
+function closeD(){ detailId=null; document.getElementById('overlay').classList.remove('open'); }
+
+async function chS(s) {
+  if (!detailId) return;
+  await fbPatch('orders/'+detailId, {s});
+  orders[detailId].s = s;
+  openD(detailId); render();
+  toast('Status updated');
+}
+
+async function delO() {
+  if (!detailId) return;
+  if (!confirm('Delete this work order? This cannot be undone.')) return;
+  await fbDel('orders/'+detailId);
+  delete orders[detailId];
+  closeD(); render();
+  toast('Work order deleted');
+}
+
+function openShare() {
+  document.getElementById('share-url').value = window.location.href;
+  document.getElementById('share-modal').classList.add('open');
+}
+function closeShare() { document.getElementById('share-modal').classList.remove('open'); }
+function copyUrl() {
+  const inp = document.getElementById('share-url');
+  inp.select(); inp.setSelectionRange(0,99999);
+  try { navigator.clipboard.writeText(inp.value); toast('✓ Link copied to clipboard'); }
+  catch { document.execCommand('copy'); toast('✓ Link copied'); }
+}
+
+function ft(iso) {
+  if (!iso) return '';
+  const d = new Date(iso), now = new Date();
+  const df = Math.floor((now-d)/60000);
+  if (df < 1) return 'just now';
+  if (df < 60) return df+'m ago';
+  if (df < 1440) return Math.floor(df/60)+'h ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+function fmtCardDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (dDay.getTime() === today.getTime()) return 'TODAY';
+  if (dDay.getTime() === yesterday.getTime()) return 'Yesterday';
+  const sameYear = d.getFullYear() === now.getFullYear();
+  return d.toLocaleDateString('en-US', sameYear ? {month:'short',day:'numeric'} : {month:'short',day:'numeric',year:'2-digit'});
+}
+
+function fdt(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true});
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  return new Date(y,m-1,day).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+
+function esc(s) {
+  if (!s && s !== 0) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+let toastT;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+if (checkSetup()) {
+  gv('all');
+  loadData();
+  pollT = setInterval(loadData, 6000);
+}
+</script>
+</body>
+</html>
