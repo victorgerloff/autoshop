@@ -2,9 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Planet Automotive Group — Service Orders</title>
-<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAEgUExURQAAAAEBAQUHBxMbGxQgHxYhIRMcHAMEBBoaGggICBsQEGkrLGgXGHIhIoBGRyAZGQ0NDRsbGz09PWBeXldfX2U9PZACArFJSaA1N4QDA4NmZlBWVmdmZi0tLQMDA4yLinqAgE00NKUAAKdfX8NdXqEWFlhJSYiMjHl5eCAfH4uOjmpgYLoVFaNRUrEFBbwdHXt+foODgxAPDwkGBig0NLdeXsgAAM4GBqRcXB4qKQYDAwUFBQICAi0wMKhAQJQ4OCEpKQYFBQ4ODgsLCzg4OUtLSy4vLwIBAS4tLhkoKSs5OicmJkVFRhkZGUNDRBUVFSsrKxgZGTMzMxgYGDExMTAtLSYjJD0+PhYWFioqKgkJCQ8PDxISEgoKCgwLC////3CznAoAAAABYktHRF9z0VEtAAAACXBIWXMAABcRAAAXEQHKJvM/AAAAB3RJTUUH6gUHBC0lQhsD+QAAAJtJREFUOMtjYBgFpAJGrExUwMTMwsrGjkuWg5OBi5uHl4+fQUAQqwVCwiKiYuISklLSMrJYLZGTV1BUUlZRVVPXwCrPyKCppa2jq6dvYGiEyxXGJqZm5haWVjikOa1tGGzt7B0YHJ2csdrg4urm7uHp5e3j6+ePVUFAYFBwSGhYUHhEZBR2O2yiY2IF4mKdom3wBTcjI8MoGBgAAEe6E1mhFM8kAAAAAElFTkSuQmCC" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Planet Automotive — Service Orders</title>
+<meta name="description" content="Service order management for Planet Automotive Group">
+<meta name="theme-color" content="#1c1a17">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Planet">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" href="__ICON_192__">
+<link rel="apple-touch-icon" href="__ICON_180__">
+<link rel="apple-touch-icon" sizes="180x180" href="__ICON_180__">
+<link rel="apple-touch-icon" sizes="192x192" href="__ICON_192__">
+<link rel="apple-touch-icon" sizes="512x512" href="__ICON_512__">
+<link rel="manifest" href="__MANIFEST__">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -38,8 +49,9 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 /* TOPBAR */
 .topbar{background:var(--accent);color:var(--accent-fg);height:54px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .brand{display:flex;align-items:center;gap:10px;}
-.brand-logo{width:38px;height:38px;border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.brand-logo img{width:38px;height:38px;object-fit:contain;}
+.brand-logo{width:34px;height:34px;border-radius:7px;background:rgba(245,240,232,0.08);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+.brand-logo img{width:100%;height:100%;object-fit:contain;}
+.brand-logo-img{width:36px;height:36px;border-radius:7px;object-fit:cover;flex-shrink:0;}
 .brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;}
 .brand-sub{font-size:10px;opacity:0.5;letter-spacing:0.3px;text-transform:uppercase;}
 .topbar-right{display:flex;align-items:center;gap:10px;}
@@ -188,6 +200,30 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .url-box{display:flex;gap:6px;margin-top:8px;}
 .url-box input{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:9px;}
 
+/* TECH BANNER */
+.tech-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1c1a17 0%,#3a3633 100%);color:var(--accent-fg);padding:12px 14px;border-radius:var(--rlg);margin-bottom:16px;}
+.tech-icon{width:38px;height:38px;border-radius:8px;background:rgba(245,240,232,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.tech-label{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;opacity:0.65;font-weight:500;}
+.tech-name{font-size:15px;font-weight:600;letter-spacing:-0.2px;margin-top:1px;}
+
+/* SMS BUTTON */
+.sms-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;background:#25D366;color:white;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:opacity 0.15s;}
+.sms-btn:hover{opacity:0.88;}
+.sms-btn.sms-blue{background:#007AFF;}
+
+/* SMS PROMPT MODAL */
+.sms-prompt{display:none;position:fixed;inset:0;background:rgba(28,26,23,0.6);z-index:600;align-items:center;justify-content:center;padding:20px;}
+.sms-prompt.open{display:flex;}
+.sms-card{background:var(--surface);border-radius:var(--rlg);max-width:480px;width:100%;padding:24px;max-height:90vh;overflow-y:auto;}
+.sms-card h3{font-size:17px;margin-bottom:6px;}
+.sms-card p{font-size:13px;color:var(--text2);margin-bottom:14px;}
+.sms-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-size:13px;line-height:1.6;color:var(--text);white-space:pre-wrap;margin-bottom:14px;font-family:'IBM Plex Sans',sans-serif;min-height:90px;resize:vertical;}
+.sms-actions{display:flex;gap:8px;}
+.sms-actions button{flex:1;padding:11px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;border:none;}
+.sms-send-btn{background:#25D366;color:white;}
+.sms-msg-btn{background:#007AFF;color:white;}
+.sms-cancel-btn{background:var(--surface2);color:var(--text2);border:1px solid var(--border2) !important;}
+
 /* MOBILE */
 @media(max-width:680px){
   .sidebar{display:none;}
@@ -212,8 +248,8 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 
 <div id="setup-modal" class="setup-overlay" style="display:none;">
   <div class="setup-card">
-    <h2>🔧 First-time setup</h2>
-    <p>To enable real-time sync across all devices, you need a free Firebase database. It takes 2 minutes:</p>
+    <h2>Welcome to Planet Automotive</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">First-time setup — to enable real-time sync across all devices, you need a free Firebase database. It takes 2 minutes:</p>
     <ol>
       <li>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> and sign in with Google</li>
       <li>Click <strong>"Add project"</strong> → name it (e.g., <em>autoshop</em>) → Continue → Continue → Create</li>
@@ -232,13 +268,17 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 
 <div class="topbar">
   <div class="brand">
-    <div class="brand-logo"><img src="data:image/png;base64,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" alt="Planet Automotive Group" /></div>
+    <img src="__ICON_192__" alt="Planet Automotive" class="brand-logo-img" />
     <div>
       <div class="brand-name">Planet Automotive</div>
       <div class="brand-sub">Service Orders</div>
     </div>
   </div>
   <div class="topbar-right">
+    <button class="share-btn" id="install-btn" onclick="installPWA()" style="display:none;">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Install</span>
+    </button>
     <button class="share-btn" onclick="openShare()">
       <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       <span>Share</span>
@@ -279,6 +319,10 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
       <span class="navcount" id="nb-d">0</span>
     </button>
     <div class="sidebar-footer">
+      <button class="navbtn" onclick="openDeviceModal()" style="margin-bottom:8px;font-size:12px;">
+        <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        <span id="device-name-display">This Device</span>
+      </button>
       <div class="sync-text" id="sync-txt">—</div>
     </div>
   </nav>
@@ -310,6 +354,35 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
     <div style="margin-top:14px;display:flex;gap:8px;">
       <button class="btn-secondary" onclick="closeShare()" style="flex:1;">Close</button>
       <button class="btn-primary" style="margin:0;flex:1;" onclick="copyUrl()">Copy Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEVICE NAME MODAL -->
+<div class="share-modal" id="device-modal" onclick="if(event.target===this)closeDeviceModal()">
+  <div class="share-card">
+    <h3>📱 Identify this device</h3>
+    <p>Give this device a name so the team knows who created each work order (e.g., "Mike's iPhone", "Front desk PC", "Service bay tablet").</p>
+    <input id="device-input" type="text" placeholder="e.g., Mike's iPhone" style="margin:8px 0 14px;" />
+    <div style="display:flex;gap:8px;">
+      <button class="btn-secondary" onclick="closeDeviceModal()" style="flex:1;">Cancel</button>
+      <button class="btn-primary" style="margin:0;flex:1;" onclick="saveDeviceName()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SMS PROMPT MODAL -->
+<div class="sms-prompt" id="sms-modal" onclick="if(event.target===this)closeSMSModal()">
+  <div class="sms-card">
+    <h3 id="sms-title">💬 Send SMS to customer</h3>
+    <p id="sms-subtitle">The message below will be sent via your phone's messaging app. You can edit it before sending.</p>
+    <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);">Message</label>
+    <textarea id="sms-text" class="sms-preview" rows="5"></textarea>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:14px;">📞 Sending to: <span id="sms-phone" style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text)"></span></p>
+    <div class="sms-actions">
+      <button class="sms-cancel-btn" onclick="closeSMSModal()">Skip</button>
+      <button class="sms-msg-btn" onclick="sendSMS()">📩 Open SMS App</button>
+      <button class="sms-send-btn" onclick="sendWhatsApp()">📱 WhatsApp</button>
     </div>
   </div>
 </div>
@@ -487,26 +560,17 @@ function listHTML(list) {
     const pl = {low:'Low',normal:'Normal',high:'URGENT'}[o.pr]||'Normal';
     const svcs = o.sv||[];
     const chips = svcs.slice(0,3).map(s=>`<span class="chip">${esc(s)}</span>`).join('')+(svcs.length>3?`<span class="chip">+${svcs.length-3}</span>`:'');
-    const isToday = o.at && new Date(o.at).toDateString() === new Date().toDateString();
-    const dateLabel = fmtCardDate(o.at);
     return `<div class="ocard${o.pr==='high'?' urgent':''}" onclick="openD('${id}')">
       <div class="oc-top">
         <div class="oc-car">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v9a2 2 0 01-2 2h-2M9 17a2 2 0 100 4 2 2 0 000-4zM15 17a2 2 0 100 4 2 2 0 000-4z"/></svg>
-          ${esc(o.c)||'—'} <span class="plate-badge">${esc(o.lp)||''}${o.st?' · '+esc(o.st):''}</span>
+          ${esc(o.c)||'—'} <span class="plate-badge">${esc(o.lp)||''}</span>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span class="date-badge${isToday?' today':''}">
-            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            ${dateLabel}
-          </span>
-          <span class="prio-pill ${pc}">${pl}</span>
-        </div>
+        <span class="prio-pill ${pc}">${pl}</span>
       </div>
       <div class="oc-cli">
         <span>👤 ${esc(o.n)||'—'}</span>
         ${o.ph ? `<span>📞 ${esc(o.ph)}</span>` : ''}
-        ${o.col ? `<span>🎨 ${esc(o.col)}</span>` : ''}
       </div>
       ${chips ? `<div class="oc-chips">${chips}</div>` : ''}
       <div class="oc-foot">
@@ -518,7 +582,7 @@ function listHTML(list) {
 }
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
-const YEARS = Array.from({length:35},(_,i)=>2025-i);
+const YEARS = Array.from({length:36},(_,i)=>2026-i);
 const MAKES = ['Acura','Audi','BMW','Buick','Cadillac','Chevrolet','Chrysler','Dodge','Ford','Genesis','GMC','Honda','Hyundai','Infiniti','Jaguar','Jeep','Kia','Land Rover','Lexus','Lincoln','Mazda','Mercedes-Benz','Mitsubishi','Nissan','Porsche','Ram','Subaru','Tesla','Toyota','Volkswagen','Volvo','Other'];
 const SVCS = ['Full Inspection','Oil Change','Brake Service','Wheel Alignment','Tire Balancing','Tire Rotation','Tire Replacement','Suspension','Electrical','A/C Service','Transmission','Engine Repair','Exhaust','Clutch','Body Work','Paint','Glass / Windshield','State Inspection','Emissions Test','Diagnostic','Battery Service','Other'];
 
@@ -527,15 +591,11 @@ function formHTML() {
     <div class="form-section-title">Customer Information</div>
     <div class="fgrid">
       <div class="fg"><label>First Name *</label><input id="f-fn" placeholder="John" autocomplete="given-name" /></div>
-      <div class="fg"><label>Last Name *</label><input id="f-ln" placeholder="Smith" autocomplete="family-name" /></div>
-      <div class="fg"><label>Phone Number</label>
+      <div class="fg"><label>Last Name</label><input id="f-ln" placeholder="Smith" autocomplete="family-name" /></div>
+      <div class="fg full"><label>Phone Number</label>
         <input id="f-ph" type="tel" placeholder="(555) 000-0000" oninput="fmtPhone(this)" maxlength="14" />
-        <span class="field-hint">Format: (555) 000-0000</span>
+        <span class="field-hint">Format: (555) 000-0000 — used to send SMS notifications</span>
       </div>
-      <div class="fg"><label>Email Address</label><input id="f-em" type="email" placeholder="john.smith@email.com" /></div>
-      <div class="fg full"><label>Street Address</label><input id="f-addr" placeholder="123 Main St" /></div>
-      <div class="fg"><label>City</label><input id="f-city" placeholder="Springfield" /></div>
-      <div class="fg"><label>ZIP Code</label><input id="f-zip" placeholder="01234" maxlength="10" /></div>
     </div>
 
     <div class="form-section-title">Vehicle Information</div>
@@ -547,11 +607,7 @@ function formHTML() {
         <select id="f-mk"><option value="">Select make</option>${MAKES.map(m=>`<option>${m}</option>`).join('')}</select>
       </div>
       <div class="fg"><label>Model *</label><input id="f-mo" placeholder="Camry, F-150, Civic..." /></div>
-      <div class="fg"><label>Color</label><input id="f-col" placeholder="Silver, Black..." /></div>
       <div class="fg"><label>License Plate *</label><input id="f-lp" class="plate-inp" placeholder="ABC 1234" maxlength="10" /></div>
-      <div class="fg"><label>State</label>
-        <select id="f-st"><option value="">Select state</option>${US_STATES.map(s=>`<option>${s}</option>`).join('')}</select>
-      </div>
       <div class="fg"><label>Mileage</label><input id="f-mi" type="number" placeholder="45000" /></div>
       <div class="fg"><label>VIN <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
         <input id="f-vin" placeholder="1HGBH41JXMN109186" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
@@ -590,8 +646,6 @@ function initForm() {
   if (lp) lp.addEventListener('input', function(){ this.value = this.value.toUpperCase(); });
   const dod = document.getElementById('f-dod');
   if (dod) dod.value = new Date().toISOString().split('T')[0];
-  const zip = document.getElementById('f-zip');
-  if (zip) zip.addEventListener('input', function(){ this.value = this.value.replace(/[^0-9-]/g,'').slice(0,10); });
 }
 
 function fmtPhone(el) {
@@ -618,7 +672,7 @@ async function submitOrder() {
   const mk = document.getElementById('f-mk')?.value||'';
   const mo = (document.getElementById('f-mo')?.value||'').trim();
 
-  if (!fn || !ln) { toast('⚠ First Name and Last Name are required'); return; }
+  if (!fn) { toast('⚠ First Name is required'); return; }
   if (!lp) { toast('⚠ License Plate is required'); return; }
   if (!yr || !mk || !mo) { toast('⚠ Year, Make and Model are required'); return; }
 
@@ -627,16 +681,11 @@ async function submitOrder() {
 
   const svcs = [...document.querySelectorAll('#svc-tags .tag.on')].map(t=>t.textContent);
   const order = {
-    n: `${fn} ${ln}`, fn, ln,
+    n: ln ? `${fn} ${ln}` : fn, fn, ln,
     ph: document.getElementById('f-ph')?.value||'',
-    em: document.getElementById('f-em')?.value||'',
-    addr: document.getElementById('f-addr')?.value||'',
-    city: document.getElementById('f-city')?.value||'',
-    zip: document.getElementById('f-zip')?.value||'',
-    lp, st: document.getElementById('f-st')?.value||'',
+    lp,
     yr, mk, mo,
     c: `${yr} ${mk} ${mo}`,
-    col: document.getElementById('f-col')?.value||'',
     mi: document.getElementById('f-mi')?.value||'',
     vin: document.getElementById('f-vin')?.value||'',
     ob: document.getElementById('f-ob')?.value||'',
@@ -644,13 +693,18 @@ async function submitOrder() {
     pd: document.getElementById('f-pd')?.value||'',
     tech: document.getElementById('f-tech')?.value||'',
     sv: svcs, pr: prio, s: 'waiting',
-    at: new Date().toISOString()
+    at: new Date().toISOString(),
+    dev: getDeviceName()
   };
 
   const key = await fbPush('orders', order);
   if (key) {
     orders[key] = order;
     toast('✓ Work order created');
+    // Auto-prompt SMS confirmation to customer if phone is provided
+    if (order.ph) {
+      setTimeout(()=>promptSendSMS(order, 'created'), 400);
+    }
     gv('all');
   } else {
     toast('⚠ Save failed — check connection');
@@ -662,30 +716,33 @@ function openD(id) {
   const o = orders[id]; if (!o) return;
   detailId = id;
   document.getElementById('dp-title').textContent = o.c||'Work Order';
-  document.getElementById('dp-sub').textContent = `${o.lp||'—'}${o.st?' · '+o.st:''}`;
+  document.getElementById('dp-sub').textContent = `${o.lp||'—'}`;
   document.getElementById('dp-body').innerHTML = `
+    ${o.tech?`<div class="tech-banner">
+      <div class="tech-icon">🔧</div>
+      <div><div class="tech-label">Assigned Technician</div><div class="tech-name">${esc(o.tech)}</div></div>
+    </div>`:''}
     <div class="dsect">
       <div class="dsect-t">Customer</div>
       <div class="drow"><span class="dk">Name</span><span class="dv">${esc(o.n)||'—'}</span></div>
       ${o.ph?`<div class="drow"><span class="dk">Phone</span><span class="dv"><a href="tel:${esc(o.ph)}" style="color:var(--blue);text-decoration:none">${esc(o.ph)}</a></span></div>`:''}
-      ${o.em?`<div class="drow"><span class="dk">Email</span><span class="dv" style="font-size:12px"><a href="mailto:${esc(o.em)}" style="color:var(--blue);text-decoration:none">${esc(o.em)}</a></span></div>`:''}
-      ${o.addr||o.city||o.zip?`<div class="drow"><span class="dk">Address</span><span class="dv" style="font-size:12px">${esc(o.addr)}${o.addr&&(o.city||o.zip)?', ':''}${esc(o.city)}${o.city&&o.zip?' ':''}${esc(o.zip)}</span></div>`:''}
+      ${o.ph?`<div style="margin-top:10px;display:flex;gap:6px;">
+        <button class="sms-btn" onclick="promptSendSMS(orders['${id}'], 'created')">💬 Send Confirmation SMS</button>
+      </div>`:''}
     </div>
     <div class="dsect">
       <div class="dsect-t">Vehicle</div>
       <div class="drow"><span class="dk">Year / Make / Model</span><span class="dv">${esc(o.c)||'—'}</span></div>
-      <div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)||'—'}${o.st?' · '+esc(o.st):''}</span></div>
-      ${o.col?`<div class="drow"><span class="dk">Color</span><span class="dv">${esc(o.col)}</span></div>`:''}
+      <div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)||'—'}</span></div>
       ${o.mi?`<div class="drow"><span class="dk">Mileage</span><span class="dv">${Number(o.mi).toLocaleString('en-US')} mi</span></div>`:''}
       ${o.vin?`<div class="drow"><span class="dk">VIN</span><span class="dv mono" style="font-size:11px">${esc(o.vin)}</span></div>`:''}
     </div>
     ${(o.sv||[]).length?`<div class="dsect"><div class="dsect-t">Services Requested</div><div class="tags-wrap" style="padding-top:4px">${(o.sv||[]).map(s=>`<span class="tag on" style="pointer-events:none">${esc(s)}</span>`).join('')}</div></div>`:''}
     ${o.ob?`<div class="dsect"><div class="dsect-t">Customer Notes</div><div class="obs-box">${esc(o.ob)}</div></div>`:''}
-    ${(o.dod||o.pd||o.tech)?`<div class="dsect">
+    ${(o.dod||o.pd)?`<div class="dsect">
       <div class="dsect-t">Schedule</div>
       ${o.dod?`<div class="drow"><span class="dk">Drop-off</span><span class="dv">${fmtDate(o.dod)}</span></div>`:''}
       ${o.pd?`<div class="drow"><span class="dk">Promised</span><span class="dv">${fmtDate(o.pd)}</span></div>`:''}
-      ${o.tech?`<div class="drow"><span class="dk">Technician</span><span class="dv">${esc(o.tech)}</span></div>`:''}
     </div>`:''}
     <div class="dsect">
       <div class="dsect-t">Status</div>
@@ -696,8 +753,9 @@ function openD(id) {
       </div>
     </div>
     <div class="dsect">
-      <div class="dsect-t">Info</div>
+      <div class="dsect-t">Order Info</div>
       <div class="drow"><span class="dk">Created</span><span class="dv" style="font-size:12px">${fdt(o.at)}</span></div>
+      <div class="drow"><span class="dk">Created from</span><span class="dv" style="font-size:12px">📱 ${esc(o.dev)||'Unknown device'}</span></div>
       <div class="drow"><span class="dk">Priority</span><span class="dv">${{low:'Low',normal:'Normal',high:'Urgent'}[o.pr]||'Normal'}</span></div>
     </div>
     <button class="del-btn" onclick="delO()">🗑 Delete Work Order</button>`;
@@ -709,10 +767,16 @@ function closeD(){ detailId=null; document.getElementById('overlay').classList.r
 
 async function chS(s) {
   if (!detailId) return;
+  const o = orders[detailId];
+  const wasNotDone = o.s !== 'done';
   await fbPatch('orders/'+detailId, {s});
   orders[detailId].s = s;
   openD(detailId); render();
   toast('Status updated');
+  // Auto-prompt SMS when marking as completed
+  if (s === 'done' && wasNotDone && o.ph) {
+    setTimeout(()=>promptSendSMS(orders[detailId], 'completed'), 400);
+  }
 }
 
 async function delO() {
@@ -734,6 +798,79 @@ function copyUrl() {
   inp.select(); inp.setSelectionRange(0,99999);
   try { navigator.clipboard.writeText(inp.value); toast('✓ Link copied to clipboard'); }
   catch { document.execCommand('copy'); toast('✓ Link copied'); }
+}
+
+// ── DEVICE NAME ──
+function getDeviceName() {
+  return localStorage.getItem('autoshop_device_name') || 'Unknown device';
+}
+function openDeviceModal() {
+  const cur = localStorage.getItem('autoshop_device_name') || '';
+  document.getElementById('device-input').value = cur;
+  document.getElementById('device-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('device-input').focus(), 100);
+}
+function closeDeviceModal() { document.getElementById('device-modal').classList.remove('open'); }
+function saveDeviceName() {
+  const v = document.getElementById('device-input').value.trim();
+  if (!v) { toast('Please enter a device name'); return; }
+  localStorage.setItem('autoshop_device_name', v);
+  closeDeviceModal();
+  toast('✓ Device name saved: ' + v);
+  updateDeviceDisplay();
+}
+
+// ── SMS / WHATSAPP NOTIFICATIONS ──
+let currentSMSData = null;
+function promptSendSMS(order, type) {
+  if (!order || !order.ph) return;
+  const name = order.fn || order.n || 'Customer';
+  const car = order.c || 'your vehicle';
+  let msg;
+  if (type === 'created') {
+    msg = `Hi ${name}, this is Planet Automotive Group. We've received your ${car} (plate ${order.lp}) and our team will start working on it soon. We'll keep you updated. Thank you!`;
+  } else if (type === 'completed') {
+    msg = `Hi ${name}, your ${car} is ready for pickup at Planet Automotive Group! Service has been completed. Please contact us to arrange pickup. Thank you for choosing Planet Automotive!`;
+  } else {
+    msg = `Hi ${name}, this is Planet Automotive Group with an update on your ${car} (plate ${order.lp}).`;
+  }
+  currentSMSData = { phone: order.ph, message: msg };
+  document.getElementById('sms-title').textContent = type === 'completed' ? '✓ Service Completed — Notify Customer' : '💬 Confirm Vehicle Received';
+  document.getElementById('sms-subtitle').textContent = type === 'completed'
+    ? 'Send a pickup notification to the customer. You can edit the message before sending.'
+    : 'Send a confirmation that the vehicle is at Planet Automotive. You can edit the message before sending.';
+  document.getElementById('sms-text').value = msg;
+  document.getElementById('sms-phone').textContent = order.ph;
+  document.getElementById('sms-modal').classList.add('open');
+}
+function closeSMSModal() {
+  currentSMSData = null;
+  document.getElementById('sms-modal').classList.remove('open');
+}
+function getCleanPhone() {
+  if (!currentSMSData) return '';
+  let p = currentSMSData.phone.replace(/\D/g,'');
+  if (p.length === 10) p = '1' + p; // Assume US country code
+  return p;
+}
+function sendSMS() {
+  if (!currentSMSData) return;
+  const msg = document.getElementById('sms-text').value;
+  const phone = getCleanPhone();
+  // SMS URI: works on iOS and Android
+  const url = `sms:+${phone}?&body=${encodeURIComponent(msg)}`;
+  window.location.href = url;
+  closeSMSModal();
+  toast('Opening SMS app...');
+}
+function sendWhatsApp() {
+  if (!currentSMSData) return;
+  const msg = document.getElementById('sms-text').value;
+  const phone = getCleanPhone();
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+  closeSMSModal();
+  toast('Opening WhatsApp...');
 }
 
 function ft(iso) {
@@ -782,11 +919,48 @@ function toast(msg) {
   clearTimeout(toastT); toastT = setTimeout(()=>el.classList.remove('show'),2800);
 }
 
+function updateDeviceDisplay() {
+  const name = localStorage.getItem('autoshop_device_name');
+  const display = document.getElementById('device-name-display');
+  if (display) display.textContent = name || 'Set device name';
+}
+
 if (checkSetup()) {
   gv('all');
   loadData();
   pollT = setInterval(loadData, 6000);
+  // Prompt for device name on first use
+  if (!localStorage.getItem('autoshop_device_name')) {
+    setTimeout(()=>openDeviceModal(), 800);
+  }
+  updateDeviceDisplay();
 }
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+
+async function installPWA() {
+  if (!deferredPrompt) {
+    toast('To install: Use your browser menu → "Add to Home Screen"');
+    return;
+  }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('install-btn').style.display = 'none';
+    toast('✓ App installed!');
+  }
+  deferredPrompt = null;
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-btn').style.display = 'none';
+});
 </script>
 </body>
 </html>
