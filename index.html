@@ -251,9 +251,9 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .tech-name{font-size:15px;font-weight:600;letter-spacing:-0.2px;margin-top:1px;}
 
 /* SMS BUTTON */
-.sms-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;background:#CC0000;color:#F0F0F0;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:opacity 0.15s;}
+.sms-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;background:#25D366;color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:opacity 0.15s;}
 .sms-btn:hover{opacity:0.88;}
-.sms-btn.sms-blue{background:#000000;}
+.sms-btn.sms-blue{background:#007AFF;}
 
 /* SMS PROMPT MODAL */
 .sms-prompt{display:none;position:fixed;inset:0;background:rgba(28,26,23,0.6);z-index:600;align-items:center;justify-content:center;padding:20px;}
@@ -264,9 +264,108 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .sms-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-size:13px;line-height:1.6;color:var(--text);white-space:pre-wrap;margin-bottom:14px;font-family:'IBM Plex Sans',sans-serif;min-height:90px;resize:vertical;}
 .sms-actions{display:flex;gap:8px;}
 .sms-actions button{flex:1;padding:11px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;border:none;}
-.sms-send-btn{background:#CC0000;color:#F0F0F0;}
-.sms-msg-btn{background:#000000;color:#F0F0F0;}
+.sms-send-btn{background:#25D366;color:#fff;}
+.sms-msg-btn{background:#007AFF;color:#fff;}
 .sms-cancel-btn{background:var(--surface2);color:var(--text2);border:1px solid var(--border2) !important;}
+
+/* === EDITABLE / EDIT MODE === */
+.edit-section{margin-bottom:16px;}
+.edit-section-title{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.edit-section-title button{background:none;border:none;color:var(--planet-red);font-size:11px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;padding:2px 6px;border-radius:4px;text-transform:none;letter-spacing:0;}
+.edit-section-title button:hover{background:rgba(204,0,0,0.08);}
+.mechanic-notes{background:#fff5e6;border:1px solid #ffd699;border-left:3px solid #cc7a00;border-radius:var(--r);padding:10px 12px;font-size:13px;line-height:1.6;color:#3d2200;white-space:pre-wrap;min-height:50px;}
+.mechanic-notes.empty{color:#996600;font-style:italic;font-size:12px;}
+.mech-edit-area{display:flex;flex-direction:column;gap:8px;}
+.mech-edit-area textarea{background:#fff5e6;border:1px solid #ffd699;font-size:13px;}
+.mech-actions{display:flex;gap:6px;}
+.mech-actions button{flex:1;padding:7px;font-size:12px;font-weight:600;cursor:pointer;border-radius:var(--r);font-family:'IBM Plex Sans',sans-serif;}
+.btn-save{background:var(--planet-red);color:#fff;border:none;}
+.btn-cancel-sm{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
+
+/* === COMPLAINT CHECKLIST === */
+.checklist{display:flex;flex-direction:column;gap:5px;}
+.checklist-item{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.5;cursor:pointer;transition:background 0.1s;}
+.checklist-item:hover{background:var(--surface2);}
+.checklist-item.checked{opacity:0.55;background:var(--surface2);}
+.checklist-item.checked .check-text{text-decoration:line-through;color:var(--text2);}
+.check-box{width:18px;height:18px;border:2px solid var(--border2);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;background:var(--surface);transition:all 0.12s;}
+.checklist-item.checked .check-box{background:var(--planet-red);border-color:var(--planet-red);}
+.check-box svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;opacity:0;}
+.checklist-item.checked .check-box svg{opacity:1;}
+.check-text{flex:1;color:var(--text);}
+
+/* === CUSTOMER AUTOCOMPLETE === */
+.autocomplete-wrap{position:relative;}
+.autocomplete-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 8px 20px rgba(0,0,0,0.18);max-height:240px;overflow-y:auto;z-index:50;display:none;}
+.autocomplete-dropdown.open{display:block;}
+.ac-item{padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;display:flex;flex-direction:column;gap:2px;}
+.ac-item:last-child{border-bottom:none;}
+.ac-item:hover{background:var(--bg);}
+.ac-name{font-weight:600;color:var(--text);}
+.ac-meta{font-size:11px;color:var(--text2);display:flex;gap:8px;}
+.ac-empty{padding:14px;text-align:center;color:var(--text3);font-size:12px;}
+
+/* === VIN OCR === */
+.vin-row{display:flex;gap:6px;align-items:stretch;}
+.vin-row input{flex:1;}
+.vin-scan-btn{padding:8px 12px;background:var(--accent);color:var(--accent-fg);border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.vin-scan-btn:hover{opacity:0.88;}
+.vin-scan-btn:disabled{opacity:0.5;cursor:wait;}
+.vin-scan-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
+.vin-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:700;align-items:center;justify-content:center;padding:20px;}
+.vin-modal.open{display:flex;}
+.vin-card{background:var(--surface);border-radius:var(--rlg);max-width:520px;width:100%;padding:22px;max-height:92vh;overflow-y:auto;}
+.vin-card h3{font-size:17px;margin-bottom:6px;}
+.vin-card p{font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5;}
+.vin-preview{width:100%;max-height:200px;object-fit:contain;background:#000;border-radius:var(--r);margin-bottom:12px;display:none;}
+.vin-preview.show{display:block;}
+.vin-progress{display:none;padding:14px;background:var(--bg);border-radius:var(--r);margin-bottom:12px;font-size:13px;color:var(--text2);text-align:center;}
+.vin-progress.show{display:block;}
+.vin-result{display:none;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px;}
+.vin-result.show{display:block;}
+.vin-result label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);margin-bottom:4px;display:block;}
+.vin-result input{font-family:'IBM Plex Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;font-size:13px;}
+
+/* === EDIT HISTORY === */
+.history-toggle{cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--text2);font-weight:500;}
+.history-toggle:hover{background:var(--surface2);}
+.history-toggle svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;transition:transform 0.15s;}
+.history-toggle.open svg{transform:rotate(180deg);}
+.history-list{display:none;margin-top:8px;border-left:2px solid var(--border);padding-left:12px;}
+.history-list.open{display:block;}
+.history-item{padding:6px 0;font-size:12px;border-bottom:1px solid var(--border);}
+.history-item:last-child{border-bottom:none;}
+.history-action{color:var(--text);font-weight:500;}
+.history-meta{font-size:10px;color:var(--text3);margin-top:1px;}
+
+/* === INVOICE === */
+.invoice-section{background:linear-gradient(135deg,#fff 0%,#fafafa 100%);border:1px solid var(--border);border-radius:var(--rlg);padding:14px;margin-bottom:16px;}
+.invoice-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.invoice-title-row{display:flex;align-items:center;gap:8px;}
+.invoice-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg);color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;}
+.invoice-badge.paid{background:#dcf5e3;color:#1a6e35;}
+.invoice-badge.unpaid{background:#fef3c7;color:#7a4f00;}
+.invoice-items{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.inv-item{display:grid;grid-template-columns:1fr 50px 80px 26px;gap:6px;align-items:center;}
+.inv-item input{font-size:12px;padding:6px 8px;height:32px;}
+.inv-item input.qty{text-align:center;}
+.inv-item input.price{text-align:right;font-family:'IBM Plex Mono',monospace;}
+.inv-item .del-row-btn{width:26px;height:32px;background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;cursor:pointer;font-size:14px;}
+.inv-item .del-row-btn:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+.inv-add-btn{padding:7px;background:none;border:1px dashed var(--border2);color:var(--text2);border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+.inv-add-btn:hover{background:var(--bg);color:var(--text);border-color:var(--text3);}
+.inv-totals{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;}
+.inv-total-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+.inv-total-row.grand{font-size:16px;font-weight:700;margin-top:4px;padding-top:8px;border-top:1px solid var(--border);}
+.inv-total-row .tax-input{width:60px;font-size:12px;padding:4px 6px;height:28px;text-align:right;font-family:'IBM Plex Mono',monospace;}
+.inv-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+.inv-action-btn{flex:1;min-width:100px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;border-radius:var(--r);font-family:'IBM Plex Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;}
+.inv-action-btn.primary{background:var(--planet-red);color:#fff;}
+.inv-action-btn.secondary{background:var(--accent);color:var(--accent-fg);}
+.inv-action-btn.send-green{background:#25D366;color:#fff;}
+.inv-action-btn:hover{opacity:0.88;}
+.inv-action-btn.toggle-paid.is-paid{background:#dcf5e3;color:#1a6e35;}
+.inv-empty{padding:20px;text-align:center;color:var(--text3);font-size:12px;background:var(--bg);border-radius:var(--r);border:1px dashed var(--border2);}
 
 /* MOBILE */
 @media(max-width:680px){
@@ -281,6 +380,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   .topbar{padding:0 12px;}
   .brand-sub{display:none;}
   .share-btn span{display:none;}
+  .inv-item{grid-template-columns:1fr 40px 70px 24px;}
 }
 .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:2px solid var(--planet-red);z-index:100;padding:8px 0 env(safe-area-inset-bottom,8px);}
 .mob-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--text2);cursor:pointer;border:none;background:none;padding:6px;font-family:'IBM Plex Sans',sans-serif;}
@@ -427,6 +527,27 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
       <button class="sms-cancel-btn" onclick="closeSMSModal()">Skip</button>
       <button class="sms-msg-btn" onclick="sendSMS()">📩 Open SMS App</button>
       <button class="sms-send-btn" onclick="sendWhatsApp()">📱 WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIN SCANNER MODAL -->
+<div class="vin-modal" id="vin-modal" onclick="if(event.target===this)closeVinModal()">
+  <div class="vin-card">
+    <h3>📷 Scan VIN Number</h3>
+    <p>Take a photo of the VIN sticker (usually on the driver's-side dashboard or door jamb). The system will automatically extract the 17-character VIN.</p>
+    <input type="file" id="vin-file" accept="image/*" capture="environment" style="display:none" onchange="handleVinPhoto(event)" />
+    <img id="vin-preview" class="vin-preview" alt="VIN photo preview" />
+    <div id="vin-progress" class="vin-progress">⏳ <span id="vin-progress-text">Processing image...</span></div>
+    <div id="vin-result" class="vin-result">
+      <label>Extracted VIN (verify and edit if needed)</label>
+      <input id="vin-extracted" type="text" maxlength="17" placeholder="VIN will appear here" />
+      <p style="font-size:11px;color:var(--text3);margin:6px 0 0;">Standard VIN is 17 characters with no I, O, or Q.</p>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="sms-cancel-btn" onclick="closeVinModal()" style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">Cancel</button>
+      <button id="vin-retry-btn" onclick="document.getElementById('vin-file').click()" style="flex:1;padding:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">📷 Retake</button>
+      <button id="vin-apply-btn" onclick="applyVin()" style="flex:1;padding:10px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:none;">✓ Apply</button>
     </div>
   </div>
 </div>
@@ -633,11 +754,18 @@ const SVCS = ['Full Inspection','Oil Change','Brake Service','Wheel Alignment','
 function formHTML() {
   return `<div class="formcard">
     <div class="form-section-title">Customer Information</div>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:10px;">💡 Type a returning customer's name or phone to auto-fill their info from past orders.</p>
     <div class="fgrid">
-      <div class="fg"><label>First Name *</label><input id="f-fn" placeholder="John" autocomplete="given-name" /></div>
+      <div class="fg autocomplete-wrap">
+        <label>First Name *</label>
+        <input id="f-fn" placeholder="John" autocomplete="off" oninput="customerSearch(this.value,'name')" onblur="setTimeout(hideAutocomplete,200)" />
+        <div id="ac-fn" class="autocomplete-dropdown"></div>
+      </div>
       <div class="fg"><label>Last Name</label><input id="f-ln" placeholder="Smith" autocomplete="family-name" /></div>
-      <div class="fg full"><label>Phone Number *</label>
-        <input id="f-ph" type="tel" placeholder="(555) 000-0000" oninput="fmtPhone(this)" maxlength="14" />
+      <div class="fg full autocomplete-wrap">
+        <label>Phone Number *</label>
+        <input id="f-ph" type="tel" placeholder="(555) 000-0000" oninput="fmtPhone(this);customerSearch(this.value,'phone')" onblur="setTimeout(hideAutocomplete,200)" maxlength="14" />
+        <div id="ac-ph" class="autocomplete-dropdown"></div>
         <span class="field-hint">Required — used to send SMS notifications. Format: (555) 000-0000</span>
       </div>
     </div>
@@ -654,7 +782,13 @@ function formHTML() {
       <div class="fg"><label>License Plate *</label><input id="f-lp" class="plate-inp" placeholder="ABC 1234" maxlength="10" /></div>
       <div class="fg"><label>Mileage</label><input id="f-mi" type="number" placeholder="45000" /></div>
       <div class="fg"><label>VIN <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
-        <input id="f-vin" placeholder="1HGBH41JXMN109186" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
+        <div class="vin-row">
+          <input id="f-vin" placeholder="1HGBH41JXMN109186" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
+          <button type="button" class="vin-scan-btn" onclick="openVinModal('f-vin')">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Scan
+          </button>
+        </div>
       </div>
     </div>
 
@@ -673,7 +807,8 @@ function formHTML() {
         </div>
       </div>
       <div class="fg full"><label>Customer Complaint / Notes</label>
-        <textarea id="f-ob" placeholder="Describe the issue reported by the customer, noises, symptoms, previous repairs..."></textarea>
+        <textarea id="f-ob" placeholder="Enter one issue per line — each becomes a checklist item:&#10;Brake squeaking when stopping&#10;Check engine light is on&#10;Strange noise from front wheel&#10;Oil change overdue" rows="5"></textarea>
+        <span class="field-hint">💡 Each line becomes a checklist item the mechanic can check off as completed.</span>
       </div>
       <div class="fg full"><label>Assigned Technician <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label><input id="f-tech" placeholder="Mike, Sarah..." /></div>
     </div>
@@ -773,28 +908,57 @@ function openD(id) {
       <div class="tech-icon">🔧</div>
       <div><div class="tech-label">Assigned Technician</div><div class="tech-name">${esc(o.tech)}</div></div>
     </div>`:''}
+
     <div class="dsect">
       <div class="dsect-t">Customer</div>
       <div class="drow"><span class="dk">Name</span><span class="dv">${esc(o.n)||'—'}</span></div>
-      ${o.ph?`<div class="drow"><span class="dk">Phone</span><span class="dv"><a href="tel:${esc(o.ph)}" style="color:var(--blue);text-decoration:none">${esc(o.ph)}</a></span></div>`:''}
+      ${o.ph?`<div class="drow"><span class="dk">Phone</span><span class="dv"><a href="tel:${esc(o.ph)}" style="color:var(--planet-red);text-decoration:none;font-weight:600">${esc(o.ph)}</a></span></div>`:''}
       ${o.ph?`<div style="margin-top:10px;display:flex;gap:6px;">
         <button class="sms-btn" onclick="promptSendSMS(orders['${id}'], 'created')">💬 Send Confirmation SMS</button>
       </div>`:''}
     </div>
+
     <div class="dsect">
-      <div class="dsect-t">Vehicle</div>
+      <div class="dsect-t">
+        <span>Vehicle</span>
+        <button onclick="openEditModal('${id}')" style="float:right;background:none;border:none;color:var(--planet-red);font-size:11px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;padding:2px 6px;border-radius:4px;text-transform:none;letter-spacing:0;">✎ Edit</button>
+      </div>
       <div class="drow"><span class="dk">Year / Make / Model</span><span class="dv">${esc(o.c)||'—'}</span></div>
       <div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)||'—'}</span></div>
       ${o.mi?`<div class="drow"><span class="dk">Mileage</span><span class="dv">${Number(o.mi).toLocaleString('en-US')} mi</span></div>`:''}
       ${o.vin?`<div class="drow"><span class="dk">VIN</span><span class="dv mono" style="font-size:11px">${esc(o.vin)}</span></div>`:''}
     </div>
+
     ${(o.sv||[]).length?`<div class="dsect"><div class="dsect-t">Services Requested</div><div class="tags-wrap" style="padding-top:4px">${(o.sv||[]).map(s=>`<span class="tag on" style="pointer-events:none">${esc(s)}</span>`).join('')}</div></div>`:''}
-    ${o.ob?`<div class="dsect"><div class="dsect-t">Customer Notes</div><div class="obs-box">${esc(o.ob)}</div></div>`:''}
+
+    ${o.ob?`<div class="dsect">
+      <div class="dsect-t">Customer Complaint Checklist</div>
+      <div class="checklist" id="checklist-${id}">${renderChecklist(o, id)}</div>
+    </div>`:''}
+
+    <div class="edit-section">
+      <div class="edit-section-title">
+        <span>🔧 Mechanic Notes <span style="text-transform:none;letter-spacing:0;font-weight:400;opacity:0.7;">(only mechanic adds)</span></span>
+        <button id="mech-toggle-${id}" onclick="toggleMechEdit('${id}')">✎ Edit</button>
+      </div>
+      <div id="mech-view-${id}">
+        ${o.mn ? `<div class="mechanic-notes">${esc(o.mn)}</div>` : `<div class="mechanic-notes empty">No mechanic notes yet. Click Edit to add findings, parts needed, repairs done, etc.</div>`}
+      </div>
+      <div id="mech-edit-${id}" style="display:none" class="mech-edit-area">
+        <textarea id="mech-text-${id}" placeholder="Add findings, diagnosis, parts needed, work performed, additional concerns..." rows="5">${esc(o.mn||'')}</textarea>
+        <div class="mech-actions">
+          <button class="btn-cancel-sm" onclick="cancelMechEdit('${id}')">Cancel</button>
+          <button class="btn-save" onclick="saveMechanicNotes('${id}')">✓ Save Notes</button>
+        </div>
+      </div>
+    </div>
+
     ${(o.dod||o.pd)?`<div class="dsect">
       <div class="dsect-t">Schedule</div>
       ${o.dod?`<div class="drow"><span class="dk">Drop-off</span><span class="dv">${fmtDate(o.dod)}</span></div>`:''}
       ${o.pd?`<div class="drow"><span class="dk">Promised</span><span class="dv">${fmtDate(o.pd)}</span></div>`:''}
     </div>`:''}
+
     <div class="dsect">
       <div class="dsect-t">Status</div>
       <div class="status-btns">
@@ -803,14 +967,243 @@ function openD(id) {
         <button class="sts-btn${o.s==='done'?' on-d':''}" onclick="chS('done')">✓ Completed</button>
       </div>
     </div>
+
+    <!-- INVOICE SECTION -->
+    <div class="invoice-section">
+      <div class="invoice-header">
+        <div class="invoice-title-row">
+          <span style="font-size:14px;font-weight:600;">💵 Invoice</span>
+          <span class="invoice-badge ${o.paid?'paid':(o.inv&&o.inv.length?'unpaid':'')}">${o.paid?'PAID':(o.inv&&o.inv.length?'UNPAID':'DRAFT')}</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Order #${id.slice(-6).toUpperCase()}</div>
+      </div>
+      <div id="inv-items-${id}" class="invoice-items">${renderInvoiceItems(o, id)}</div>
+      <button class="inv-add-btn" onclick="addInvoiceLine('${id}')">+ Add Line Item</button>
+      ${(o.inv && o.inv.length) ? renderInvoiceTotals(o, id) : ''}
+      ${(o.inv && o.inv.length) ? `<div class="inv-actions">
+        <button class="inv-action-btn toggle-paid ${o.paid?'is-paid':''}" onclick="togglePaid('${id}')">${o.paid?'✓ Paid':'Mark as Paid'}</button>
+        <button class="inv-action-btn send-green" onclick="sendInvoice('${id}')">📩 Send to Customer</button>
+        <button class="inv-action-btn secondary" onclick="printInvoice('${id}')">🖨 Print</button>
+      </div>` : ''}
+    </div>
+
     <div class="dsect">
       <div class="dsect-t">Order Info</div>
       <div class="drow"><span class="dk">Created</span><span class="dv" style="font-size:12px">${fdt(o.at)}</span></div>
-      <div class="drow"><span class="dk">Created from</span><span class="dv" style="font-size:12px">📱 ${esc(o.dev)||'Unknown device'}</span></div>
+      <div class="drow"><span class="dk">Created from</span><span class="dv" style="font-size:12px">📱 ${esc(o.dev)||'Unknown'}</span></div>
       <div class="drow"><span class="dk">Priority</span><span class="dv">${{low:'Low',normal:'Normal',high:'Urgent'}[o.pr]||'Normal'}</span></div>
     </div>
+
+    ${(o.h && o.h.length) ? `<div class="dsect">
+      <div class="dsect-t">Edit History</div>
+      <div class="history-toggle" id="hist-toggle-${id}" onclick="toggleHistory('${id}')">
+        <span>${o.h.length} edit${o.h.length!==1?'s':''} recorded</span>
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="history-list" id="hist-list-${id}">
+        ${o.h.map(h=>`<div class="history-item">
+          <div class="history-action">${esc(h.action)}</div>
+          <div class="history-meta">${fdt(h.ts)} · 📱 ${esc(h.dev)||'Unknown'}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+
     <button class="del-btn" onclick="delO()">🗑 Delete Work Order</button>`;
   document.getElementById('overlay').classList.add('open');
+}
+
+// ── COMPLAINT CHECKLIST ──
+function renderChecklist(o, id) {
+  if (!o.ob) return '';
+  const lines = o.ob.split('\n').map(l => l.trim()).filter(l => l);
+  const checked = o.cl || {};
+  return lines.map((line, i) => {
+    const isChecked = checked[i];
+    return `<div class="checklist-item${isChecked?' checked':''}" onclick="toggleCheckItem('${id}',${i})">
+      <div class="check-box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="check-text">${esc(line)}</div>
+    </div>`;
+  }).join('');
+}
+async function toggleCheckItem(id, idx) {
+  const o = orders[id]; if (!o) return;
+  if (!o.cl) o.cl = {};
+  o.cl[idx] = !o.cl[idx];
+  await fbPatch('orders/'+id, {cl: o.cl});
+  document.getElementById('checklist-'+id).innerHTML = renderChecklist(o, id);
+}
+
+// ── MECHANIC NOTES ──
+function toggleMechEdit(id) {
+  const view = document.getElementById('mech-view-'+id);
+  const edit = document.getElementById('mech-edit-'+id);
+  const isEditing = edit.style.display !== 'none';
+  view.style.display = isEditing ? 'block' : 'none';
+  edit.style.display = isEditing ? 'none' : 'block';
+  document.getElementById('mech-toggle-'+id).textContent = isEditing ? '✎ Edit' : '× Cancel';
+  if (!isEditing) document.getElementById('mech-text-'+id).focus();
+}
+function cancelMechEdit(id) { toggleMechEdit(id); }
+async function saveMechanicNotes(id) {
+  const o = orders[id]; if (!o) return;
+  const newVal = document.getElementById('mech-text-'+id).value;
+  const oldVal = o.mn || '';
+  if (newVal === oldVal) { toggleMechEdit(id); return; }
+  o.mn = newVal;
+  await fbPatch('orders/'+id, {mn: newVal});
+  await addHistory(id, 'Mechanic notes updated');
+  toast('✓ Mechanic notes saved');
+  openD(id);
+}
+
+// ── EDIT HISTORY ──
+async function addHistory(id, action) {
+  const o = orders[id]; if (!o) return;
+  if (!o.h) o.h = [];
+  o.h.push({ ts: new Date().toISOString(), dev: getDeviceName(), action });
+  await fbPatch('orders/'+id, {h: o.h});
+}
+function toggleHistory(id) {
+  document.getElementById('hist-toggle-'+id).classList.toggle('open');
+  document.getElementById('hist-list-'+id).classList.toggle('open');
+}
+
+// ── INVOICE ──
+function renderInvoiceItems(o, id) {
+  const items = o.inv || [];
+  if (!items.length) return `<div class="inv-empty">No items yet. Click below to add parts, labor, or services.</div>`;
+  return items.map((it, i) => `<div class="inv-item">
+    <input type="text" placeholder="Description (e.g., Oil change)" value="${esc(it.d||'')}" onblur="updateInvLine('${id}',${i},'d',this.value)" />
+    <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="updateInvLine('${id}',${i},'q',this.value)" />
+    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p||''}" onblur="updateInvLine('${id}',${i},'p',this.value)" />
+    <button class="del-row-btn" onclick="deleteInvLine('${id}',${i})">✕</button>
+  </div>`).join('');
+}
+function renderInvoiceTotals(o, id) {
+  const items = o.inv || [];
+  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
+  const taxPct = o.tax !== undefined ? o.tax : 6.25;
+  const tax = sub * (taxPct/100);
+  const total = sub + tax;
+  return `<div class="inv-totals">
+    <div class="inv-total-row"><span style="color:var(--text2)">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
+    <div class="inv-total-row">
+      <span style="color:var(--text2);display:flex;align-items:center;gap:6px;">Tax <input type="number" class="tax-input" min="0" max="100" step="0.01" value="${taxPct}" onblur="updateTax('${id}',this.value)" />%</span>
+      <span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span>
+    </div>
+    <div class="inv-total-row grand"><span>Total Due</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
+  </div>`;
+}
+function addInvoiceLine(id) {
+  const o = orders[id]; if (!o) return;
+  if (!o.inv) o.inv = [];
+  o.inv.push({ d:'', q:1, p:'' });
+  fbPatch('orders/'+id, {inv: o.inv});
+  openD(id);
+}
+async function updateInvLine(id, idx, field, val) {
+  const o = orders[id]; if (!o || !o.inv || !o.inv[idx]) return;
+  o.inv[idx][field] = val;
+  await fbPatch('orders/'+id, {inv: o.inv});
+  // Only re-render totals (cheaper)
+  const totalsEl = document.querySelector('.invoice-section .inv-totals');
+  if (totalsEl && o.inv.length) {
+    totalsEl.outerHTML = renderInvoiceTotals(o, id);
+  } else {
+    openD(id);
+  }
+}
+async function deleteInvLine(id, idx) {
+  const o = orders[id]; if (!o || !o.inv) return;
+  o.inv.splice(idx, 1);
+  await fbPatch('orders/'+id, {inv: o.inv});
+  openD(id);
+}
+async function updateTax(id, val) {
+  const o = orders[id]; if (!o) return;
+  o.tax = parseFloat(val) || 0;
+  await fbPatch('orders/'+id, {tax: o.tax});
+  openD(id);
+}
+async function togglePaid(id) {
+  const o = orders[id]; if (!o) return;
+  o.paid = !o.paid;
+  await fbPatch('orders/'+id, {paid: o.paid});
+  await addHistory(id, o.paid ? 'Invoice marked as PAID' : 'Invoice marked as UNPAID');
+  toast(o.paid ? '✓ Marked as paid' : 'Marked as unpaid');
+  openD(id);
+}
+function buildInvoiceText(o) {
+  const items = o.inv || [];
+  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
+  const taxPct = o.tax !== undefined ? o.tax : 6.25;
+  const tax = sub * (taxPct/100);
+  const total = sub + tax;
+  const name = o.fn || o.n || 'Customer';
+  let msg = `Hi ${name}, here is your invoice from Planet Automotive Group for your ${o.c} (plate ${o.lp}):\n\n`;
+  items.forEach(it => {
+    const lineTotal = (parseFloat(it.q)||0) * (parseFloat(it.p)||0);
+    msg += `• ${it.d||'Item'} (${it.q}x $${parseFloat(it.p||0).toFixed(2)}) = $${lineTotal.toFixed(2)}\n`;
+  });
+  msg += `\nSubtotal: $${sub.toFixed(2)}\nTax (${taxPct}%): $${tax.toFixed(2)}\nTotal Due: $${total.toFixed(2)}\n\n`;
+  msg += o.paid ? 'Status: PAID ✓\n\nThank you for choosing Planet Automotive!' : 'Please contact us to arrange payment. Thank you!';
+  return msg;
+}
+function sendInvoice(id) {
+  const o = orders[id]; if (!o) return;
+  if (!o.ph) { toast('⚠ No customer phone on file'); return; }
+  if (!o.inv || !o.inv.length) { toast('⚠ Invoice is empty'); return; }
+  const msg = buildInvoiceText(o);
+  currentSMSData = { phone: o.ph, message: msg };
+  document.getElementById('sms-title').textContent = '💵 Send Invoice to Customer';
+  document.getElementById('sms-subtitle').textContent = 'The invoice breakdown will be sent. You can edit before sending.';
+  document.getElementById('sms-text').value = msg;
+  document.getElementById('sms-phone').textContent = o.ph;
+  document.getElementById('sms-modal').classList.add('open');
+}
+function printInvoice(id) {
+  const o = orders[id]; if (!o) return;
+  const items = o.inv || [];
+  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
+  const taxPct = o.tax !== undefined ? o.tax : 6.25;
+  const tax = sub * (taxPct/100);
+  const total = sub + tax;
+  const w = window.open('', '_blank');
+  if (!w) { toast('⚠ Allow popups to print'); return; }
+  const html = `<!DOCTYPE html><html><head><title>Invoice ${id.slice(-6).toUpperCase()}</title><style>
+    body{font-family:Arial,sans-serif;max-width:680px;margin:30px auto;padding:20px;color:#000;}
+    .hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #CC0000;padding-bottom:14px;margin-bottom:20px;}
+    .hdr h1{font-size:24px;color:#CC0000;margin:0;}.hdr p{margin:4px 0 0;font-size:13px;color:#666;}
+    .info{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;font-size:13px;}
+    .info h3{font-size:11px;text-transform:uppercase;color:#666;margin-bottom:8px;border-bottom:1px solid #ddd;padding-bottom:4px;}
+    table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+    th{background:#000;color:#fff;text-align:left;padding:10px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;}
+    td{padding:10px;border-bottom:1px solid #eee;font-size:13px;}
+    .totals{margin-left:auto;width:280px;font-size:14px;}
+    .totals div{display:flex;justify-content:space-between;padding:6px 0;}
+    .totals .grand{font-size:18px;font-weight:bold;color:#CC0000;border-top:2px solid #000;padding-top:10px;margin-top:6px;}
+    .paid{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;letter-spacing:1px;}
+    .paid.yes{background:#dcf5e3;color:#1a6e35;}.paid.no{background:#fef3c7;color:#7a4f00;}
+    .footer{margin-top:30px;text-align:center;color:#666;font-size:11px;border-top:1px solid #ddd;padding-top:14px;}
+  </style></head><body>
+    <div class="hdr"><div><h1>PLANET AUTOMOTIVE GROUP</h1><p>Service Invoice</p></div>
+    <div style="text-align:right"><div style="font-size:18px;font-weight:bold">Invoice #${id.slice(-6).toUpperCase()}</div><div style="font-size:12px;color:#666">${fdt(o.at)}</div><div style="margin-top:6px"><span class="paid ${o.paid?'yes':'no'}">${o.paid?'PAID':'UNPAID'}</span></div></div></div>
+    <div class="info">
+      <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
+      <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div><div>Plate: ${esc(o.lp)||'—'}</div>${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}</div>
+    </div>
+    <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
+    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
+    <div class="totals">
+      <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
+      <div><span>Tax (${taxPct}%)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
+      <div class="grand"><span>TOTAL DUE</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
+    </div>
+    <div class="footer">Thank you for choosing Planet Automotive Group</div>
+    <script>window.print();<\/script>
+  </body></html>`;
+  w.document.write(html);
+  w.document.close();
 }
 
 function maybeClose(e){ if(e.target===document.getElementById('overlay')) closeD(); }
@@ -820,8 +1213,11 @@ async function chS(s) {
   if (!detailId) return;
   const o = orders[detailId];
   const wasNotDone = o.s !== 'done';
+  const oldStatus = o.s;
+  const statusLabels = {waiting:'Waiting', progress:'In Progress', done:'Completed'};
   await fbPatch('orders/'+detailId, {s});
   orders[detailId].s = s;
+  await addHistory(detailId, `Status changed: ${statusLabels[oldStatus]||oldStatus} → ${statusLabels[s]||s}`);
   openD(detailId); render();
   toast('Status updated');
   // Auto-prompt SMS when marking as completed
@@ -869,6 +1265,324 @@ function saveDeviceName() {
   closeDeviceModal();
   toast('✓ Device name saved: ' + v);
   updateDeviceDisplay();
+}
+
+// ── CUSTOMER AUTOCOMPLETE ──
+function customerSearch(query, type) {
+  const dropdown = document.getElementById(type === 'name' ? 'ac-fn' : 'ac-ph');
+  if (!dropdown) return;
+  query = query.trim().toLowerCase();
+  if (query.length < 2) { dropdown.classList.remove('open'); return; }
+
+  // Build unique customer list from orders, sorted by most recent
+  const customers = {};
+  Object.values(orders).forEach(o => {
+    if (!o.fn && !o.ph) return;
+    const key = (o.ph || '') + '|' + (o.fn || '').toLowerCase();
+    if (!customers[key] || new Date(o.at) > new Date(customers[key].at)) {
+      customers[key] = o;
+    }
+  });
+
+  const list = Object.values(customers).filter(c => {
+    if (type === 'name') {
+      const fullName = ((c.fn||'') + ' ' + (c.ln||'')).toLowerCase();
+      return fullName.includes(query);
+    } else {
+      const cleanPhone = (c.ph||'').replace(/\D/g,'');
+      const cleanQuery = query.replace(/\D/g,'');
+      return cleanQuery.length >= 3 && cleanPhone.includes(cleanQuery);
+    }
+  }).sort((a,b) => new Date(b.at) - new Date(a.at)).slice(0, 8);
+
+  if (!list.length) { dropdown.classList.remove('open'); return; }
+
+  dropdown.innerHTML = list.map(c => {
+    const name = c.ln ? `${c.fn} ${c.ln}` : c.fn;
+    const carInfo = c.c ? `${c.c} · ${c.lp}` : '';
+    return `<div class="ac-item" onmousedown="fillCustomer('${esc(c.fn||'')}','${esc(c.ln||'')}','${esc(c.ph||'')}')">
+      <div class="ac-name">${esc(name)}</div>
+      <div class="ac-meta">
+        ${c.ph?`<span>📞 ${esc(c.ph)}</span>`:''}
+        ${carInfo?`<span>🚗 ${esc(carInfo)}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  dropdown.classList.add('open');
+}
+function hideAutocomplete() {
+  document.getElementById('ac-fn')?.classList.remove('open');
+  document.getElementById('ac-ph')?.classList.remove('open');
+}
+function fillCustomer(fn, ln, ph) {
+  const fnEl = document.getElementById('f-fn');
+  const lnEl = document.getElementById('f-ln');
+  const phEl = document.getElementById('f-ph');
+  if (fnEl) fnEl.value = fn;
+  if (lnEl) lnEl.value = ln;
+  if (phEl) phEl.value = ph;
+  hideAutocomplete();
+  toast('✓ Customer info loaded');
+  // Focus next empty field
+  setTimeout(() => {
+    if (!document.getElementById('f-yr').value) document.getElementById('f-yr').focus();
+  }, 100);
+}
+
+// ── VIN OCR (using Tesseract.js loaded on demand) ──
+let vinTargetFieldId = null;
+let tesseractLoaded = false;
+function openVinModal(targetFieldId) {
+  vinTargetFieldId = targetFieldId;
+  document.getElementById('vin-modal').classList.add('open');
+  // Reset state
+  document.getElementById('vin-preview').classList.remove('show');
+  document.getElementById('vin-progress').classList.remove('show');
+  document.getElementById('vin-result').classList.remove('show');
+  document.getElementById('vin-apply-btn').style.display = 'none';
+  document.getElementById('vin-extracted').value = '';
+  // Trigger file picker immediately
+  setTimeout(() => document.getElementById('vin-file').click(), 100);
+}
+function closeVinModal() {
+  document.getElementById('vin-modal').classList.remove('open');
+  document.getElementById('vin-file').value = '';
+  vinTargetFieldId = null;
+}
+async function handleVinPhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Show preview
+  const url = URL.createObjectURL(file);
+  const preview = document.getElementById('vin-preview');
+  preview.src = url;
+  preview.classList.add('show');
+
+  // Show progress
+  const progress = document.getElementById('vin-progress');
+  const progressText = document.getElementById('vin-progress-text');
+  progress.classList.add('show');
+  document.getElementById('vin-result').classList.remove('show');
+  document.getElementById('vin-apply-btn').style.display = 'none';
+
+  try {
+    // Load Tesseract.js on demand
+    if (!tesseractLoaded) {
+      progressText.textContent = 'Loading OCR engine (one-time, ~3MB)...';
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      tesseractLoaded = true;
+    }
+
+    progressText.textContent = 'Reading VIN from photo...';
+    const result = await Tesseract.recognize(file, 'eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          progressText.textContent = `Reading VIN... ${Math.round(m.progress*100)}%`;
+        }
+      }
+    });
+
+    let text = result.data.text || '';
+    // Clean up — find a 17-char VIN-like sequence
+    text = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    // VIN regex: 17 chars, no I, O, Q
+    const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/);
+    const extracted = vinMatch ? vinMatch[0] : (text.length >= 10 ? text.slice(0, 17) : text);
+
+    progress.classList.remove('show');
+    document.getElementById('vin-extracted').value = extracted;
+    document.getElementById('vin-result').classList.add('show');
+    document.getElementById('vin-apply-btn').style.display = 'block';
+
+    if (!vinMatch) {
+      toast('⚠ Could not find standard VIN — please verify');
+    } else {
+      toast('✓ VIN extracted successfully');
+    }
+  } catch (err) {
+    console.error(err);
+    progress.classList.remove('show');
+    document.getElementById('vin-result').classList.add('show');
+    document.getElementById('vin-extracted').value = '';
+    document.getElementById('vin-apply-btn').style.display = 'block';
+    toast('⚠ OCR failed. Please type the VIN manually.');
+  }
+}
+function applyVin() {
+  const vin = document.getElementById('vin-extracted').value.trim().toUpperCase();
+  if (vin && vinTargetFieldId) {
+    const target = document.getElementById(vinTargetFieldId);
+    if (target) target.value = vin;
+  }
+  closeVinModal();
+  toast('✓ VIN applied');
+}
+
+// ── EDIT WORK ORDER ──
+let editingOrderId = null;
+let editPriority = 'normal';
+function openEditModal(id) {
+  const o = orders[id]; if (!o) return;
+  editingOrderId = id;
+  editPriority = o.pr || 'normal';
+  // Build modal HTML
+  const modal = document.getElementById('edit-modal') || createEditModal();
+  document.getElementById('e-fn').value = o.fn || '';
+  document.getElementById('e-ln').value = o.ln || '';
+  document.getElementById('e-ph').value = o.ph || '';
+  document.getElementById('e-yr').value = o.yr || '';
+  document.getElementById('e-mk').value = o.mk || '';
+  document.getElementById('e-mo').value = o.mo || '';
+  document.getElementById('e-lp').value = o.lp || '';
+  document.getElementById('e-mi').value = o.mi || '';
+  document.getElementById('e-vin').value = o.vin || '';
+  document.getElementById('e-ob').value = o.ob || '';
+  document.getElementById('e-tech').value = o.tech || '';
+  document.getElementById('e-dod').value = o.dod || '';
+  document.getElementById('e-pd').value = o.pd || '';
+  // Refresh service tags
+  const svcsSet = new Set(o.sv||[]);
+  const tagsEl = document.getElementById('e-svc-tags');
+  if (tagsEl) {
+    tagsEl.innerHTML = SVCS.map(s=>`<div class="tag${svcsSet.has(s)?' on':''}" onclick="this.classList.toggle('on')">${s}</div>`).join('');
+  }
+  // Priority buttons
+  ['low','normal','high'].forEach(x => {
+    const b = document.getElementById('e-pb-'+x);
+    if (b) b.className = 'priobtn' + (x===editPriority ? ' p-'+x : '');
+  });
+  modal.classList.add('open');
+}
+function setEditPrio(p) {
+  editPriority = p;
+  ['low','normal','high'].forEach(x => {
+    const b = document.getElementById('e-pb-'+x);
+    if (b) b.className = 'priobtn' + (x===p ? ' p-'+x : '');
+  });
+}
+function createEditModal() {
+  const modal = document.createElement('div');
+  modal.id = 'edit-modal';
+  modal.className = 'sms-prompt';
+  modal.onclick = (e) => { if (e.target === modal) closeEditModal(); };
+  modal.innerHTML = `<div class="sms-card" style="max-width:560px;">
+    <h3>✎ Edit Work Order</h3>
+    <p>Edits are tracked in the history log with date, time, and device.</p>
+    <div class="fgrid">
+      <div class="fg"><label>First Name *</label><input id="e-fn" /></div>
+      <div class="fg"><label>Last Name</label><input id="e-ln" /></div>
+      <div class="fg full"><label>Phone Number *</label><input id="e-ph" type="tel" oninput="fmtPhone(this)" maxlength="14" /></div>
+      <div class="fg"><label>Year</label>
+        <select id="e-yr">${YEARS.map(y=>`<option>${y}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label>Make</label>
+        <select id="e-mk">${MAKES.map(m=>`<option>${m}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label>Model</label><input id="e-mo" /></div>
+      <div class="fg"><label>License Plate</label><input id="e-lp" class="plate-inp" maxlength="10" oninput="this.value=this.value.toUpperCase()" /></div>
+      <div class="fg"><label>Mileage</label><input id="e-mi" type="number" /></div>
+      <div class="fg"><label>VIN</label>
+        <div class="vin-row">
+          <input id="e-vin" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
+          <button type="button" class="vin-scan-btn" onclick="openVinModal('e-vin')">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Scan
+          </button>
+        </div>
+      </div>
+      <div class="fg full"><label>Service Type</label>
+        <div class="tags-wrap" id="e-svc-tags"></div>
+      </div>
+      <div class="fg full"><label>Priority</label>
+        <div class="prio-row">
+          <button class="priobtn" id="e-pb-low" onclick="setEditPrio('low')">🌿 Low</button>
+          <button class="priobtn" id="e-pb-normal" onclick="setEditPrio('normal')">⏱ Normal</button>
+          <button class="priobtn" id="e-pb-high" onclick="setEditPrio('high')">🔥 Urgent</button>
+        </div>
+      </div>
+      <div class="fg full"><label>Customer Complaint / Notes</label>
+        <textarea id="e-ob" rows="4"></textarea>
+      </div>
+      <div class="fg full"><label>Assigned Technician</label><input id="e-tech" /></div>
+      <div class="fg"><label>Drop-off Date</label><input id="e-dod" type="date" /></div>
+      <div class="fg"><label>Promised Date</label><input id="e-pd" type="date" /></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button class="sms-cancel-btn" onclick="closeEditModal()" style="flex:1;padding:11px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">Cancel</button>
+      <button onclick="saveEdit()" style="flex:1;padding:11px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">✓ Save Changes</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  return modal;
+}
+function closeEditModal() {
+  const m = document.getElementById('edit-modal');
+  if (m) m.classList.remove('open');
+  editingOrderId = null;
+}
+async function saveEdit() {
+  if (!editingOrderId) return;
+  const o = orders[editingOrderId]; if (!o) return;
+
+  const fn = document.getElementById('e-fn').value.trim();
+  const ph = document.getElementById('e-ph').value.trim();
+  if (!fn) { toast('⚠ First Name is required'); return; }
+  if (!ph) { toast('⚠ Phone is required'); return; }
+
+  const ln = document.getElementById('e-ln').value.trim();
+  const yr = document.getElementById('e-yr').value;
+  const mk = document.getElementById('e-mk').value;
+  const mo = document.getElementById('e-mo').value.trim();
+  const lp = document.getElementById('e-lp').value.trim().toUpperCase();
+  const svcs = [...document.querySelectorAll('#e-svc-tags .tag.on')].map(t=>t.textContent);
+
+  // Track changes
+  const changes = [];
+  if (o.fn !== fn) changes.push('First Name');
+  if (o.ln !== ln) changes.push('Last Name');
+  if (o.ph !== ph) changes.push('Phone');
+  if (o.yr !== yr || o.mk !== mk || o.mo !== mo) changes.push('Vehicle');
+  if (o.lp !== lp) changes.push('License Plate');
+  if ((o.mi||'') !== document.getElementById('e-mi').value) changes.push('Mileage');
+  if ((o.vin||'') !== document.getElementById('e-vin').value) changes.push('VIN');
+  if ((o.ob||'') !== document.getElementById('e-ob').value) changes.push('Complaint');
+  if ((o.tech||'') !== document.getElementById('e-tech').value) changes.push('Technician');
+  if ((o.dod||'') !== document.getElementById('e-dod').value) changes.push('Drop-off Date');
+  if ((o.pd||'') !== document.getElementById('e-pd').value) changes.push('Promised Date');
+  if ((o.pr||'normal') !== editPriority) changes.push('Priority');
+  if (JSON.stringify((o.sv||[]).sort()) !== JSON.stringify(svcs.sort())) changes.push('Services');
+
+  // Update
+  const updated = {
+    fn, ln, ph,
+    n: ln ? `${fn} ${ln}` : fn,
+    yr, mk, mo, lp,
+    c: `${yr} ${mk} ${mo}`,
+    mi: document.getElementById('e-mi').value,
+    vin: document.getElementById('e-vin').value,
+    ob: document.getElementById('e-ob').value,
+    tech: document.getElementById('e-tech').value,
+    dod: document.getElementById('e-dod').value,
+    pd: document.getElementById('e-pd').value,
+    pr: editPriority,
+    sv: svcs
+  };
+
+  Object.assign(o, updated);
+  await fbPatch('orders/'+editingOrderId, updated);
+  if (changes.length) {
+    await addHistory(editingOrderId, `Edited: ${changes.join(', ')}`);
+  }
+  toast('✓ Changes saved');
+  closeEditModal();
+  openD(editingOrderId);
+  render();
 }
 
 // ── SMS / WHATSAPP NOTIFICATIONS ──
