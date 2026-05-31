@@ -687,15 +687,71 @@ function checkForChanges(current, previous, label) {
 }
 
 function notify(title, body) {
+  // Always try to vibrate (works on mobile when app is open)
+  try {
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  } catch(e) {}
+
+  // Play a brief notification sound
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.4);
+  } catch(e) {}
+
+  // Show in-app toast (always visible while app is open)
+  showInAppNotification(title, body);
+
+  // Try to fire system notification (works in background tabs and on desktop)
   if (!notificationsEnabled) return;
   try {
     if (Notification.permission === 'granted') {
-      const n = new Notification(`🔧 Planet Auto — ${title}`, {
-        body, icon: '/favicon.ico', tag: 'planet-auto-'+Date.now(), requireInteraction: false
-      });
-      setTimeout(()=>n.close(), 8000);
+      // Use Service Worker notification if available (more persistent on mobile)
+      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(`🔧 Planet Auto — ${title}`, {
+            body,
+            tag: 'planet-auto-'+Date.now(),
+            requireInteraction: false,
+            vibrate: [200, 100, 200]
+          }).catch(() => {
+            // Fallback to direct notification
+            const n = new Notification(`🔧 Planet Auto — ${title}`, { body, tag: 'planet-auto-'+Date.now() });
+            setTimeout(()=>n.close(), 8000);
+          });
+        });
+      } else {
+        const n = new Notification(`🔧 Planet Auto — ${title}`, { body, tag: 'planet-auto-'+Date.now() });
+        setTimeout(()=>n.close(), 8000);
+      }
     }
   } catch(e) { console.log('Notification error', e); }
+}
+
+// In-app notification banner (works on mobile even without permission)
+function showInAppNotification(title, body) {
+  let banner = document.getElementById('in-app-notify');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'in-app-notify';
+    banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-150px);background:#000;color:#F0F0F0;padding:12px 16px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,0.5);border-left:3px solid #CC0000;max-width:90vw;min-width:280px;transition:transform 0.3s ease;cursor:pointer;';
+    banner.onclick = () => banner.style.transform = 'translateX(-50%) translateY(-150px)';
+    document.body.appendChild(banner);
+  }
+  banner.innerHTML = `<div style="font-weight:600;margin-bottom:3px;">🔧 ${esc(title)}</div><div style="font-size:12px;opacity:0.85;white-space:pre-line;">${esc(body)}</div><div style="font-size:10px;opacity:0.5;margin-top:5px;">Tap to dismiss</div>`;
+  banner.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(window._notifTimer);
+  window._notifTimer = setTimeout(() => {
+    banner.style.transform = 'translateX(-50%) translateY(-150px)';
+  }, 7000);
 }
 
 async function requestNotificationPermission() {
@@ -1554,9 +1610,15 @@ function renderQuotesList() {
     </div>
     <div class="sec-head">
       <div class="sec-title">Quotes / Estimates</div>
-      <div class="searchbox">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search..." value="${q}" oninput="q=this.value;renderQuotesList()" />
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button onclick="gv('newquote')" style="padding:8px 14px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Quote
+        </button>
+        <div class="searchbox">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search..." value="${q}" oninput="q=this.value;renderQuotesList()" />
+        </div>
       </div>
     </div>
     <div>${quoteListHTML(filtered)}</div>`;
@@ -2180,6 +2242,16 @@ if (checkSetup()) {
     setTimeout(()=>openDeviceModal(), 800);
   }
   updateDeviceDisplay();
+
+  // Register Service Worker for offline support and better notifications
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('SW registered:', reg.scope);
+    }).catch(err => {
+      console.log('SW registration failed:', err);
+    });
+  }
+
   // Request notification permission on first interaction
   setTimeout(() => {
     if ('Notification' in window && Notification.permission === 'default') {
