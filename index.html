@@ -566,7 +566,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 </div>
 
 <nav class="mob-nav">
-  <button class="mob-btn" onclick="gv('new')">
+  <button class="mob-btn" onclick="showNewMenu()">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     New
   </button>
@@ -583,6 +583,33 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
     Active
   </button>
 </nav>
+
+<!-- NEW ITEM MENU (mobile) -->
+<div class="share-modal" id="new-menu-modal" onclick="if(event.target===this)closeNewMenu()" style="align-items:flex-end;padding:0;">
+  <div class="share-card" style="max-width:100%;width:100%;border-radius:20px 20px 0 0;padding:20px 20px max(20px,env(safe-area-inset-bottom,20px));">
+    <div style="width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 14px;"></div>
+    <h3 style="margin-bottom:14px;">Create new...</h3>
+    <button onclick="closeNewMenu();gv('new')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--rlg);font-size:14px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;margin-bottom:8px;text-align:left;color:var(--text);">
+      <div style="width:42px;height:42px;background:var(--planet-red);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v9a2 2 0 01-2 2h-2M9 17a2 2 0 100 4 2 2 0 000-4zM15 17a2 2 0 100 4 2 2 0 000-4z"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:14px;">New Work Order</div>
+        <div style="font-size:12px;color:var(--text2);font-weight:400;">Car arrived for service</div>
+      </div>
+    </button>
+    <button onclick="closeNewMenu();gv('newquote')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--rlg);font-size:14px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;margin-bottom:8px;text-align:left;color:var(--text);">
+      <div style="width:42px;height:42px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F0F0F0" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:14px;">New Quote / Estimate</div>
+        <div style="font-size:12px;color:var(--text2);font-weight:400;">Customer asking for price</div>
+      </div>
+    </button>
+    <button onclick="closeNewMenu()" style="width:100%;padding:12px;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;margin-top:6px;">Cancel</button>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -1404,6 +1431,14 @@ function openShare() {
   document.getElementById('share-modal').classList.add('open');
 }
 function closeShare() { document.getElementById('share-modal').classList.remove('open'); }
+
+// ── NEW ITEM MENU (mobile) ──
+function showNewMenu() {
+  document.getElementById('new-menu-modal').classList.add('open');
+}
+function closeNewMenu() {
+  document.getElementById('new-menu-modal').classList.remove('open');
+}
 function copyUrl() {
   const inp = document.getElementById('share-url');
   inp.select(); inp.setSelectionRange(0,99999);
