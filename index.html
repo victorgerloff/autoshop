@@ -954,6 +954,9 @@ function formHTML() {
         <div id="ac-ph" class="autocomplete-dropdown"></div>
         <span class="field-hint">Required — used to send SMS notifications. Format: (555) 000-0000</span>
       </div>
+      <div class="fg full"><label>Alternate Phone <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
+        <input id="f-ph2" type="tel" placeholder="(555) 000-0000" oninput="fmtPhone(this)" maxlength="14" />
+      </div>
     </div>
 
     <div class="form-section-title">Vehicle Information</div>
@@ -1045,7 +1048,7 @@ async function submitOrder() {
   const carParts = [yr, mk, mo].filter(p => p).join(' ') || mo || '—';
   const order = {
     n: fn, fn,
-    ph, lp,
+    ph, ph2: (document.getElementById('f-ph2')?.value||'').trim(), lp,
     yr, mk, mo,
     c: carParts,
     mi: document.getElementById('f-mi')?.value||'',
@@ -1089,6 +1092,7 @@ function openD(id) {
       <div class="dsect-t">Customer</div>
       <div class="drow"><span class="dk">Name</span><span class="dv">${esc(o.n)||'—'}</span></div>
       ${o.ph?`<div class="drow"><span class="dk">Phone</span><span class="dv"><a href="tel:${esc(o.ph)}" style="color:var(--planet-red);text-decoration:none;font-weight:600">${esc(o.ph)}</a></span></div>`:''}
+      ${o.ph2?`<div class="drow"><span class="dk">Alt. Phone</span><span class="dv"><a href="tel:${esc(o.ph2)}" style="color:var(--planet-red);text-decoration:none;font-weight:600">${esc(o.ph2)}</a></span></div>`:''}
       ${o.ph?`<div style="margin-top:10px;display:flex;gap:6px;">
         <button class="sms-btn" onclick="promptSendSMS(orders['${id}'], 'created')">💬 Send Confirmation SMS</button>
       </div>`:''}
@@ -1239,6 +1243,12 @@ async function addHistory(id, action) {
   o.h.push({ ts: new Date().toISOString(), dev: getDeviceName(), action });
   await fbPatch('orders/'+id, {h: o.h});
 }
+async function addQuoteHistory(id, action) {
+  const o = quotes[id]; if (!o) return;
+  if (!o.h) o.h = [];
+  o.h.push({ ts: new Date().toISOString(), dev: getDeviceName(), action });
+  await fbPatch('quotes/'+id, {h: o.h});
+}
 function toggleHistory(id) {
   document.getElementById('hist-toggle-'+id).classList.toggle('open');
   document.getElementById('hist-list-'+id).classList.toggle('open');
@@ -1271,17 +1281,24 @@ function renderInvoiceTotals(o, id) {
     <div class="inv-total-row grand"><span>Total Due</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
   </div>`;
 }
-function addInvoiceLine(id) {
+async function addInvoiceLine(id) {
   const o = orders[id]; if (!o) return;
   if (!o.inv) o.inv = [];
   o.inv.push({ d:'', q:1, p:'', labor:false });
-  fbPatch('orders/'+id, {inv: o.inv});
+  await fbPatch('orders/'+id, {inv: o.inv});
+  await addHistory(id, 'Added invoice line item');
   openD(id);
 }
+const INV_FIELD_LABELS = { d:'Description', q:'Qty', p:'Price' };
 async function updateInvLine(id, idx, field, val) {
   const o = orders[id]; if (!o || !o.inv || !o.inv[idx]) return;
+  const prevVal = o.inv[idx][field];
+  const itemLabel = o.inv[idx].d || `Item ${idx+1}`;
   o.inv[idx][field] = val;
   await fbPatch('orders/'+id, {inv: o.inv});
+  if ((prevVal||'') !== (val||'')) {
+    await addHistory(id, `Invoice item "${itemLabel}": ${INV_FIELD_LABELS[field]||field} changed`);
+  }
   // Only re-render totals (cheaper)
   const totalsEl = document.querySelector('.invoice-section .inv-totals');
   if (totalsEl && o.inv.length) {
@@ -1293,13 +1310,17 @@ async function updateInvLine(id, idx, field, val) {
 async function toggleInvLineLabor(id, idx) {
   const o = orders[id]; if (!o || !o.inv || !o.inv[idx]) return;
   o.inv[idx].labor = !o.inv[idx].labor;
+  const itemLabel = o.inv[idx].d || `Item ${idx+1}`;
   await fbPatch('orders/'+id, {inv: o.inv});
+  await addHistory(id, `Marked "${itemLabel}" as ${o.inv[idx].labor?'Labor (not taxed)':'Part (taxed)'}`);
   openD(id);
 }
 async function deleteInvLine(id, idx) {
   const o = orders[id]; if (!o || !o.inv) return;
+  const itemLabel = o.inv[idx]?.d || `Item ${idx+1}`;
   o.inv.splice(idx, 1);
   await fbPatch('orders/'+id, {inv: o.inv});
+  await addHistory(id, `Removed invoice line item "${itemLabel}"`);
   openD(id);
 }
 async function updateTax(id, val) {
@@ -1563,6 +1584,9 @@ function quoteFormHTML() {
         <input id="qf-ph" type="tel" placeholder="(555) 000-0000" oninput="fmtPhone(this);customerSearchQuote(this.value,'phone')" onblur="setTimeout(hideAutocompleteQ,200)" maxlength="14" />
         <div id="qac-ph" class="autocomplete-dropdown"></div>
       </div>
+      <div class="fg full"><label>Alternate Phone <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
+        <input id="qf-ph2" type="tel" placeholder="(555) 000-0000" oninput="fmtPhone(this)" maxlength="14" />
+      </div>
     </div>
     <div class="form-section-title">Vehicle</div>
     <div class="fgrid">
@@ -1695,6 +1719,7 @@ async function submitQuote() {
 
   const quote = {
     n: fn, fn, ph,
+    ph2: (document.getElementById('qf-ph2')?.value||'').trim(),
     lp: (document.getElementById('qf-lp')?.value||'').trim().toUpperCase(),
     yr, mk, mo,
     c: carParts,
@@ -1806,6 +1831,7 @@ function openQuote(id) {
       <div class="dsect-t">Customer</div>
       <div class="drow"><span class="dk">Name</span><span class="dv">${esc(o.n)||'—'}</span></div>
       <div class="drow"><span class="dk">Phone</span><span class="dv"><a href="tel:${esc(o.ph)}" style="color:var(--planet-red);text-decoration:none;font-weight:600">${esc(o.ph)}</a></span></div>
+      ${o.ph2?`<div class="drow"><span class="dk">Alt. Phone</span><span class="dv"><a href="tel:${esc(o.ph2)}" style="color:var(--planet-red);text-decoration:none;font-weight:600">${esc(o.ph2)}</a></span></div>`:''}
     </div>
     <div class="dsect">
       <div class="dsect-t">Vehicle</div>
@@ -1813,7 +1839,6 @@ function openQuote(id) {
       ${o.lp?`<div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)}</span></div>`:''}
       ${o.vin?`<div class="drow"><span class="dk">VIN</span><span class="dv mono">${esc(o.vin)}</span></div>`:''}
     </div>
-    ${o.desc?`<div class="dsect"><div class="dsect-t">Notes</div><div class="obs-box">${esc(o.desc)}</div></div>`:''}
     <div class="invoice-section">
       <div class="invoice-header">
         <div class="invoice-title-row"><span style="font-size:14px;font-weight:600;">💰 Estimate</span></div>
@@ -1823,6 +1848,7 @@ function openQuote(id) {
       <button type="button" class="inv-add-btn" onclick="addQuoteItem('${id}')">+ Add Line Item</button>
       ${renderQuoteTotals(o, id)}
     </div>
+    ${o.desc?`<div class="dsect"><div class="dsect-t">Notes</div><div class="obs-box">${esc(o.desc)}</div></div>`:''}
     ${(o.exp||o.followup)?`<div class="dsect">
       <div class="dsect-t">Schedule</div>
       ${o.exp?`<div class="drow"><span class="dk">Valid Until</span><span class="dv">${fmtDate(o.exp)}</span></div>`:''}
@@ -1847,6 +1873,19 @@ function openQuote(id) {
       <div class="drow"><span class="dk">Created</span><span class="dv" style="font-size:12px">${fdt(o.at)}</span></div>
       <div class="drow"><span class="dk">Created from</span><span class="dv" style="font-size:12px">📱 ${esc(o.dev)||'Unknown'}</span></div>
     </div>
+    ${(o.h && o.h.length) ? `<div class="dsect">
+      <div class="dsect-t">Edit History</div>
+      <div class="history-toggle" id="hist-toggle-${id}" onclick="toggleHistory('${id}')">
+        <span>${o.h.length} edit${o.h.length!==1?'s':''} recorded</span>
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="history-list" id="hist-list-${id}">
+        ${o.h.map(h=>`<div class="history-item">
+          <div class="history-action">${esc(h.action)}</div>
+          <div class="history-meta">${fdt(h.ts)} · 📱 ${esc(h.dev)||'Unknown'}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
     <button class="del-btn" onclick="deleteQuote('${id}')">🗑 Delete Quote</button>`;
   document.getElementById('overlay').classList.add('open');
 }
@@ -1879,12 +1918,18 @@ async function addQuoteItem(id) {
   if (!o.items) o.items = [];
   o.items.push({ d:'', q:1, p:'', labor:false });
   await fbPatch('quotes/'+id, {items: o.items});
+  await addQuoteHistory(id, 'Added estimate line item');
   openQuote(id);
 }
 async function updateQuoteItem(id, idx, field, val) {
   const o = quotes[id]; if (!o || !o.items || !o.items[idx]) return;
+  const prevVal = o.items[idx][field];
+  const itemLabel = o.items[idx].d || `Item ${idx+1}`;
   o.items[idx][field] = val;
   await fbPatch('quotes/'+id, {items: o.items});
+  if ((prevVal||'') !== (val||'')) {
+    await addQuoteHistory(id, `Estimate item "${itemLabel}": ${INV_FIELD_LABELS[field]||field} changed`);
+  }
   const totalsEl = document.querySelector('.invoice-section .inv-totals');
   if (totalsEl && o.items.length) {
     totalsEl.outerHTML = renderQuoteTotals(o, id);
@@ -1894,14 +1939,18 @@ async function updateQuoteItem(id, idx, field, val) {
 }
 async function deleteQuoteItem(id, idx) {
   const o = quotes[id]; if (!o || !o.items) return;
+  const itemLabel = o.items[idx]?.d || `Item ${idx+1}`;
   o.items.splice(idx, 1);
   await fbPatch('quotes/'+id, {items: o.items});
+  await addQuoteHistory(id, `Removed estimate line item "${itemLabel}"`);
   openQuote(id);
 }
 async function toggleQuoteItemTax(id, idx) {
   const o = quotes[id]; if (!o || !o.items || !o.items[idx]) return;
   o.items[idx].labor = !o.items[idx].labor;
+  const itemLabel = o.items[idx].d || `Item ${idx+1}`;
   await fbPatch('quotes/'+id, {items: o.items});
+  await addQuoteHistory(id, `Marked "${itemLabel}" as ${o.items[idx].labor?'Labor (not taxed)':'Part (taxed)'}`);
   openQuote(id);
 }
 
@@ -1950,7 +1999,7 @@ async function convertQuoteToOrder(id) {
   if (!confirm('Convert this quote to a Work Order? The quote will be marked as Accepted.')) return;
   // Create work order from quote
   const order = {
-    n: o.n, fn: o.fn || o.n, ph: o.ph,
+    n: o.n, fn: o.fn || o.n, ph: o.ph, ph2: o.ph2 || '',
     lp: o.lp || '—',
     yr: o.yr || '', mk: o.mk || '', mo: o.mo || '',
     c: o.c || '—',
@@ -2155,6 +2204,7 @@ function openEditModal(id) {
   document.getElementById('e-fn').value = o.fn || '';
   document.getElementById('e-ln').value = o.ln || '';
   document.getElementById('e-ph').value = o.ph || '';
+  document.getElementById('e-ph2').value = o.ph2 || '';
   document.getElementById('e-yr').value = o.yr || '';
   document.getElementById('e-mk').value = o.mk || '';
   document.getElementById('e-mo').value = o.mo || '';
@@ -2197,6 +2247,7 @@ function createEditModal() {
       <div class="fg"><label>First Name *</label><input id="e-fn" /></div>
       <div class="fg"><label>Last Name</label><input id="e-ln" /></div>
       <div class="fg full"><label>Phone Number *</label><input id="e-ph" type="tel" oninput="fmtPhone(this)" maxlength="14" /></div>
+      <div class="fg full"><label>Alternate Phone <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label><input id="e-ph2" type="tel" oninput="fmtPhone(this)" maxlength="14" /></div>
       <div class="fg"><label>Year</label>
         <select id="e-yr">${YEARS.map(y=>`<option>${y}</option>`).join('')}</select>
       </div>
@@ -2254,6 +2305,7 @@ async function saveEdit() {
   if (!ph) { toast('⚠ Phone is required'); return; }
 
   const ln = document.getElementById('e-ln').value.trim();
+  const ph2 = document.getElementById('e-ph2').value.trim();
   const yr = document.getElementById('e-yr').value;
   const mk = document.getElementById('e-mk').value;
   const mo = document.getElementById('e-mo').value.trim();
@@ -2265,6 +2317,7 @@ async function saveEdit() {
   if (o.fn !== fn) changes.push('First Name');
   if (o.ln !== ln) changes.push('Last Name');
   if (o.ph !== ph) changes.push('Phone');
+  if ((o.ph2||'') !== ph2) changes.push('Alternate Phone');
   if (o.yr !== yr || o.mk !== mk || o.mo !== mo) changes.push('Vehicle');
   if (o.lp !== lp) changes.push('License Plate');
   if ((o.mi||'') !== document.getElementById('e-mi').value) changes.push('Mileage');
@@ -2278,7 +2331,7 @@ async function saveEdit() {
 
   // Update
   const updated = {
-    fn, ln, ph,
+    fn, ln, ph, ph2,
     n: ln ? `${fn} ${ln}` : fn,
     yr, mk, mo, lp,
     c: `${yr} ${mk} ${mo}`,
@@ -2310,6 +2363,7 @@ function openEditQuoteModal(id) {
   const modal = document.getElementById('edit-quote-modal') || createEditQuoteModal();
   document.getElementById('qe-fn').value = o.fn || o.n || '';
   document.getElementById('qe-ph').value = o.ph || '';
+  document.getElementById('qe-ph2').value = o.ph2 || '';
   document.getElementById('qe-lp').value = o.lp || '';
   document.getElementById('qe-yr').value = o.yr || '';
   document.getElementById('qe-mk').value = o.mk || '';
@@ -2331,6 +2385,7 @@ function createEditQuoteModal() {
     <div class="fgrid">
       <div class="fg full"><label>Customer Name *</label><input id="qe-fn" /></div>
       <div class="fg full"><label>Phone Number *</label><input id="qe-ph" type="tel" oninput="fmtPhone(this)" maxlength="14" /></div>
+      <div class="fg full"><label>Alternate Phone <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label><input id="qe-ph2" type="tel" oninput="fmtPhone(this)" maxlength="14" /></div>
       <div class="fg full"><label>License Plate</label><input id="qe-lp" class="plate-inp" maxlength="10" oninput="this.value=this.value.toUpperCase()" /></div>
       <div class="fg"><label>Year</label>
         <select id="qe-yr"><option value="">Select year</option>${YEARS.map(y=>`<option>${y}</option>`).join('')}</select>
@@ -2373,6 +2428,7 @@ async function saveEditQuote() {
   if (!fn) { toast('⚠ Customer Name is required'); return; }
   if (!ph) { toast('⚠ Phone Number is required'); return; }
 
+  const ph2 = document.getElementById('qe-ph2').value.trim();
   const yr = document.getElementById('qe-yr').value;
   const mk = document.getElementById('qe-mk').value;
   const mo = document.getElementById('qe-mo').value.trim();
@@ -2386,6 +2442,7 @@ async function saveEditQuote() {
   const changes = [];
   if ((o.fn||o.n) !== fn) changes.push('Name');
   if (o.ph !== ph) changes.push('Phone');
+  if ((o.ph2||'') !== ph2) changes.push('Alternate Phone');
   if (o.yr !== yr || o.mk !== mk || o.mo !== mo) changes.push('Vehicle');
   if ((o.lp||'') !== lp) changes.push('License Plate');
   if ((o.vin||'') !== vin) changes.push('VIN');
@@ -2394,7 +2451,7 @@ async function saveEditQuote() {
   if ((o.followup||'') !== followup) changes.push('Follow-up Date');
 
   const id = editingQuoteId;
-  const updated = { n: fn, fn, ph, yr, mk, mo, c: carParts, lp, vin, desc, exp, followup };
+  const updated = { n: fn, fn, ph, ph2, yr, mk, mo, c: carParts, lp, vin, desc, exp, followup };
   Object.assign(o, updated);
   if (changes.length) {
     if (!o.h) o.h = [];
