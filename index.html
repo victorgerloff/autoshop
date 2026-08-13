@@ -1364,7 +1364,10 @@ async function getLogoDataUrl() {
 }
 function estimateDocStyles() {
   return `
+    @page{margin:12mm;}
     body{font-family:Arial,sans-serif;max-width:680px;margin:30px auto;padding:20px;color:#000;}
+    .print-tip{max-width:680px;margin:0 auto 16px;padding:10px 14px;background:#FFF8E1;border:1px solid #F0D882;border-radius:6px;font-size:12px;color:#7a5c00;}
+    @media print{.print-tip{display:none;}}
     .hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #CC0000;padding-bottom:12px;margin-bottom:20px;}
     .hdr-brand{display:flex;align-items:center;gap:10px;}
     .hdr-logo{width:68px;height:68px;object-fit:contain;flex-shrink:0;}
@@ -1396,6 +1399,7 @@ async function printInvoice(id) {
   const logoUrl = await getLogoDataUrl();
   const printScript = `(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();`;
   const html = `<!DOCTYPE html><html><head><title>Estimate ${invoiceNo}</title><style>${estimateDocStyles()}</style></head><body>
+    <div class="print-tip">📄 Before saving: in the print dialog, open "More settings" and uncheck "Headers and footers" to avoid the page URL/date being added to the PDF.</div>
     <div class="hdr">
       <div class="hdr-brand">
         <img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" />
@@ -1407,9 +1411,9 @@ async function printInvoice(id) {
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
       <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div><div>Plate: ${esc(o.lp)||'—'}</div>${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}</div>
     </div>
-    ${o.ob?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.ob)}</div></div></div>`:''}
     <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
+    ${o.ob?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.ob)}</div></div></div>`:''}
     <div class="totals">
       <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
       <div><span>MA Tax (${taxPct}%)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
@@ -1436,6 +1440,7 @@ async function printQuote(id) {
   const logoUrl = await getLogoDataUrl();
   const printScript = `(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();`;
   const html = `<!DOCTYPE html><html><head><title>Estimate ${quoteNo}</title><style>${estimateDocStyles()}</style></head><body>
+    <div class="print-tip">📄 Before saving: in the print dialog, open "More settings" and uncheck "Headers and footers" to avoid the page URL/date being added to the PDF.</div>
     <div class="hdr">
       <div class="hdr-brand">
         <img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" />
@@ -1447,9 +1452,9 @@ async function printQuote(id) {
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
       <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div>${o.lp?`<div>Plate: ${esc(o.lp)}</div>`:''}${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}</div>
     </div>
-    ${o.desc?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.desc)}</div></div></div>`:''}
     <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
+    ${o.desc?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.desc)}</div></div></div>`:''}
     <div class="totals">
       <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
       <div><span>MA Tax (${taxPct}%)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
