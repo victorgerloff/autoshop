@@ -1157,7 +1157,7 @@ function openD(id) {
       ${(o.inv && o.inv.length) ? `<div class="inv-actions">
         <button class="inv-action-btn toggle-paid ${o.paid?'is-paid':''}" onclick="togglePaid('${id}')">${o.paid?'✓ Paid':'Mark as Paid'}</button>
         <button class="inv-action-btn send-green" onclick="sendInvoice('${id}')">📩 Send to Customer</button>
-        <button class="inv-action-btn secondary" onclick="printInvoice('${id}')">🖨 Print</button>
+        <button class="inv-action-btn secondary" onclick="printInvoice('${id}')">🖨 Print / Export PDF</button>
       </div>` : ''}
     </div>
 
@@ -1249,7 +1249,7 @@ function renderInvoiceItems(o, id) {
   return items.map((it, i) => `<div class="inv-item">
     <input type="text" placeholder="Description (e.g., Oil change)" value="${esc(it.d||'')}" onblur="updateInvLine('${id}',${i},'d',this.value)" />
     <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="updateInvLine('${id}',${i},'q',this.value)" />
-    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p||''}" onblur="updateInvLine('${id}',${i},'p',this.value)" />
+    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);updateInvLine('${id}',${i},'p',this.value)" />
     <button class="del-row-btn" onclick="deleteInvLine('${id}',${i})">✕</button>
   </div>`).join('');
 }
@@ -1344,18 +1344,8 @@ async function getInvoiceNumber(o, id) {
   await fbPatch('orders/'+id, { invoiceNo: next });
   return next;
 }
-async function printInvoice(id) {
-  const o = orders[id]; if (!o) return;
-  const items = o.inv || [];
-  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
-  const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = sub * (taxPct/100);
-  const total = sub + tax;
-  const w = window.open('', '_blank');
-  if (!w) { toast('⚠ Allow popups to print'); return; }
-  const invoiceNo = await getInvoiceNumber(o, id);
-  const logoUrl = new URL('./icons/icon-512.png', location.href).href;
-  const html = `<!DOCTYPE html><html><head><title>Estimate ${invoiceNo}</title><style>
+function estimateDocStyles() {
+  return `
     body{font-family:Arial,sans-serif;max-width:680px;margin:30px auto;padding:20px;color:#000;}
     .hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #CC0000;padding-bottom:12px;margin-bottom:20px;}
     .hdr-brand{display:flex;align-items:center;gap:10px;}
@@ -1370,16 +1360,29 @@ async function printInvoice(id) {
     .totals{margin-left:auto;width:280px;font-size:14px;}
     .totals div{display:flex;justify-content:space-between;padding:6px 0;}
     .totals .grand{font-size:18px;font-weight:bold;color:#CC0000;border-top:2px solid #000;padding-top:10px;margin-top:6px;}
-    .paid{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;letter-spacing:1px;}
-    .paid.yes{background:#dcf5e3;color:#1a6e35;}.paid.no{background:#fef3c7;color:#7a4f00;}
+    .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;letter-spacing:1px;}
+    .badge.yes{background:#dcf5e3;color:#1a6e35;}.badge.no{background:#fef3c7;color:#7a4f00;}.badge.neutral{background:#eee;color:#555;}
     .footer{margin-top:30px;text-align:center;color:#666;font-size:11px;border-top:1px solid #ddd;padding-top:14px;line-height:1.6;}
-  </style></head><body>
+  `;
+}
+async function printInvoice(id) {
+  const o = orders[id]; if (!o) return;
+  const items = o.inv || [];
+  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
+  const taxPct = o.tax !== undefined ? o.tax : 6.25;
+  const tax = sub * (taxPct/100);
+  const total = sub + tax;
+  const w = window.open('', '_blank');
+  if (!w) { toast('⚠ Allow popups to print'); return; }
+  const invoiceNo = await getInvoiceNumber(o, id);
+  const logoUrl = new URL('./icons/icon-512.png', location.href).href;
+  const html = `<!DOCTYPE html><html><head><title>Estimate ${invoiceNo}</title><style>${estimateDocStyles()}</style></head><body>
     <div class="hdr">
       <div class="hdr-brand">
         <img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" />
         <div><h1>PLANET AUTOMOTIVE GROUP</h1><p>Estimate</p></div>
       </div>
-      <div style="text-align:right"><div style="font-size:16px;font-weight:bold">Estimate #${invoiceNo}</div><div style="font-size:12px;color:#666">${fdt(o.at)}</div><div style="margin-top:6px"><span class="paid ${o.paid?'yes':'no'}">${o.paid?'PAID':'UNPAID'}</span></div></div>
+      <div style="text-align:right"><div style="font-size:16px;font-weight:bold">Estimate #${invoiceNo}</div><div style="font-size:12px;color:#666">${fdt(o.at)}</div><div style="margin-top:6px"><span class="badge ${o.paid?'yes':'no'}">${o.paid?'PAID':'UNPAID'}</span></div></div>
     </div>
     <div class="info">
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
@@ -1392,6 +1395,45 @@ async function printInvoice(id) {
       <div><span>MA Tax (${taxPct}%)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
       <div class="grand"><span>TOTAL DUE</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
     </div>
+    <div class="footer">Thank you for choosing Planet Automotive Group<br>567 Concord St, Holliston MA 01746<br>(508) 429-9444</div>
+    <script>window.print();<\/script>
+  </body></html>`;
+  w.document.write(html);
+  w.document.close();
+}
+function printQuote(id) {
+  const o = quotes[id]; if (!o) return;
+  const items = o.items || [];
+  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
+  const taxPct = o.tax !== undefined ? o.tax : 6.25;
+  const tax = sub * (taxPct/100);
+  const total = sub + tax;
+  const w = window.open('', '_blank');
+  if (!w) { toast('⚠ Allow popups to print'); return; }
+  const quoteNo = id.slice(-6).toUpperCase();
+  const statusLabels = {open:'OPEN', accepted:'ACCEPTED', declined:'DECLINED', expired:'EXPIRED'};
+  const statusClass = o.s === 'accepted' ? 'yes' : (o.s === 'declined' || o.s === 'expired' ? 'no' : 'neutral');
+  const logoUrl = new URL('./icons/icon-512.png', location.href).href;
+  const html = `<!DOCTYPE html><html><head><title>Estimate ${quoteNo}</title><style>${estimateDocStyles()}</style></head><body>
+    <div class="hdr">
+      <div class="hdr-brand">
+        <img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" />
+        <div><h1>PLANET AUTOMOTIVE GROUP</h1><p>Estimate</p></div>
+      </div>
+      <div style="text-align:right"><div style="font-size:16px;font-weight:bold">Estimate #${quoteNo}</div><div style="font-size:12px;color:#666">${fdt(o.at)}</div><div style="margin-top:6px"><span class="badge ${statusClass}">${statusLabels[o.s]||'OPEN'}</span></div></div>
+    </div>
+    <div class="info">
+      <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
+      <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div>${o.lp?`<div>Plate: ${esc(o.lp)}</div>`:''}${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}</div>
+    </div>
+    <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
+    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
+    <div class="totals">
+      <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
+      <div><span>MA Tax (${taxPct}%)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
+      <div class="grand"><span>ESTIMATED TOTAL</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
+    </div>
+    ${o.exp?`<div style="text-align:center;font-size:12px;color:#666;margin-top:-10px;margin-bottom:10px;">Valid until ${fmtDate(o.exp)}</div>`:''}
     <div class="footer">Thank you for choosing Planet Automotive Group<br>567 Concord St, Holliston MA 01746<br>(508) 429-9444</div>
     <script>window.print();<\/script>
   </body></html>`;
@@ -1534,7 +1576,7 @@ function renderQuoteFormItems() {
   el.innerHTML = quoteFormItems.map((it, i) => `<div class="inv-item">
     <input type="text" placeholder="Description (e.g., Brake pads + labor)" value="${esc(it.d||'')}" onblur="quoteFormItems[${i}].d=this.value" />
     <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="quoteFormItems[${i}].q=this.value" />
-    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p||''}" onblur="quoteFormItems[${i}].p=this.value" />
+    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);quoteFormItems[${i}].p=this.value" />
     <button class="del-row-btn" onclick="quoteFormItems.splice(${i},1);renderQuoteFormItems()">✕</button>
   </div>`).join('');
 }
@@ -1763,6 +1805,7 @@ function openQuote(id) {
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
       ${o.ph?`<button class="sms-btn" onclick="sendQuoteToCustomer('${id}')" style="flex:1;">💬 Send Quote to Customer</button>`:''}
+      <button class="inv-action-btn secondary" onclick="printQuote('${id}')" style="flex:1;">🖨 Print / Export PDF</button>
       <button onclick="convertQuoteToOrder('${id}')" style="flex:1;padding:9px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">→ Convert to Work Order</button>
     </div>
     <div class="dsect">
@@ -2261,6 +2304,10 @@ function fmtDate(d) {
 function esc(s) {
   if (!s && s !== 0) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtMoney(v) {
+  const n = parseFloat(v);
+  return isNaN(n) ? '' : n.toFixed(2);
 }
 
 let toastT;
