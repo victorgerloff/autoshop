@@ -1801,11 +1801,6 @@ function openQuote(id) {
   detailId = 'Q:'+id; // prefix to indicate quote
   document.getElementById('dp-title').textContent = (o.c||'Quote') + ' · ' + (o.n||'');
   document.getElementById('dp-sub').textContent = `Quote · ${o.ph||''}`;
-  const items = o.items || [];
-  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
-  const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = taxableSubtotal(items) * (taxPct/100);
-  const total = sub + tax;
   document.getElementById('dp-body').innerHTML = `
     <div class="dsect">
       <div class="dsect-t">Customer</div>
@@ -1824,12 +1819,9 @@ function openQuote(id) {
         <div class="invoice-title-row"><span style="font-size:14px;font-weight:600;">💰 Estimate</span></div>
         <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Quote #${id.slice(-6).toUpperCase()}</div>
       </div>
-      <div class="invoice-items">${items.length ? items.map(it => `<div class="inv-item"><div style="padding:6px 8px;font-size:12px;">${esc(it.d)||'—'}${it.labor?' <span style="color:var(--text3);font-size:10px;">(labor)</span>':''}</div><div style="padding:6px;font-size:12px;text-align:center;">${it.q}</div><div style="padding:6px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;">$${parseFloat(it.p||0).toFixed(2)}</div><div></div></div>`).join('') : '<div class="inv-empty">No items</div>'}</div>
-      ${items.length ? `<div class="inv-totals">
-        <div class="inv-total-row"><span style="color:var(--text2)">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
-        <div class="inv-total-row"><span style="color:var(--text2)">MA Tax (${taxPct}%, parts only)</span><span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span></div>
-        <div class="inv-total-row grand"><span>Estimated Total</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
-      </div>` : ''}
+      <div id="qinv-items-${id}" class="invoice-items">${renderQuoteItems(o, id)}</div>
+      <button type="button" class="inv-add-btn" onclick="addQuoteItem('${id}')">+ Add Line Item</button>
+      ${renderQuoteTotals(o, id)}
     </div>
     ${(o.exp||o.followup)?`<div class="dsect">
       <div class="dsect-t">Schedule</div>
@@ -1845,6 +1837,7 @@ function openQuote(id) {
       </div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="inv-action-btn secondary" onclick="openEditQuoteModal('${id}')" style="flex:1;">✎ Edit</button>
       ${o.ph?`<button class="sms-btn" onclick="sendQuoteToCustomer('${id}')" style="flex:1;">💬 Send Quote to Customer</button>`:''}
       <button class="inv-action-btn secondary" onclick="printQuote('${id}')" style="flex:1;">🖨 Print / Export PDF</button>
       <button onclick="convertQuoteToOrder('${id}')" style="flex:1;padding:9px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">→ Convert to Work Order</button>
@@ -1856,6 +1849,60 @@ function openQuote(id) {
     </div>
     <button class="del-btn" onclick="deleteQuote('${id}')">🗑 Delete Quote</button>`;
   document.getElementById('overlay').classList.add('open');
+}
+function renderQuoteItems(o, id) {
+  const items = o.items || [];
+  if (!items.length) return `<div class="inv-empty">No items yet. Click below to add estimated parts, labor, or services.</div>`;
+  return items.map((it, i) => `<div class="inv-item">
+    <input type="text" placeholder="Description (e.g., Oil change)" value="${esc(it.d||'')}" onblur="updateQuoteItem('${id}',${i},'d',this.value)" />
+    <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="updateQuoteItem('${id}',${i},'q',this.value)" />
+    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);updateQuoteItem('${id}',${i},'p',this.value)" />
+    <button class="del-row-btn" onclick="deleteQuoteItem('${id}',${i})">✕</button>
+    <button type="button" class="inv-labor-toggle${it.labor?' is-labor':''}" onclick="toggleQuoteItemTax('${id}',${i})" title="MA sales tax doesn't apply to labor/services">${it.labor?'🔧 Labor (not taxed)':'📦 Part (taxed)'}</button>
+  </div>`).join('');
+}
+function renderQuoteTotals(o, id) {
+  const items = o.items || [];
+  if (!items.length) return '';
+  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
+  const taxPct = o.tax !== undefined ? o.tax : 6.25;
+  const tax = taxableSubtotal(items) * (taxPct/100);
+  const total = sub + tax;
+  return `<div class="inv-totals">
+    <div class="inv-total-row"><span style="color:var(--text2)">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
+    <div class="inv-total-row"><span style="color:var(--text2)">MA Tax (${taxPct}%, parts only)</span><span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span></div>
+    <div class="inv-total-row grand"><span>Estimated Total</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
+  </div>`;
+}
+async function addQuoteItem(id) {
+  const o = quotes[id]; if (!o) return;
+  if (!o.items) o.items = [];
+  o.items.push({ d:'', q:1, p:'', labor:false });
+  await fbPatch('quotes/'+id, {items: o.items});
+  openQuote(id);
+}
+async function updateQuoteItem(id, idx, field, val) {
+  const o = quotes[id]; if (!o || !o.items || !o.items[idx]) return;
+  o.items[idx][field] = val;
+  await fbPatch('quotes/'+id, {items: o.items});
+  const totalsEl = document.querySelector('.invoice-section .inv-totals');
+  if (totalsEl && o.items.length) {
+    totalsEl.outerHTML = renderQuoteTotals(o, id);
+  } else {
+    openQuote(id);
+  }
+}
+async function deleteQuoteItem(id, idx) {
+  const o = quotes[id]; if (!o || !o.items) return;
+  o.items.splice(idx, 1);
+  await fbPatch('quotes/'+id, {items: o.items});
+  openQuote(id);
+}
+async function toggleQuoteItemTax(id, idx) {
+  const o = quotes[id]; if (!o || !o.items || !o.items[idx]) return;
+  o.items[idx].labor = !o.items[idx].labor;
+  await fbPatch('quotes/'+id, {items: o.items});
+  openQuote(id);
 }
 
 async function chQuoteStatus(id, s) {
@@ -2097,6 +2144,7 @@ function applyVin() {
 
 // ── EDIT WORK ORDER ──
 let editingOrderId = null;
+let editingQuoteId = null;
 let editPriority = 'normal';
 function openEditModal(id) {
   const o = orders[id]; if (!o) return;
@@ -2244,14 +2292,119 @@ async function saveEdit() {
     sv: svcs
   };
 
+  const id = editingOrderId;
   Object.assign(o, updated);
-  await fbPatch('orders/'+editingOrderId, updated);
+  await fbPatch('orders/'+id, updated);
   if (changes.length) {
-    await addHistory(editingOrderId, `Edited: ${changes.join(', ')}`);
+    await addHistory(id, `Edited: ${changes.join(', ')}`);
   }
   toast('✓ Changes saved');
   closeEditModal();
-  openD(editingOrderId);
+  openD(id);
+  render();
+}
+
+function openEditQuoteModal(id) {
+  const o = quotes[id]; if (!o) return;
+  editingQuoteId = id;
+  const modal = document.getElementById('edit-quote-modal') || createEditQuoteModal();
+  document.getElementById('qe-fn').value = o.fn || o.n || '';
+  document.getElementById('qe-ph').value = o.ph || '';
+  document.getElementById('qe-lp').value = o.lp || '';
+  document.getElementById('qe-yr').value = o.yr || '';
+  document.getElementById('qe-mk').value = o.mk || '';
+  document.getElementById('qe-mo').value = o.mo || '';
+  document.getElementById('qe-vin').value = o.vin || '';
+  document.getElementById('qe-desc').value = o.desc || '';
+  document.getElementById('qe-exp').value = o.exp || '';
+  document.getElementById('qe-followup').value = o.followup || '';
+  modal.classList.add('open');
+}
+function createEditQuoteModal() {
+  const modal = document.createElement('div');
+  modal.id = 'edit-quote-modal';
+  modal.className = 'sms-prompt';
+  modal.onclick = (e) => { if (e.target === modal) closeEditQuoteModal(); };
+  modal.innerHTML = `<div class="sms-card" style="max-width:560px;">
+    <h3>✎ Edit Estimate</h3>
+    <p>Line items are edited directly on the estimate — this covers customer, vehicle, and schedule details.</p>
+    <div class="fgrid">
+      <div class="fg full"><label>Customer Name *</label><input id="qe-fn" /></div>
+      <div class="fg full"><label>Phone Number *</label><input id="qe-ph" type="tel" oninput="fmtPhone(this)" maxlength="14" /></div>
+      <div class="fg full"><label>License Plate</label><input id="qe-lp" class="plate-inp" maxlength="10" oninput="this.value=this.value.toUpperCase()" /></div>
+      <div class="fg"><label>Year</label>
+        <select id="qe-yr"><option value="">Select year</option>${YEARS.map(y=>`<option>${y}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label>Make</label>
+        <select id="qe-mk"><option value="">Select make</option>${MAKES.map(m=>`<option>${m}</option>`).join('')}</select>
+      </div>
+      <div class="fg full"><label>Model</label><input id="qe-mo" /></div>
+      <div class="fg full"><label>VIN <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
+        <div class="vin-row">
+          <input id="qe-vin" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
+          <button type="button" class="vin-scan-btn" onclick="openVinModal('qe-vin')">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Scan
+          </button>
+        </div>
+      </div>
+      <div class="fg full"><label>Notes / Customer Request</label><textarea id="qe-desc" rows="4"></textarea></div>
+      <div class="fg"><label>Valid Until</label><input id="qe-exp" type="date" /></div>
+      <div class="fg"><label>Follow-up Date</label><input id="qe-followup" type="date" /></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button class="sms-cancel-btn" onclick="closeEditQuoteModal()" style="flex:1;padding:11px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">Cancel</button>
+      <button onclick="saveEditQuote()" style="flex:1;padding:11px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">✓ Save Changes</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  return modal;
+}
+function closeEditQuoteModal() {
+  const m = document.getElementById('edit-quote-modal');
+  if (m) m.classList.remove('open');
+  editingQuoteId = null;
+}
+async function saveEditQuote() {
+  if (!editingQuoteId) return;
+  const o = quotes[editingQuoteId]; if (!o) return;
+
+  const fn = document.getElementById('qe-fn').value.trim();
+  const ph = document.getElementById('qe-ph').value.trim();
+  if (!fn) { toast('⚠ Customer Name is required'); return; }
+  if (!ph) { toast('⚠ Phone Number is required'); return; }
+
+  const yr = document.getElementById('qe-yr').value;
+  const mk = document.getElementById('qe-mk').value;
+  const mo = document.getElementById('qe-mo').value.trim();
+  const lp = document.getElementById('qe-lp').value.trim().toUpperCase();
+  const vin = document.getElementById('qe-vin').value.trim().toUpperCase();
+  const desc = document.getElementById('qe-desc').value;
+  const exp = document.getElementById('qe-exp').value;
+  const followup = document.getElementById('qe-followup').value;
+  const carParts = [yr, mk, mo].filter(p=>p).join(' ') || '—';
+
+  const changes = [];
+  if ((o.fn||o.n) !== fn) changes.push('Name');
+  if (o.ph !== ph) changes.push('Phone');
+  if (o.yr !== yr || o.mk !== mk || o.mo !== mo) changes.push('Vehicle');
+  if ((o.lp||'') !== lp) changes.push('License Plate');
+  if ((o.vin||'') !== vin) changes.push('VIN');
+  if ((o.desc||'') !== desc) changes.push('Notes');
+  if ((o.exp||'') !== exp) changes.push('Valid Until');
+  if ((o.followup||'') !== followup) changes.push('Follow-up Date');
+
+  const id = editingQuoteId;
+  const updated = { n: fn, fn, ph, yr, mk, mo, c: carParts, lp, vin, desc, exp, followup };
+  Object.assign(o, updated);
+  if (changes.length) {
+    if (!o.h) o.h = [];
+    o.h.push({ ts: new Date().toISOString(), dev: getDeviceName(), action: `Edited: ${changes.join(', ')}` });
+    updated.h = o.h;
+  }
+  await fbPatch('quotes/'+id, updated);
+  toast('✓ Changes saved');
+  closeEditQuoteModal();
+  openQuote(id);
   render();
 }
 
