@@ -1,7 +1,7 @@
 // Planet Automotive Service Worker
 // Provides offline support and background notifications
 
-const CACHE_NAME = 'planet-auto-v1';
+const CACHE_NAME = 'planet-auto-v2';
 const URLS_TO_CACHE = [
   './',
   './index.html'
@@ -29,13 +29,35 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: serve from cache, fallback to network
+// Fetch: the app shell (index.html) is network-first so a new deploy shows up
+// immediately when online; the cached copy is only used offline. Everything
+// else (icons, manifest, textures) is cache-first for speed, refreshed in
+// the background whenever it's fetched.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('firebaseio.com')) return; // Don't cache Firebase API calls
+
+  const isAppShell = event.request.mode === 'navigate' || event.request.url.endsWith('/index.html');
+
+  if (isAppShell) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      }).catch(() => caches.match(event.request).then((r) => r || caches.match('./index.html')))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => caches.match('./index.html'));
+    caches.match(event.request).then((cached) => {
+      const fetchPromise = fetch(event.request).then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      }).catch(() => cached);
+      return cached || fetchPromise;
     })
   );
 });

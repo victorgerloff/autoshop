@@ -2288,10 +2288,22 @@ if (checkSetup()) {
 
   // Register Service Worker for offline support and better notifications
   if ('serviceWorker' in navigator) {
+    const hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('./sw.js').then(reg => {
       console.log('SW registered:', reg.scope);
+      reg.update().catch(() => {});
     }).catch(err => {
       console.log('SW registration failed:', err);
+    });
+
+    // Reload once when a *different* service worker takes over a page that
+    // was already controlled — i.e. a real update, not the first-ever
+    // activation — so a new deploy is picked up automatically.
+    let swRefreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || swRefreshing) return;
+      swRefreshing = true;
+      location.reload();
     });
   }
 
