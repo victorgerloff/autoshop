@@ -1862,11 +1862,15 @@ function openQuote(id) {
         <button class="sts-btn${o.s==='declined'?' on-p':''}" onclick="chQuoteStatus('${id}','declined')">✗ Declined</button>
       </div>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-      <button class="inv-action-btn secondary" onclick="openEditQuoteModal('${id}')" style="flex:1;">✎ Edit</button>
-      ${o.ph?`<button class="sms-btn" onclick="sendQuoteToCustomer('${id}')" style="flex:1;">💬 Send Quote to Customer</button>`:''}
-      <button class="inv-action-btn secondary" onclick="printQuote('${id}')" style="flex:1;">🖨 Print / Export PDF</button>
-      <button onclick="convertQuoteToOrder('${id}')" style="flex:1;padding:9px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">→ Convert to Work Order</button>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+      <div style="display:flex;gap:6px;">
+        ${o.ph?`<button class="sms-btn" onclick="sendQuoteToCustomer('${id}')" style="flex:1;">💬 Send to Customer</button>`:''}
+        <button onclick="convertQuoteToOrder('${id}')" style="flex:1;padding:9px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">→ Convert to Work Order</button>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="inv-action-btn secondary" onclick="openEditQuoteModal('${id}')" style="flex:1;">✎ Edit</button>
+        <button class="inv-action-btn secondary" onclick="printQuote('${id}')" style="flex:1;">🖨 Print/PDF</button>
+      </div>
     </div>
     <div class="dsect">
       <div class="dsect-t">Info</div>
