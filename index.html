@@ -353,6 +353,8 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .inv-item input.price{text-align:right;font-family:'IBM Plex Mono',monospace;}
 .inv-item .del-row-btn{width:26px;height:32px;background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;cursor:pointer;font-size:14px;}
 .inv-item .del-row-btn:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+.inv-labor-toggle{grid-column:1/-1;justify-self:start;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;margin-top:-2px;font-size:10px;font-weight:600;border-radius:20px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+.inv-labor-toggle.is-labor{background:var(--amber-bg);color:var(--amber-text);border-color:transparent;}
 .inv-add-btn{padding:7px;background:none;border:1px dashed var(--border2);color:var(--text2);border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
 .inv-add-btn:hover{background:var(--bg);color:var(--text);border-color:var(--text3);}
 .inv-totals{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;}
@@ -1251,18 +1253,19 @@ function renderInvoiceItems(o, id) {
     <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="updateInvLine('${id}',${i},'q',this.value)" />
     <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);updateInvLine('${id}',${i},'p',this.value)" />
     <button class="del-row-btn" onclick="deleteInvLine('${id}',${i})">✕</button>
+    <button type="button" class="inv-labor-toggle${it.labor?' is-labor':''}" onclick="toggleInvLineLabor('${id}',${i})" title="MA sales tax doesn't apply to labor/services">${it.labor?'🔧 Labor (not taxed)':'📦 Part (taxed)'}</button>
   </div>`).join('');
 }
 function renderInvoiceTotals(o, id) {
   const items = o.inv || [];
   const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = sub * (taxPct/100);
+  const tax = taxableSubtotal(items) * (taxPct/100);
   const total = sub + tax;
   return `<div class="inv-totals">
     <div class="inv-total-row"><span style="color:var(--text2)">Subtotal (parts/services)</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
     <div class="inv-total-row">
-      <span style="color:var(--text2);display:flex;align-items:center;gap:6px;">MA Tax <input type="number" class="tax-input" min="0" max="100" step="0.01" value="${taxPct}" onblur="updateTax('${id}',this.value)" />%</span>
+      <span style="color:var(--text2);display:flex;align-items:center;gap:6px;">MA Tax (parts only) <input type="number" class="tax-input" min="0" max="100" step="0.01" value="${taxPct}" onblur="updateTax('${id}',this.value)" />%</span>
       <span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span>
     </div>
     <div class="inv-total-row grand"><span>Total Due</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
@@ -1271,7 +1274,7 @@ function renderInvoiceTotals(o, id) {
 function addInvoiceLine(id) {
   const o = orders[id]; if (!o) return;
   if (!o.inv) o.inv = [];
-  o.inv.push({ d:'', q:1, p:'' });
+  o.inv.push({ d:'', q:1, p:'', labor:false });
   fbPatch('orders/'+id, {inv: o.inv});
   openD(id);
 }
@@ -1286,6 +1289,12 @@ async function updateInvLine(id, idx, field, val) {
   } else {
     openD(id);
   }
+}
+async function toggleInvLineLabor(id, idx) {
+  const o = orders[id]; if (!o || !o.inv || !o.inv[idx]) return;
+  o.inv[idx].labor = !o.inv[idx].labor;
+  await fbPatch('orders/'+id, {inv: o.inv});
+  openD(id);
 }
 async function deleteInvLine(id, idx) {
   const o = orders[id]; if (!o || !o.inv) return;
@@ -1311,15 +1320,15 @@ function buildInvoiceText(o) {
   const items = o.inv || [];
   const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = sub * (taxPct/100);
+  const tax = taxableSubtotal(items) * (taxPct/100);
   const total = sub + tax;
   const name = o.fn || o.n || 'Customer';
   let msg = `Hi ${name}, here is your invoice from Planet Automotive Group for your ${o.c} (plate ${o.lp}):\n\n`;
   items.forEach(it => {
     const lineTotal = (parseFloat(it.q)||0) * (parseFloat(it.p)||0);
-    msg += `• ${it.d||'Item'} (${it.q}x $${parseFloat(it.p||0).toFixed(2)}) = $${lineTotal.toFixed(2)}\n`;
+    msg += `• ${it.d||'Item'}${it.labor?' (labor)':''} (${it.q}x $${parseFloat(it.p||0).toFixed(2)}) = $${lineTotal.toFixed(2)}\n`;
   });
-  msg += `\nSubtotal: $${sub.toFixed(2)}\nMA Tax (${taxPct}%): $${tax.toFixed(2)}\nTotal Due: $${total.toFixed(2)}\n\n`;
+  msg += `\nSubtotal: $${sub.toFixed(2)}\nMA Tax (${taxPct}%, parts only): $${tax.toFixed(2)}\nTotal Due: $${total.toFixed(2)}\n\n`;
   msg += o.paid ? 'Status: PAID ✓\n\nThank you for choosing Planet Automotive!' : 'Please contact us to arrange payment. Thank you!';
   return msg;
 }
@@ -1391,7 +1400,7 @@ async function printInvoice(id) {
   const items = o.inv || [];
   const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = sub * (taxPct/100);
+  const tax = taxableSubtotal(items) * (taxPct/100);
   const total = sub + tax;
   const w = window.open('', '_blank');
   if (!w) { toast('⚠ Allow popups to print'); return; }
@@ -1412,11 +1421,11 @@ async function printInvoice(id) {
       <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div><div>Plate: ${esc(o.lp)||'—'}</div>${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}</div>
     </div>
     <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
-    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
+    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}${it.labor?' <span style="color:#888;font-size:10px;">(labor — not taxed)</span>':''}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     ${o.ob?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.ob)}</div></div></div>`:''}
     <div class="totals">
       <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
-      <div><span>MA Tax (${taxPct}%)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
+      <div><span>MA Tax (${taxPct}%, parts only)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
       <div class="grand"><span>TOTAL DUE</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
     </div>
     <div class="footer">Thank you for choosing Planet Automotive Group<br>567 Concord St, Holliston MA 01746<br>(508) 429-9444</div>
@@ -1430,7 +1439,7 @@ async function printQuote(id) {
   const items = o.items || [];
   const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = sub * (taxPct/100);
+  const tax = taxableSubtotal(items) * (taxPct/100);
   const total = sub + tax;
   const w = window.open('', '_blank');
   if (!w) { toast('⚠ Allow popups to print'); return; }
@@ -1453,11 +1462,11 @@ async function printQuote(id) {
       <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div>${o.lp?`<div>Plate: ${esc(o.lp)}</div>`:''}${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}</div>
     </div>
     <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
-    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
+    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}${it.labor?' <span style="color:#888;font-size:10px;">(labor — not taxed)</span>':''}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     ${o.desc?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.desc)}</div></div></div>`:''}
     <div class="totals">
       <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
-      <div><span>MA Tax (${taxPct}%)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
+      <div><span>MA Tax (${taxPct}%, parts only)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
       <div class="grand"><span>ESTIMATED TOTAL</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
     </div>
     ${o.exp?`<div style="text-align:center;font-size:12px;color:#666;margin-top:-10px;margin-bottom:10px;">Valid until ${fmtDate(o.exp)}</div>`:''}
@@ -1593,7 +1602,11 @@ function quoteFormHTML() {
 
 let quoteFormItems = [];
 function addQuoteLineForm() {
-  quoteFormItems.push({d:'', q:1, p:''});
+  quoteFormItems.push({d:'', q:1, p:'', labor:false});
+  renderQuoteFormItems();
+}
+function toggleQuoteLineLabor(i) {
+  quoteFormItems[i].labor = !quoteFormItems[i].labor;
   renderQuoteFormItems();
 }
 function renderQuoteFormItems() {
@@ -1605,6 +1618,7 @@ function renderQuoteFormItems() {
     <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="quoteFormItems[${i}].q=this.value" />
     <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);quoteFormItems[${i}].p=this.value" />
     <button class="del-row-btn" onclick="quoteFormItems.splice(${i},1);renderQuoteFormItems()">✕</button>
+    <button type="button" class="inv-labor-toggle${it.labor?' is-labor':''}" onclick="toggleQuoteLineLabor(${i})" title="MA sales tax doesn't apply to labor/services">${it.labor?'🔧 Labor (not taxed)':'📦 Part (taxed)'}</button>
   </div>`).join('');
 }
 function initQuoteForm() {
@@ -1778,7 +1792,7 @@ function quoteTotal(o) {
   const items = o.items || [];
   const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = sub * (taxPct/100);
+  const tax = taxableSubtotal(items) * (taxPct/100);
   return sub + tax;
 }
 
@@ -1790,7 +1804,7 @@ function openQuote(id) {
   const items = o.items || [];
   const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = sub * (taxPct/100);
+  const tax = taxableSubtotal(items) * (taxPct/100);
   const total = sub + tax;
   document.getElementById('dp-body').innerHTML = `
     <div class="dsect">
@@ -1810,10 +1824,10 @@ function openQuote(id) {
         <div class="invoice-title-row"><span style="font-size:14px;font-weight:600;">💰 Estimate</span></div>
         <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Quote #${id.slice(-6).toUpperCase()}</div>
       </div>
-      <div class="invoice-items">${items.length ? items.map(it => `<div class="inv-item"><div style="padding:6px 8px;font-size:12px;">${esc(it.d)||'—'}</div><div style="padding:6px;font-size:12px;text-align:center;">${it.q}</div><div style="padding:6px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;">$${parseFloat(it.p||0).toFixed(2)}</div><div></div></div>`).join('') : '<div class="inv-empty">No items</div>'}</div>
+      <div class="invoice-items">${items.length ? items.map(it => `<div class="inv-item"><div style="padding:6px 8px;font-size:12px;">${esc(it.d)||'—'}${it.labor?' <span style="color:var(--text3);font-size:10px;">(labor)</span>':''}</div><div style="padding:6px;font-size:12px;text-align:center;">${it.q}</div><div style="padding:6px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;">$${parseFloat(it.p||0).toFixed(2)}</div><div></div></div>`).join('') : '<div class="inv-empty">No items</div>'}</div>
       ${items.length ? `<div class="inv-totals">
         <div class="inv-total-row"><span style="color:var(--text2)">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
-        <div class="inv-total-row"><span style="color:var(--text2)">MA Tax (${taxPct}%)</span><span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span></div>
+        <div class="inv-total-row"><span style="color:var(--text2)">MA Tax (${taxPct}%, parts only)</span><span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span></div>
         <div class="inv-total-row grand"><span>Estimated Total</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
       </div>` : ''}
     </div>
@@ -2335,6 +2349,9 @@ function esc(s) {
 function fmtMoney(v) {
   const n = parseFloat(v);
   return isNaN(n) ? '' : n.toFixed(2);
+}
+function taxableSubtotal(items) {
+  return (items||[]).filter(it => !it.labor).reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
 }
 
 let toastT;
