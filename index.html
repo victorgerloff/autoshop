@@ -1083,6 +1083,7 @@ async function submitOrder() {
 function openD(id) {
   const o = orders[id]; if (!o) return;
   detailId = id;
+  const unlocked = itemsUnlockedFor === id;
   document.getElementById('dp-title').textContent = o.c||'Work Order';
   document.getElementById('dp-sub').textContent = `${o.lp||'—'}`;
   document.getElementById('dp-body').innerHTML = `
@@ -1104,7 +1105,7 @@ function openD(id) {
     <div class="dsect">
       <div class="dsect-t">
         <span>Vehicle</span>
-        <button onclick="openEditModal('${id}')" style="float:right;background:none;border:none;color:var(--planet-red);font-size:11px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;padding:2px 6px;border-radius:4px;text-transform:none;letter-spacing:0;">✎ Edit</button>
+        <button onclick="unlockOrderEdit('${id}')" style="float:right;background:none;border:none;color:var(--planet-red);font-size:11px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;padding:2px 6px;border-radius:4px;text-transform:none;letter-spacing:0;">✎ Edit</button>
       </div>
       <div class="drow"><span class="dk">Year / Make / Model</span><span class="dv">${esc(o.c)||'—'}</span></div>
       <div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)||'—'}</span></div>
@@ -1160,13 +1161,13 @@ function openD(id) {
         </div>
         <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Order #${id.slice(-6).toUpperCase()}</div>
       </div>
-      <div id="inv-items-${id}" class="invoice-items">${renderInvoiceItems(o, id)}</div>
-      <button class="inv-add-btn" onclick="addInvoiceLine('${id}')">+ Add Line Item</button>
-      ${(o.inv && o.inv.length) ? renderInvoiceTotals(o, id) : ''}
+      <div id="inv-items-${id}" class="invoice-items">${renderInvoiceItems(o, id, unlocked)}</div>
+      ${unlocked ? `<button class="inv-add-btn" onclick="addInvoiceLine('${id}')">+ Add Line Item</button>` : ''}
+      ${(o.inv && o.inv.length) ? renderInvoiceTotals(o, id, unlocked) : ''}
       ${(o.inv && o.inv.length) ? `<div class="inv-actions">
         <button class="inv-action-btn toggle-paid ${o.paid?'is-paid':''}" onclick="togglePaid('${id}')">${o.paid?'✓ Paid':'Mark as Paid'}</button>
         <button class="inv-action-btn send-green" onclick="sendInvoice('${id}')">📩 Send to Customer</button>
-        <button class="inv-action-btn secondary" onclick="printInvoice('${id}')">🖨 Print / Export PDF</button>
+        <button class="inv-action-btn secondary" onclick="printInvoice('${id}')">🖨 Print/PDF</button>
       </div>` : ''}
     </div>
 
@@ -1258,9 +1259,18 @@ function toggleHistory(id) {
 }
 
 // ── INVOICE ──
-function renderInvoiceItems(o, id) {
+function renderInvoiceItems(o, id, unlocked) {
   const items = o.inv || [];
-  if (!items.length) return `<div class="inv-empty">No items yet. Click below to add parts, labor, or services.</div>`;
+  if (!items.length) return `<div class="inv-empty">${unlocked ? 'No items yet. Click below to add parts, labor, or services.' : 'No items yet. Click Edit to add parts, labor, or services.'}</div>`;
+  if (!unlocked) {
+    return items.map(it => `<div class="inv-item">
+    <div style="font-size:12px;padding:6px 8px;">${esc(it.d)||'—'}</div>
+    <div style="font-size:12px;text-align:center;">${it.q||0}</div>
+    <div style="font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;padding:6px 8px;">$${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):'0.00'}</div>
+    <div></div>
+    <span class="inv-labor-toggle${it.labor?' is-labor':''}" style="pointer-events:none;">${it.labor?'🔧 Labor (not taxed)':'📦 Part (taxed)'}</span>
+  </div>`).join('');
+  }
   return items.map((it, i) => `<div class="inv-item">
     <input type="text" placeholder="Description (e.g., Oil change)" value="${esc(it.d||'')}" onblur="updateInvLine('${id}',${i},'d',this.value)" />
     <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="updateInvLine('${id}',${i},'q',this.value)" />
@@ -1269,16 +1279,19 @@ function renderInvoiceItems(o, id) {
     <button type="button" class="inv-labor-toggle${it.labor?' is-labor':''}" onclick="toggleInvLineLabor('${id}',${i})" title="MA sales tax doesn't apply to labor/services">${it.labor?'🔧 Labor (not taxed)':'📦 Part (taxed)'}</button>
   </div>`).join('');
 }
-function renderInvoiceTotals(o, id) {
+function renderInvoiceTotals(o, id, unlocked) {
   const items = o.inv || [];
   const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
   const tax = taxableSubtotal(items) * (taxPct/100);
   const total = sub + tax;
+  const taxLabel = unlocked
+    ? `<span style="color:var(--text2);display:flex;align-items:center;gap:6px;">MA Tax (parts only) <input type="number" class="tax-input" min="0" max="100" step="0.01" value="${taxPct}" onblur="updateTax('${id}',this.value)" />%</span>`
+    : `<span style="color:var(--text2)">MA Tax (${taxPct}%, parts only)</span>`;
   return `<div class="inv-totals">
     <div class="inv-total-row"><span style="color:var(--text2)">Subtotal (parts/services)</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
     <div class="inv-total-row">
-      <span style="color:var(--text2);display:flex;align-items:center;gap:6px;">MA Tax (parts only) <input type="number" class="tax-input" min="0" max="100" step="0.01" value="${taxPct}" onblur="updateTax('${id}',this.value)" />%</span>
+      ${taxLabel}
       <span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span>
     </div>
     <div class="inv-total-row grand"><span>Total Due</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
@@ -1305,7 +1318,7 @@ async function updateInvLine(id, idx, field, val) {
   // Only re-render totals (cheaper)
   const totalsEl = document.querySelector('.invoice-section .inv-totals');
   if (totalsEl && o.inv.length) {
-    totalsEl.outerHTML = renderInvoiceTotals(o, id);
+    totalsEl.outerHTML = renderInvoiceTotals(o, id, true);
   } else {
     openD(id);
   }
@@ -1502,7 +1515,7 @@ async function printQuote(id) {
 }
 
 function maybeClose(e){ if(e.target===document.getElementById('overlay')) closeD(); }
-function closeD(){ detailId=null; document.getElementById('overlay').classList.remove('open'); }
+function closeD(){ detailId=null; itemsUnlockedFor=null; document.getElementById('overlay').classList.remove('open'); }
 
 async function chS(s) {
   if (!detailId) return;
@@ -1827,6 +1840,7 @@ function quoteTotal(o) {
 function openQuote(id) {
   const o = quotes[id]; if (!o) return;
   detailId = 'Q:'+id; // prefix to indicate quote
+  const unlocked = itemsUnlockedFor === id;
   document.getElementById('dp-title').textContent = (o.c||'Quote') + ' · ' + (o.n||'');
   document.getElementById('dp-sub').textContent = `Quote · ${o.ph||''}`;
   document.getElementById('dp-body').innerHTML = `
@@ -1847,9 +1861,9 @@ function openQuote(id) {
         <div class="invoice-title-row"><span style="font-size:14px;font-weight:600;">💰 Estimate</span></div>
         <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Quote #${id.slice(-6).toUpperCase()}</div>
       </div>
-      <div id="qinv-items-${id}" class="invoice-items">${renderQuoteItems(o, id)}</div>
-      <button type="button" class="inv-add-btn" onclick="addQuoteItem('${id}')">+ Add Line Item</button>
-      ${renderQuoteTotals(o, id)}
+      <div id="qinv-items-${id}" class="invoice-items">${renderQuoteItems(o, id, unlocked)}</div>
+      ${unlocked ? `<button type="button" class="inv-add-btn" onclick="addQuoteItem('${id}')">+ Add Line Item</button>` : ''}
+      ${renderQuoteTotals(o, id, unlocked)}
     </div>
     ${o.desc?`<div class="dsect"><div class="dsect-t">Notes</div><div class="obs-box">${esc(o.desc)}</div></div>`:''}
     ${(o.exp||o.followup)?`<div class="dsect">
@@ -1865,11 +1879,15 @@ function openQuote(id) {
         <button class="sts-btn${o.s==='declined'?' on-p':''}" onclick="chQuoteStatus('${id}','declined')">✗ Declined</button>
       </div>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-      <button class="inv-action-btn secondary" onclick="openEditQuoteModal('${id}')" style="flex:1;">✎ Edit</button>
-      ${o.ph?`<button class="sms-btn" onclick="sendQuoteToCustomer('${id}')" style="flex:1;">💬 Send Quote to Customer</button>`:''}
-      <button class="inv-action-btn secondary" onclick="printQuote('${id}')" style="flex:1;">🖨 Print / Export PDF</button>
-      <button onclick="convertQuoteToOrder('${id}')" style="flex:1;padding:9px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">→ Convert to Work Order</button>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+      <div style="display:flex;gap:6px;">
+        ${o.ph?`<button class="sms-btn" onclick="sendQuoteToCustomer('${id}')" style="flex:1;">💬 Send to Customer</button>`:''}
+        <button onclick="convertQuoteToOrder('${id}')" style="flex:1;padding:9px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;">→ Convert to Work Order</button>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="inv-action-btn secondary" onclick="unlockQuoteEdit('${id}')" style="flex:1;">✎ Edit</button>
+        <button class="inv-action-btn secondary" onclick="printQuote('${id}')" style="flex:1;">🖨 Print/PDF</button>
+      </div>
     </div>
     <div class="dsect">
       <div class="dsect-t">Info</div>
@@ -1892,9 +1910,18 @@ function openQuote(id) {
     <button class="del-btn" onclick="deleteQuote('${id}')">🗑 Delete Quote</button>`;
   document.getElementById('overlay').classList.add('open');
 }
-function renderQuoteItems(o, id) {
+function renderQuoteItems(o, id, unlocked) {
   const items = o.items || [];
-  if (!items.length) return `<div class="inv-empty">No items yet. Click below to add estimated parts, labor, or services.</div>`;
+  if (!items.length) return `<div class="inv-empty">${unlocked ? 'No items yet. Click below to add estimated parts, labor, or services.' : 'No items yet. Click Edit to add estimated parts, labor, or services.'}</div>`;
+  if (!unlocked) {
+    return items.map(it => `<div class="inv-item">
+    <div style="font-size:12px;padding:6px 8px;">${esc(it.d)||'—'}</div>
+    <div style="font-size:12px;text-align:center;">${it.q||0}</div>
+    <div style="font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;padding:6px 8px;">$${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):'0.00'}</div>
+    <div></div>
+    <span class="inv-labor-toggle${it.labor?' is-labor':''}" style="pointer-events:none;">${it.labor?'🔧 Labor (not taxed)':'📦 Part (taxed)'}</span>
+  </div>`).join('');
+  }
   return items.map((it, i) => `<div class="inv-item">
     <input type="text" placeholder="Description (e.g., Oil change)" value="${esc(it.d||'')}" onblur="updateQuoteItem('${id}',${i},'d',this.value)" />
     <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="updateQuoteItem('${id}',${i},'q',this.value)" />
@@ -2195,6 +2222,17 @@ function applyVin() {
 }
 
 // ── EDIT WORK ORDER ──
+let itemsUnlockedFor = null;
+function unlockOrderEdit(id) {
+  itemsUnlockedFor = id;
+  openD(id);
+  openEditModal(id);
+}
+function unlockQuoteEdit(id) {
+  itemsUnlockedFor = id;
+  openQuote(id);
+  openEditQuoteModal(id);
+}
 let editingOrderId = null;
 let editingQuoteId = null;
 let editPriority = 'normal';
