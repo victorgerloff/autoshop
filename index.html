@@ -1429,6 +1429,8 @@ function estimateDocStyles() {
     table{width:100%;border-collapse:collapse;margin-bottom:20px;}
     th{background:#000;color:#fff;text-align:left;padding:10px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;}
     td{padding:10px;border-bottom:1px solid #eee;font-size:13px;}
+    .pl-badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:#eee;color:#555;font-size:10px;font-weight:bold;}
+    .pl-badge.pl-l{background:#FAEEDA;color:#854F0B;}
     .totals{margin-left:auto;width:280px;font-size:14px;}
     .totals div{display:flex;justify-content:space-between;padding:6px 0;}
     .totals .grand{font-size:18px;font-weight:bold;color:#CC0000;border-top:2px solid #000;padding-top:10px;margin-top:6px;}
@@ -1462,8 +1464,8 @@ async function printInvoice(id) {
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
       <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div><div>Plate: ${esc(o.lp)||'—'}</div>${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}</div>
     </div>
-    <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
-    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}${it.labor?' <span style="color:#888;font-size:10px;">(labor — not taxed)</span>':''}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
+    <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
+    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td style="text-align:center"><span class="pl-badge${it.labor?' pl-l':''}">${it.labor?'L':'P'}</span></td><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     ${o.ob?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.ob)}</div></div></div>`:''}
     <div class="totals">
       <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
@@ -1503,8 +1505,8 @@ async function printQuote(id) {
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
       <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div>${o.lp?`<div>Plate: ${esc(o.lp)}</div>`:''}${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}</div>
     </div>
-    <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
-    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}${it.labor?' <span style="color:#888;font-size:10px;">(labor — not taxed)</span>':''}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
+    <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
+    <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td style="text-align:center"><span class="pl-badge${it.labor?' pl-l':''}">${it.labor?'L':'P'}</span></td><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     ${o.desc?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.desc)}</div></div></div>`:''}
     <div class="totals">
       <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
