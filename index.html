@@ -1335,14 +1335,32 @@ function sendInvoice(id) {
   document.getElementById('sms-phone').textContent = o.ph;
   document.getElementById('sms-modal').classList.add('open');
 }
-async function getInvoiceNumber(o, id) {
+async function getEstimateNumber(kind, o, id) {
   if (o.invoiceNo) return o.invoiceNo;
   const current = await fbGet('counters/invoiceSeq');
   const next = (parseInt(current, 10) || 1000) + 1;
   await fbPatch('counters', { invoiceSeq: next });
   o.invoiceNo = next;
-  await fbPatch('orders/'+id, { invoiceNo: next });
+  await fbPatch(kind+'/'+id, { invoiceNo: next });
   return next;
+}
+let cachedLogoDataUrl = null;
+async function getLogoDataUrl() {
+  if (cachedLogoDataUrl) return cachedLogoDataUrl;
+  const url = new URL('./icons/icon-512.png', location.href).href;
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    cachedLogoDataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    cachedLogoDataUrl = url; // fall back to a plain URL if inlining fails
+  }
+  return cachedLogoDataUrl;
 }
 function estimateDocStyles() {
   return `
@@ -1374,8 +1392,9 @@ async function printInvoice(id) {
   const total = sub + tax;
   const w = window.open('', '_blank');
   if (!w) { toast('⚠ Allow popups to print'); return; }
-  const invoiceNo = await getInvoiceNumber(o, id);
-  const logoUrl = new URL('./icons/icon-512.png', location.href).href;
+  const invoiceNo = await getEstimateNumber('orders', o, id);
+  const logoUrl = await getLogoDataUrl();
+  const printScript = `(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();`;
   const html = `<!DOCTYPE html><html><head><title>Estimate ${invoiceNo}</title><style>${estimateDocStyles()}</style></head><body>
     <div class="hdr">
       <div class="hdr-brand">
@@ -1388,6 +1407,7 @@ async function printInvoice(id) {
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
       <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div><div>Plate: ${esc(o.lp)||'—'}</div>${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}</div>
     </div>
+    ${o.ob?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.ob)}</div></div></div>`:''}
     <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     <div class="totals">
@@ -1396,12 +1416,12 @@ async function printInvoice(id) {
       <div class="grand"><span>TOTAL DUE</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
     </div>
     <div class="footer">Thank you for choosing Planet Automotive Group<br>567 Concord St, Holliston MA 01746<br>(508) 429-9444</div>
-    <script>window.print();<\/script>
+    <script>${printScript}<\/script>
   </body></html>`;
   w.document.write(html);
   w.document.close();
 }
-function printQuote(id) {
+async function printQuote(id) {
   const o = quotes[id]; if (!o) return;
   const items = o.items || [];
   const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
@@ -1410,10 +1430,11 @@ function printQuote(id) {
   const total = sub + tax;
   const w = window.open('', '_blank');
   if (!w) { toast('⚠ Allow popups to print'); return; }
-  const quoteNo = id.slice(-6).toUpperCase();
+  const quoteNo = await getEstimateNumber('quotes', o, id);
   const statusLabels = {open:'OPEN', accepted:'ACCEPTED', declined:'DECLINED', expired:'EXPIRED'};
   const statusClass = o.s === 'accepted' ? 'yes' : (o.s === 'declined' || o.s === 'expired' ? 'no' : 'neutral');
-  const logoUrl = new URL('./icons/icon-512.png', location.href).href;
+  const logoUrl = await getLogoDataUrl();
+  const printScript = `(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();`;
   const html = `<!DOCTYPE html><html><head><title>Estimate ${quoteNo}</title><style>${estimateDocStyles()}</style></head><body>
     <div class="hdr">
       <div class="hdr-brand">
@@ -1426,6 +1447,7 @@ function printQuote(id) {
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
       <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div>${o.lp?`<div>Plate: ${esc(o.lp)}</div>`:''}${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}</div>
     </div>
+    ${o.desc?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.desc)}</div></div></div>`:''}
     <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     <div class="totals">
@@ -1435,7 +1457,7 @@ function printQuote(id) {
     </div>
     ${o.exp?`<div style="text-align:center;font-size:12px;color:#666;margin-top:-10px;margin-bottom:10px;">Valid until ${fmtDate(o.exp)}</div>`:''}
     <div class="footer">Thank you for choosing Planet Automotive Group<br>567 Concord St, Holliston MA 01746<br>(508) 429-9444</div>
-    <script>window.print();<\/script>
+    <script>${printScript}<\/script>
   </body></html>`;
   w.document.write(html);
   w.document.close();
@@ -1554,7 +1576,7 @@ function quoteFormHTML() {
     <div class="form-section-title">Notes</div>
     <div class="fgrid">
       <div class="fg full">
-        <label>Description / Customer Request</label>
+        <label>Notes / Customer Request</label>
         <textarea id="qf-desc" rows="4" placeholder="What does the customer need? Any specific concerns..."></textarea>
       </div>
       <div class="fg"><label>Valid Until</label><input id="qf-exp" type="date" /></div>
@@ -1777,7 +1799,7 @@ function openQuote(id) {
       ${o.lp?`<div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)}</span></div>`:''}
       ${o.vin?`<div class="drow"><span class="dk">VIN</span><span class="dv mono">${esc(o.vin)}</span></div>`:''}
     </div>
-    ${o.desc?`<div class="dsect"><div class="dsect-t">Description</div><div class="obs-box">${esc(o.desc)}</div></div>`:''}
+    ${o.desc?`<div class="dsect"><div class="dsect-t">Notes</div><div class="obs-box">${esc(o.desc)}</div></div>`:''}
     <div class="invoice-section">
       <div class="invoice-header">
         <div class="invoice-title-row"><span style="font-size:14px;font-weight:600;">💰 Estimate</span></div>
