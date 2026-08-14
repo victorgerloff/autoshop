@@ -1661,11 +1661,11 @@ function renderQuoteFormItems() {
   if (!el) return;
   if (!quoteFormItems.length) { el.innerHTML = '<div class="inv-empty">No items yet. Click below to add estimated parts, labor, or services.</div>'; return; }
   el.innerHTML = quoteFormItems.map((it, i) => `<div class="inv-item">
+    <button type="button" class="inv-pl${it.labor?' is-labor':''}" onclick="toggleQuoteLineLabor(${i})" title="${it.labor?'Labor — not taxed. Click to mark as Part.':'Part — taxed. Click to mark as Labor.'}">${it.labor?'L':'P'}</button>
     <input type="text" placeholder="Description (e.g., Brake pads + labor)" value="${esc(it.d||'')}" onblur="quoteFormItems[${i}].d=this.value" />
     <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="quoteFormItems[${i}].q=this.value" />
     <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);quoteFormItems[${i}].p=this.value" />
     <button class="del-row-btn" onclick="quoteFormItems.splice(${i},1);renderQuoteFormItems()">✕</button>
-    <button type="button" class="inv-labor-toggle${it.labor?' is-labor':''}" onclick="toggleQuoteLineLabor(${i})" title="MA sales tax doesn't apply to labor/services">${it.labor?'🔧 Labor (not taxed)':'📦 Part (taxed)'}</button>
   </div>`).join('');
 }
 function initQuoteForm() {
