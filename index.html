@@ -1054,6 +1054,7 @@ async function submitOrder() {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
   const carParts = [yr, mk, mo].filter(p => p).join(' ') || mo || '—';
+  const invoiceNo = await nextEstimateNumber();
   const order = {
     n: fn, fn,
     ph, ph2: (document.getElementById('f-ph2')?.value||'').trim(), lp,
@@ -1067,7 +1068,8 @@ async function submitOrder() {
     tech: document.getElementById('f-tech')?.value||'',
     sv: [], pr: prio, s: 'waiting',
     at: new Date().toISOString(),
-    dev: getDeviceName()
+    dev: getDeviceName(),
+    invoiceNo
   };
 
   const key = await fbPush('orders', order);
@@ -1089,6 +1091,7 @@ function openD(id) {
   const o = orders[id]; if (!o) return;
   detailId = id;
   const unlocked = itemsUnlockedFor === id;
+  if (!o.invoiceNo) { getEstimateNumber('orders', o, id).then(() => { if (detailId === id) openD(id); }); }
   document.getElementById('dp-title').textContent = o.c||'Work Order';
   document.getElementById('dp-sub').textContent = `${o.lp||'—'}`;
   document.getElementById('dp-body').innerHTML = `
@@ -1165,7 +1168,7 @@ function openD(id) {
           <span class="invoice-badge ${o.paid?'paid':(o.inv&&o.inv.length?'unpaid':'')}">${o.paid?'PAID':(o.inv&&o.inv.length?'UNPAID':'DRAFT')}</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Order #${id.slice(-6).toUpperCase()}</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Estimate #${o.invoiceNo||'—'}</div>
           ${!unlocked ? `<button type="button" class="inv-edit-btn" onclick="confirmUnlockOrderItems('${id}')">✎ Edit</button>` : ''}
         </div>
       </div>
@@ -1292,10 +1295,8 @@ function renderInvoiceItems(o, id, unlocked) {
 }
 function renderInvoiceTotals(o, id, unlocked) {
   const items = o.inv || [];
-  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = taxableSubtotal(items) * (taxPct/100);
-  const total = sub + tax;
+  const { sub, tax, fee, total } = calcTotals(items, taxPct);
   const taxLabel = unlocked
     ? `<span style="color:var(--text2);display:flex;align-items:center;gap:6px;">MA Tax (parts only) <input type="number" class="tax-input" min="0" max="100" step="0.01" value="${taxPct}" onblur="updateTax('${id}',this.value)" />%</span>`
     : `<span style="color:var(--text2)">MA Tax (${taxPct}%, parts only)</span>`;
@@ -1305,6 +1306,7 @@ function renderInvoiceTotals(o, id, unlocked) {
       ${taxLabel}
       <span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span>
     </div>
+    <div class="inv-total-row"><span style="color:var(--text2)">Shop Fee</span><span style="font-family:'IBM Plex Mono',monospace">$${fee.toFixed(2)}</span></div>
     <div class="inv-total-row grand"><span>Total Due</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
   </div>`;
 }
@@ -1374,17 +1376,15 @@ async function togglePaid(id) {
 }
 function buildInvoiceText(o) {
   const items = o.inv || [];
-  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = taxableSubtotal(items) * (taxPct/100);
-  const total = sub + tax;
+  const { sub, tax, fee, total } = calcTotals(items, taxPct);
   const name = o.fn || o.n || 'Customer';
   let msg = `Hi ${name}, here is your invoice from Planet Automotive Group for your ${o.c} (plate ${o.lp}):\n\n`;
   items.forEach(it => {
     const lineTotal = (parseFloat(it.q)||0) * (parseFloat(it.p)||0);
     msg += `• ${it.d||'Item'}${it.labor?' (labor)':''} (${it.q}x $${parseFloat(it.p||0).toFixed(2)}) = $${lineTotal.toFixed(2)}\n`;
   });
-  msg += `\nSubtotal: $${sub.toFixed(2)}\nMA Tax (${taxPct}%, parts only): $${tax.toFixed(2)}\nTotal Due: $${total.toFixed(2)}\n\n`;
+  msg += `\nSubtotal: $${sub.toFixed(2)}\nMA Tax (${taxPct}%, parts only): $${tax.toFixed(2)}\nShop Fee: $${fee.toFixed(2)}\nTotal Due: $${total.toFixed(2)}\n\n`;
   msg += o.paid ? 'Status: PAID ✓\n\nThank you for choosing Planet Automotive!' : 'Please contact us to arrange payment. Thank you!';
   return msg;
 }
@@ -1400,11 +1400,15 @@ function sendInvoice(id) {
   document.getElementById('sms-phone').textContent = o.ph;
   document.getElementById('sms-modal').classList.add('open');
 }
-async function getEstimateNumber(kind, o, id) {
-  if (o.invoiceNo) return o.invoiceNo;
+async function nextEstimateNumber() {
   const current = await fbGet('counters/invoiceSeq');
   const next = (parseInt(current, 10) || 1000) + 1;
   await fbPatch('counters', { invoiceSeq: next });
+  return next;
+}
+async function getEstimateNumber(kind, o, id) {
+  if (o.invoiceNo) return o.invoiceNo;
+  const next = await nextEstimateNumber();
   o.invoiceNo = next;
   await fbPatch(kind+'/'+id, { invoiceNo: next });
   return next;
@@ -1456,10 +1460,8 @@ function estimateDocStyles() {
 async function printInvoice(id) {
   const o = orders[id]; if (!o) return;
   const items = o.inv || [];
-  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = taxableSubtotal(items) * (taxPct/100);
-  const total = sub + tax;
+  const { sub, tax, fee, total } = calcTotals(items, taxPct);
   const w = window.open('', '_blank');
   if (!w) { toast('⚠ Allow popups to print'); return; }
   const invoiceNo = await getEstimateNumber('orders', o, id);
@@ -1484,6 +1486,7 @@ async function printInvoice(id) {
     <div class="totals">
       <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
       <div><span>MA Tax (${taxPct}%, parts only)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
+      <div><span>Shop Fee</span><span style="font-family:monospace">$${fee.toFixed(2)}</span></div>
       <div class="grand"><span>TOTAL DUE</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
     </div>
     <div class="footer">Thank you for choosing Planet Automotive Group<br>567 Concord St, Holliston MA 01746<br>(508) 429-9444</div>
@@ -1495,10 +1498,8 @@ async function printInvoice(id) {
 async function printQuote(id) {
   const o = quotes[id]; if (!o) return;
   const items = o.items || [];
-  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = taxableSubtotal(items) * (taxPct/100);
-  const total = sub + tax;
+  const { sub, tax, fee, total } = calcTotals(items, taxPct);
   const w = window.open('', '_blank');
   if (!w) { toast('⚠ Allow popups to print'); return; }
   const quoteNo = await getEstimateNumber('quotes', o, id);
@@ -1525,6 +1526,7 @@ async function printQuote(id) {
     <div class="totals">
       <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
       <div><span>MA Tax (${taxPct}%, parts only)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
+      <div><span>Shop Fee</span><span style="font-family:monospace">$${fee.toFixed(2)}</span></div>
       <div class="grand"><span>ESTIMATED TOTAL</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
     </div>
     ${o.exp?`<div style="text-align:center;font-size:12px;color:#666;margin-top:-10px;margin-bottom:10px;">Valid until ${fmtDate(o.exp)}</div>`:''}
@@ -1649,6 +1651,7 @@ function quoteFormHTML() {
     <div class="inv-items-head"><span></span><span>Description</span><span style="text-align:center">Qty</span><span style="text-align:right">Unit Price</span><span style="text-align:right">Total</span><span></span></div>
     <div id="quote-items" class="invoice-items"></div>
     <button type="button" class="inv-add-btn" onclick="addQuoteLineForm()">+ Add Line Item</button>
+    <div id="quote-form-totals"></div>
     <div class="form-section-title">Notes</div>
     <div class="fgrid">
       <div class="fg full">
@@ -1674,15 +1677,28 @@ function toggleQuoteLineLabor(i) {
 function renderQuoteFormItems() {
   const el = document.getElementById('quote-items');
   if (!el) return;
-  if (!quoteFormItems.length) { el.innerHTML = '<div class="inv-empty">No items yet. Click below to add estimated parts, labor, or services.</div>'; return; }
-  el.innerHTML = quoteFormItems.map((it, i) => `<div class="inv-item">
-    <button type="button" class="inv-pl${it.labor?' is-labor':''}" onclick="toggleQuoteLineLabor(${i})" title="${it.labor?'Labor — not taxed. Click to mark as Part.':'Part — taxed. Click to mark as Labor.'}">${it.labor?'L':'P'}</button>
-    <input type="text" placeholder="Description (e.g., Brake pads + labor)" value="${esc(it.d||'')}" onblur="quoteFormItems[${i}].d=this.value" />
-    <input type="text" inputmode="decimal" class="qty" placeholder="Qty" value="${it.q||1}" onblur="this.value=sanitizeNum(this.value);quoteFormItems[${i}].q=this.value;renderQuoteFormItems()" />
-    <input type="text" inputmode="decimal" class="price" placeholder="$0.00" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);quoteFormItems[${i}].p=this.value;renderQuoteFormItems()" />
-    <div class="inv-item-total">$${((parseFloat(it.q)||0)*(parseFloat(it.p)||0)).toFixed(2)}</div>
-    <button class="del-row-btn" onclick="quoteFormItems.splice(${i},1);renderQuoteFormItems()">✕</button>
-  </div>`).join('');
+  if (!quoteFormItems.length) { el.innerHTML = '<div class="inv-empty">No items yet. Click below to add estimated parts, labor, or services.</div>'; }
+  else {
+    el.innerHTML = quoteFormItems.map((it, i) => `<div class="inv-item">
+      <button type="button" class="inv-pl${it.labor?' is-labor':''}" onclick="toggleQuoteLineLabor(${i})" title="${it.labor?'Labor — not taxed. Click to mark as Part.':'Part — taxed. Click to mark as Labor.'}">${it.labor?'L':'P'}</button>
+      <input type="text" placeholder="Description (e.g., Brake pads + labor)" value="${esc(it.d||'')}" onblur="quoteFormItems[${i}].d=this.value" />
+      <input type="text" inputmode="decimal" class="qty" placeholder="Qty" value="${it.q||1}" onblur="this.value=sanitizeNum(this.value);quoteFormItems[${i}].q=this.value;renderQuoteFormItems()" />
+      <input type="text" inputmode="decimal" class="price" placeholder="$0.00" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);quoteFormItems[${i}].p=this.value;renderQuoteFormItems()" />
+      <div class="inv-item-total">$${((parseFloat(it.q)||0)*(parseFloat(it.p)||0)).toFixed(2)}</div>
+      <button class="del-row-btn" onclick="quoteFormItems.splice(${i},1);renderQuoteFormItems()">✕</button>
+    </div>`).join('');
+  }
+  const totalsEl = document.getElementById('quote-form-totals');
+  if (totalsEl) {
+    const validItems = quoteFormItems.filter(it => (parseFloat(it.q)||0) > 0 || (parseFloat(it.p)||0) > 0);
+    const { sub, tax, fee, total } = calcTotals(validItems, 6.25);
+    totalsEl.innerHTML = !validItems.length ? '' : `<div class="inv-totals">
+      <div class="inv-total-row"><span style="color:var(--text2)">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
+      <div class="inv-total-row"><span style="color:var(--text2)">MA Tax (6.25%, parts only)</span><span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span></div>
+      <div class="inv-total-row"><span style="color:var(--text2)">Shop Fee</span><span style="font-family:'IBM Plex Mono',monospace">$${fee.toFixed(2)}</span></div>
+      <div class="inv-total-row grand"><span>Estimated Total</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
+    </div>`;
+  }
 }
 function initQuoteForm() {
   quoteFormItems = [];
@@ -1755,6 +1771,7 @@ async function submitQuote() {
   const mk = document.getElementById('qf-mk')?.value || '';
   const mo = (document.getElementById('qf-mo')?.value || '').trim();
   const carParts = [yr, mk, mo].filter(p=>p).join(' ') || '—';
+  const invoiceNo = await nextEstimateNumber();
 
   const quote = {
     n: fn, fn, ph,
@@ -1770,6 +1787,7 @@ async function submitQuote() {
     s: 'open', // open, accepted, declined, expired
     at: new Date().toISOString(),
     dev: getDeviceName(),
+    invoiceNo,
     h: []
   };
   const key = await fbPush('quotes', quote);
@@ -1854,16 +1872,15 @@ function quoteListHTML(list) {
 
 function quoteTotal(o) {
   const items = o.items || [];
-  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = taxableSubtotal(items) * (taxPct/100);
-  return sub + tax;
+  return calcTotals(items, taxPct).total;
 }
 
 function openQuote(id) {
   const o = quotes[id]; if (!o) return;
   detailId = 'Q:'+id; // prefix to indicate quote
   const unlocked = itemsUnlockedFor === id;
+  if (!o.invoiceNo) { getEstimateNumber('quotes', o, id).then(() => { if (detailId === 'Q:'+id) openQuote(id); }); }
   document.getElementById('dp-title').textContent = (o.c||'Quote') + ' · ' + (o.n||'');
   document.getElementById('dp-sub').textContent = `Quote · ${o.ph||''}`;
   document.getElementById('dp-body').innerHTML = `
@@ -1883,7 +1900,7 @@ function openQuote(id) {
       <div class="invoice-header">
         <div class="invoice-title-row"><span style="font-size:14px;font-weight:600;">💰 Estimate</span></div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Quote #${id.slice(-6).toUpperCase()}</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Estimate #${o.invoiceNo||'—'}</div>
           ${!unlocked ? `<button type="button" class="inv-edit-btn" onclick="confirmUnlockQuoteItems('${id}')">✎ Edit</button>` : ''}
         </div>
       </div>
@@ -1962,13 +1979,12 @@ function renderQuoteItems(o, id, unlocked) {
 function renderQuoteTotals(o, id) {
   const items = o.items || [];
   if (!items.length) return '';
-  const sub = items.reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const tax = taxableSubtotal(items) * (taxPct/100);
-  const total = sub + tax;
+  const { sub, tax, fee, total } = calcTotals(items, taxPct);
   return `<div class="inv-totals">
     <div class="inv-total-row"><span style="color:var(--text2)">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
     <div class="inv-total-row"><span style="color:var(--text2)">MA Tax (${taxPct}%, parts only)</span><span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span></div>
+    <div class="inv-total-row"><span style="color:var(--text2)">Shop Fee</span><span style="font-family:'IBM Plex Mono',monospace">$${fee.toFixed(2)}</span></div>
     <div class="inv-total-row grand"><span>Estimated Total</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--planet-red)">$${total.toFixed(2)}</span></div>
   </div>`;
 }
@@ -2065,6 +2081,7 @@ async function convertQuoteToOrder(id) {
   const o = quotes[id]; if (!o) return;
   if (!confirm('Convert this quote to a Work Order? The quote will be marked as Accepted.')) return;
   // Create work order from quote
+  const invoiceNo = await nextEstimateNumber();
   const order = {
     n: o.n, fn: o.fn || o.n, ph: o.ph, ph2: o.ph2 || '',
     lp: o.lp || '—',
@@ -2078,7 +2095,8 @@ async function convertQuoteToOrder(id) {
     at: new Date().toISOString(),
     dev: getDeviceName(),
     quoteId: id,
-    h: [{ ts: new Date().toISOString(), dev: getDeviceName(), action: `Created from Quote #${id.slice(-6).toUpperCase()}` }]
+    invoiceNo,
+    h: [{ ts: new Date().toISOString(), dev: getDeviceName(), action: `Created from Estimate #${o.invoiceNo || id.slice(-6).toUpperCase()}` }]
   };
   const key = await fbPush('orders', order);
   if (key) {
@@ -2643,6 +2661,13 @@ function fmtMoney(v) {
 }
 function taxableSubtotal(items) {
   return (items||[]).filter(it => !it.labor).reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
+}
+const SHOP_FEE = 5.00;
+function calcTotals(items, taxPct) {
+  const sub = (items||[]).reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
+  const tax = taxableSubtotal(items) * (taxPct/100);
+  const fee = (items && items.length) ? SHOP_FEE : 0;
+  return { sub, tax, fee, total: sub + tax + fee };
 }
 
 let toastT;
