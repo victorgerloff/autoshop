@@ -350,6 +350,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .invoice-badge.paid{background:#dcf5e3;color:#1a6e35;}
 .invoice-badge.unpaid{background:#fef3c7;color:#7a4f00;}
 .invoice-items{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.inv-items-head{display:grid;grid-template-columns:24px 1fr 50px 92px 26px;gap:6px;padding:0 2px 2px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);}
 .inv-item{display:grid;grid-template-columns:24px 1fr 50px 92px 26px;gap:6px;align-items:center;}
 .inv-item input{font-size:12px;padding:6px 8px;height:32px;}
 .inv-item input.qty{text-align:center;}
@@ -389,6 +390,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   .brand-sub{display:none;}
   .share-btn span{display:none;}
   .inv-item{grid-template-columns:22px 1fr 40px 70px 24px;}
+  .inv-items-head{grid-template-columns:22px 1fr 40px 70px 24px;}
 }
 .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:2px solid var(--planet-red);z-index:100;padding:8px max(0px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,8px) max(0px,env(safe-area-inset-left,0px));}
 .mob-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--text2);cursor:pointer;border:none;background:none;padding:6px;font-family:'IBM Plex Sans',sans-serif;}
@@ -1166,6 +1168,7 @@ function openD(id) {
           ${!unlocked ? `<button type="button" class="inv-edit-btn" onclick="confirmUnlockOrderItems('${id}')">✎ Edit</button>` : ''}
         </div>
       </div>
+      <div class="inv-items-head"><span></span><span>Description</span><span style="text-align:center">Qty</span><span style="text-align:right">Unit Price</span><span></span></div>
       <div id="inv-items-${id}" class="invoice-items">${renderInvoiceItems(o, id, unlocked)}</div>
       ${unlocked ? `<button class="inv-add-btn" onclick="addInvoiceLine('${id}')">+ Add Line Item</button>` : ''}
       ${(o.inv && o.inv.length) ? renderInvoiceTotals(o, id, unlocked) : ''}
@@ -1279,8 +1282,8 @@ function renderInvoiceItems(o, id, unlocked) {
   return items.map((it, i) => `<div class="inv-item">
     <button type="button" class="inv-pl${it.labor?' is-labor':''}" onclick="toggleInvLineLabor('${id}',${i})" title="${it.labor?'Labor — not taxed. Click to mark as Part.':'Part — taxed. Click to mark as Labor.'}">${it.labor?'L':'P'}</button>
     <input type="text" placeholder="Description (e.g., Oil change)" value="${esc(it.d||'')}" onblur="updateInvLine('${id}',${i},'d',this.value)" />
-    <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="updateInvLine('${id}',${i},'q',this.value)" />
-    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);updateInvLine('${id}',${i},'p',this.value)" />
+    <input type="text" inputmode="decimal" class="qty" placeholder="Qty" value="${it.q||1}" onblur="this.value=sanitizeNum(this.value);updateInvLine('${id}',${i},'q',this.value)" />
+    <input type="text" inputmode="decimal" class="price" placeholder="$0.00" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);updateInvLine('${id}',${i},'p',this.value)" />
     <button class="del-row-btn" onclick="deleteInvLine('${id}',${i})">✕</button>
   </div>`).join('');
 }
@@ -1632,6 +1635,7 @@ function quoteFormHTML() {
       </div>
     </div>
     <div class="form-section-title">Estimate Items</div>
+    <div class="inv-items-head"><span></span><span>Description</span><span style="text-align:center">Qty</span><span style="text-align:right">Unit Price</span><span></span></div>
     <div id="quote-items" class="invoice-items"></div>
     <button type="button" class="inv-add-btn" onclick="addQuoteLineForm()">+ Add Line Item</button>
     <div class="form-section-title">Notes</div>
@@ -1663,8 +1667,8 @@ function renderQuoteFormItems() {
   el.innerHTML = quoteFormItems.map((it, i) => `<div class="inv-item">
     <button type="button" class="inv-pl${it.labor?' is-labor':''}" onclick="toggleQuoteLineLabor(${i})" title="${it.labor?'Labor — not taxed. Click to mark as Part.':'Part — taxed. Click to mark as Labor.'}">${it.labor?'L':'P'}</button>
     <input type="text" placeholder="Description (e.g., Brake pads + labor)" value="${esc(it.d||'')}" onblur="quoteFormItems[${i}].d=this.value" />
-    <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="quoteFormItems[${i}].q=this.value" />
-    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);quoteFormItems[${i}].p=this.value" />
+    <input type="text" inputmode="decimal" class="qty" placeholder="Qty" value="${it.q||1}" onblur="this.value=sanitizeNum(this.value);quoteFormItems[${i}].q=this.value" />
+    <input type="text" inputmode="decimal" class="price" placeholder="$0.00" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);quoteFormItems[${i}].p=this.value" />
     <button class="del-row-btn" onclick="quoteFormItems.splice(${i},1);renderQuoteFormItems()">✕</button>
   </div>`).join('');
 }
@@ -1871,6 +1875,7 @@ function openQuote(id) {
           ${!unlocked ? `<button type="button" class="inv-edit-btn" onclick="confirmUnlockQuoteItems('${id}')">✎ Edit</button>` : ''}
         </div>
       </div>
+      <div class="inv-items-head"><span></span><span>Description</span><span style="text-align:center">Qty</span><span style="text-align:right">Unit Price</span><span></span></div>
       <div id="qinv-items-${id}" class="invoice-items">${renderQuoteItems(o, id, unlocked)}</div>
       ${unlocked ? `<button type="button" class="inv-add-btn" onclick="addQuoteItem('${id}')">+ Add Line Item</button>` : ''}
       ${renderQuoteTotals(o, id, unlocked)}
@@ -1935,8 +1940,8 @@ function renderQuoteItems(o, id, unlocked) {
   return items.map((it, i) => `<div class="inv-item">
     <button type="button" class="inv-pl${it.labor?' is-labor':''}" onclick="toggleQuoteItemTax('${id}',${i})" title="${it.labor?'Labor — not taxed. Click to mark as Part.':'Part — taxed. Click to mark as Labor.'}">${it.labor?'L':'P'}</button>
     <input type="text" placeholder="Description (e.g., Oil change)" value="${esc(it.d||'')}" onblur="updateQuoteItem('${id}',${i},'d',this.value)" />
-    <input type="number" class="qty" placeholder="Qty" min="0" step="0.5" value="${it.q||1}" onblur="updateQuoteItem('${id}',${i},'q',this.value)" />
-    <input type="number" class="price" placeholder="$0.00" min="0" step="0.01" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);updateQuoteItem('${id}',${i},'p',this.value)" />
+    <input type="text" inputmode="decimal" class="qty" placeholder="Qty" value="${it.q||1}" onblur="this.value=sanitizeNum(this.value);updateQuoteItem('${id}',${i},'q',this.value)" />
+    <input type="text" inputmode="decimal" class="price" placeholder="$0.00" value="${it.p!==undefined&&it.p!==''?Number(it.p).toFixed(2):''}" onblur="this.value=fmtMoney(this.value);updateQuoteItem('${id}',${i},'p',this.value)" />
     <button class="del-row-btn" onclick="deleteQuoteItem('${id}',${i})">✕</button>
   </div>`).join('');
 }
@@ -2607,8 +2612,11 @@ function esc(s) {
   if (!s && s !== 0) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+function sanitizeNum(v) {
+  return String(v).trim().replace(',', '.');
+}
 function fmtMoney(v) {
-  const n = parseFloat(v);
+  const n = parseFloat(String(v).replace(',', '.'));
   return isNaN(n) ? '' : n.toFixed(2);
 }
 function taxableSubtotal(items) {
