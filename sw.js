@@ -1,7 +1,7 @@
 // Planet Automotive Service Worker
 // Provides offline support and background notifications
 
-const CACHE_NAME = 'planet-auto-v3';
+const CACHE_NAME = 'planet-auto-v4';
 const URLS_TO_CACHE = [
   './',
   './index.html'
