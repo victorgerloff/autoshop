@@ -1485,7 +1485,17 @@ async function printInvoice(id) {
     </div>
     <div class="info">
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
-      <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div><div style="font-family:monospace;font-size:11px">Plate: ${esc(o.lp)||'—'}</div>${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div style="font-family:monospace;font-size:11px">Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}${o.eng?`<div style="font-family:monospace;font-size:11px">Engine: ${esc(o.eng)}</div>`:''}</div>
+      <div><h3>Vehicle</h3>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
+          <strong>${esc(o.c)||'—'}</strong>
+          ${o.vin?`<span style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</span>`:''}
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;font-family:monospace;font-size:11px;">
+          <span>Plate: ${esc(o.lp)||'—'}</span>
+          ${o.mi?`<span>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</span>`:''}
+        </div>
+        ${o.eng?`<div style="font-family:monospace;font-size:11px;margin-top:2px;">Engine: ${esc(o.eng)}</div>`:''}
+      </div>
     </div>
     <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td style="text-align:center"><span class="pl-badge${it.labor?' pl-l':''}">${it.labor?'L':'P'}</span></td><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
@@ -1529,7 +1539,17 @@ async function printQuote(id) {
     </div>
     <div class="info">
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
-      <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div>${o.lp?`<div style="font-family:monospace;font-size:11px">Plate: ${esc(o.lp)}</div>`:''}${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div style="font-family:monospace;font-size:11px">Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}${o.eng?`<div style="font-family:monospace;font-size:11px">Engine: ${esc(o.eng)}</div>`:''}</div>
+      <div><h3>Vehicle</h3>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
+          <strong>${esc(o.c)||'—'}</strong>
+          ${o.vin?`<span style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</span>`:''}
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;font-family:monospace;font-size:11px;">
+          ${o.lp?`<span>Plate: ${esc(o.lp)}</span>`:''}
+          ${o.mi?`<span>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</span>`:''}
+        </div>
+        ${o.eng?`<div style="font-family:monospace;font-size:11px;margin-top:2px;">Engine: ${esc(o.eng)}</div>`:''}
+      </div>
     </div>
     <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td style="text-align:center"><span class="pl-badge${it.labor?' pl-l':''}">${it.labor?'L':'P'}</span></td><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
