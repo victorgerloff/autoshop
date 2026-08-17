@@ -978,6 +978,7 @@ function formHTML() {
       </div>
       <div class="fg"><label>Model *</label><input id="f-mo" placeholder="Camry, F-150, Civic..." /></div>
       <div class="fg"><label>Mileage</label><input id="f-mi" type="number" placeholder="45000" /></div>
+      <div class="fg"><label>Engine <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label><input id="f-eng" placeholder="2.0L I4, V6 3.5L..." /></div>
       <div class="fg full"><label>VIN <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
         <div class="vin-row">
           <input id="f-vin" placeholder="1HGBH41JXMN109186" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
@@ -1061,6 +1062,7 @@ async function submitOrder() {
     yr, mk, mo,
     c: carParts,
     mi: document.getElementById('f-mi')?.value||'',
+    eng: (document.getElementById('f-eng')?.value||'').trim(),
     vin: document.getElementById('f-vin')?.value||'',
     ob: document.getElementById('f-ob')?.value||'',
     dod: document.getElementById('f-dod')?.value||'',
@@ -1118,6 +1120,7 @@ function openD(id) {
       <div class="drow"><span class="dk">Year / Make / Model</span><span class="dv">${esc(o.c)||'—'}</span></div>
       <div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)||'—'}</span></div>
       ${o.mi?`<div class="drow"><span class="dk">Mileage</span><span class="dv">${Number(o.mi).toLocaleString('en-US')} mi</span></div>`:''}
+      ${o.eng?`<div class="drow"><span class="dk">Engine</span><span class="dv">${esc(o.eng)}</span></div>`:''}
       ${o.vin?`<div class="drow"><span class="dk">VIN</span><span class="dv mono" style="font-size:11px">${esc(o.vin)}</span></div>`:''}
     </div>
 
@@ -1296,11 +1299,13 @@ function renderInvoiceItems(o, id, unlocked) {
 function renderInvoiceTotals(o, id, unlocked) {
   const items = o.inv || [];
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const { sub, tax, fee, total } = calcTotals(items, taxPct);
+  const { sub, partsTotal, laborTotal, tax, fee, total } = calcTotals(items, taxPct);
   const taxLabel = unlocked
     ? `<span style="color:var(--text2);display:flex;align-items:center;gap:6px;">MA Tax (parts only) <input type="number" class="tax-input" min="0" max="100" step="0.01" value="${taxPct}" onblur="updateTax('${id}',this.value)" />%</span>`
     : `<span style="color:var(--text2)">MA Tax (${taxPct}%, parts only)</span>`;
   return `<div class="inv-totals">
+    <div class="inv-total-row"><span style="color:var(--text2)">Parts</span><span style="font-family:'IBM Plex Mono',monospace">$${partsTotal.toFixed(2)}</span></div>
+    <div class="inv-total-row"><span style="color:var(--text2)">Labor</span><span style="font-family:'IBM Plex Mono',monospace">$${laborTotal.toFixed(2)}</span></div>
     <div class="inv-total-row"><span style="color:var(--text2)">Subtotal (parts/services)</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
     <div class="inv-total-row">
       ${taxLabel}
@@ -1377,14 +1382,14 @@ async function togglePaid(id) {
 function buildInvoiceText(o) {
   const items = o.inv || [];
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const { sub, tax, fee, total } = calcTotals(items, taxPct);
+  const { sub, partsTotal, laborTotal, tax, fee, total } = calcTotals(items, taxPct);
   const name = o.fn || o.n || 'Customer';
   let msg = `Hi ${name}, here is your invoice from Planet Automotive Group for your ${o.c} (plate ${o.lp}):\n\n`;
   items.forEach(it => {
     const lineTotal = (parseFloat(it.q)||0) * (parseFloat(it.p)||0);
     msg += `• ${it.d||'Item'}${it.labor?' (labor)':''} (${it.q}x $${parseFloat(it.p||0).toFixed(2)}) = $${lineTotal.toFixed(2)}\n`;
   });
-  msg += `\nSubtotal: $${sub.toFixed(2)}\nMA Tax (${taxPct}%, parts only): $${tax.toFixed(2)}\nShop Fee: $${fee.toFixed(2)}\nTotal Due: $${total.toFixed(2)}\n\n`;
+  msg += `\nParts: $${partsTotal.toFixed(2)}\nLabor: $${laborTotal.toFixed(2)}\nSubtotal: $${sub.toFixed(2)}\nMA Tax (${taxPct}%, parts only): $${tax.toFixed(2)}\nShop Fee: $${fee.toFixed(2)}\nTotal Due: $${total.toFixed(2)}\n\n`;
   msg += o.paid ? 'Status: PAID ✓\n\nThank you for choosing Planet Automotive!' : 'Please contact us to arrange payment. Thank you!';
   return msg;
 }
@@ -1439,7 +1444,7 @@ function estimateDocStyles() {
     @media print{.print-tip{display:none;}}
     .hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #CC0000;padding-bottom:12px;margin-bottom:20px;}
     .hdr-brand{display:flex;align-items:center;gap:10px;}
-    .hdr-logo-wrap{width:136px;height:136px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:radial-gradient(circle, rgba(0,0,0,0.09) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0) 72%);}
+    .hdr-logo-wrap{width:140px;height:140px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:radial-gradient(circle, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.09) 45%, rgba(0,0,0,0) 74%);}
     .hdr-logo{width:116px;height:116px;object-fit:contain;}
     .hdr h1{font-size:18px;color:#CC0000;margin:0;line-height:1.2;letter-spacing:0.3px;}
     .hdr p{margin:2px 0 0;font-size:12px;color:#666;}
@@ -1463,7 +1468,7 @@ async function printInvoice(id) {
   const o = orders[id]; if (!o) return;
   const items = o.inv || [];
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const { sub, tax, fee, total } = calcTotals(items, taxPct);
+  const { sub, partsTotal, laborTotal, tax, fee, total } = calcTotals(items, taxPct);
   const w = window.open('', '_blank');
   if (!w) { toast('⚠ Allow popups to print'); return; }
   const invoiceNo = await getEstimateNumber('orders', o, id);
@@ -1474,19 +1479,21 @@ async function printInvoice(id) {
     <div class="hdr">
       <div class="hdr-brand">
         <div class="hdr-logo-wrap"><img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" /></div>
-        <div><h1>PLANET AUTOMOTIVE GROUP</h1><p>Estimate</p></div>
+        <div><h1>PLANET AUTOMOTIVE GROUP</h1><p>Estimate</p><p>567 Concord St, Holliston MA 01746</p><p>(508) 429-9444</p></div>
       </div>
       <div style="text-align:right"><div style="font-size:16px;font-weight:bold">Estimate #${invoiceNo}</div><div style="font-size:12px;color:#666">${fdt(o.at)}</div><div style="margin-top:6px"><span class="badge ${o.paid?'yes':'no'}">${o.paid?'PAID':'UNPAID'}</span></div></div>
     </div>
     <div class="info">
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
-      <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div><div style="font-family:monospace;font-size:11px">Plate: ${esc(o.lp)||'—'}</div>${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}</div>
+      <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div><div style="font-family:monospace;font-size:11px">Plate: ${esc(o.lp)||'—'}</div>${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}${o.eng?`<div>Engine: ${esc(o.eng)}</div>`:''}</div>
     </div>
     <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td style="text-align:center"><span class="pl-badge${it.labor?' pl-l':''}">${it.labor?'L':'P'}</span></td><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     <div class="bottom-block">
       ${o.ob?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.ob)}</div></div></div>`:''}
       <div class="totals">
+        <div><span>Parts</span><span style="font-family:monospace">$${partsTotal.toFixed(2)}</span></div>
+        <div><span>Labor</span><span style="font-family:monospace">$${laborTotal.toFixed(2)}</span></div>
         <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
         <div><span>MA Tax (${taxPct}%, parts only)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
         <div><span>Shop Fee</span><span style="font-family:monospace">$${fee.toFixed(2)}</span></div>
@@ -1503,7 +1510,7 @@ async function printQuote(id) {
   const o = quotes[id]; if (!o) return;
   const items = o.items || [];
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const { sub, tax, fee, total } = calcTotals(items, taxPct);
+  const { sub, partsTotal, laborTotal, tax, fee, total } = calcTotals(items, taxPct);
   const w = window.open('', '_blank');
   if (!w) { toast('⚠ Allow popups to print'); return; }
   const quoteNo = await getEstimateNumber('quotes', o, id);
@@ -1516,19 +1523,21 @@ async function printQuote(id) {
     <div class="hdr">
       <div class="hdr-brand">
         <div class="hdr-logo-wrap"><img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" /></div>
-        <div><h1>PLANET AUTOMOTIVE GROUP</h1><p>Estimate</p></div>
+        <div><h1>PLANET AUTOMOTIVE GROUP</h1><p>Estimate</p><p>567 Concord St, Holliston MA 01746</p><p>(508) 429-9444</p></div>
       </div>
       <div style="text-align:right"><div style="font-size:16px;font-weight:bold">Estimate #${quoteNo}</div><div style="font-size:12px;color:#666">${fdt(o.at)}</div><div style="margin-top:6px"><span class="badge ${statusClass}">${statusLabels[o.s]||'OPEN'}</span></div></div>
     </div>
     <div class="info">
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
-      <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div>${o.lp?`<div style="font-family:monospace;font-size:11px">Plate: ${esc(o.lp)}</div>`:''}${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}</div>
+      <div><h3>Vehicle</h3><div><strong>${esc(o.c)||'—'}</strong></div>${o.lp?`<div style="font-family:monospace;font-size:11px">Plate: ${esc(o.lp)}</div>`:''}${o.vin?`<div style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</div>`:''}${o.mi?`<div>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</div>`:''}${o.eng?`<div>Engine: ${esc(o.eng)}</div>`:''}</div>
     </div>
     <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td style="text-align:center"><span class="pl-badge${it.labor?' pl-l':''}">${it.labor?'L':'P'}</span></td><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     <div class="bottom-block">
       ${o.desc?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.desc)}</div></div></div>`:''}
       <div class="totals">
+        <div><span>Parts</span><span style="font-family:monospace">$${partsTotal.toFixed(2)}</span></div>
+        <div><span>Labor</span><span style="font-family:monospace">$${laborTotal.toFixed(2)}</span></div>
         <div><span>Subtotal</span><span style="font-family:monospace">$${sub.toFixed(2)}</span></div>
         <div><span>MA Tax (${taxPct}%, parts only)</span><span style="font-family:monospace">$${tax.toFixed(2)}</span></div>
         <div><span>Shop Fee</span><span style="font-family:monospace">$${fee.toFixed(2)}</span></div>
@@ -1643,6 +1652,8 @@ function quoteFormHTML() {
         <select id="qf-mk"><option value="">Select make</option>${MAKES.map(m=>`<option>${m}</option>`).join('')}</select>
       </div>
       <div class="fg full"><label>Model</label><input id="qf-mo" placeholder="Camry, F-150, Civic..." /></div>
+      <div class="fg"><label>Mileage <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label><input id="qf-mi" type="number" placeholder="45000" /></div>
+      <div class="fg"><label>Engine <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label><input id="qf-eng" placeholder="2.0L I4, V6 3.5L..." /></div>
       <div class="fg full"><label>VIN <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
         <div class="vin-row">
           <input id="qf-vin" placeholder="1HGBH41JXMN109186" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
@@ -1701,8 +1712,10 @@ function renderQuoteFormItems() {
   const totalsEl = document.getElementById('quote-form-totals');
   if (totalsEl) {
     const validItems = quoteFormItems.filter(it => (parseFloat(it.q)||0) > 0 || (parseFloat(it.p)||0) > 0);
-    const { sub, tax, fee, total } = calcTotals(validItems, 6.25);
+    const { sub, partsTotal, laborTotal, tax, fee, total } = calcTotals(validItems, 6.25);
     totalsEl.innerHTML = !validItems.length ? '' : `<div class="inv-totals">
+      <div class="inv-total-row"><span style="color:var(--text2)">Parts</span><span style="font-family:'IBM Plex Mono',monospace">$${partsTotal.toFixed(2)}</span></div>
+      <div class="inv-total-row"><span style="color:var(--text2)">Labor</span><span style="font-family:'IBM Plex Mono',monospace">$${laborTotal.toFixed(2)}</span></div>
       <div class="inv-total-row"><span style="color:var(--text2)">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
       <div class="inv-total-row"><span style="color:var(--text2)">MA Tax (6.25%, parts only)</span><span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span></div>
       <div class="inv-total-row"><span style="color:var(--text2)">Shop Fee</span><span style="font-family:'IBM Plex Mono',monospace">$${fee.toFixed(2)}</span></div>
@@ -1789,6 +1802,8 @@ async function submitQuote() {
     lp: (document.getElementById('qf-lp')?.value||'').trim().toUpperCase(),
     yr, mk, mo,
     c: carParts,
+    mi: document.getElementById('qf-mi')?.value || '',
+    eng: (document.getElementById('qf-eng')?.value||'').trim(),
     vin: (document.getElementById('qf-vin')?.value||'').trim().toUpperCase(),
     desc: document.getElementById('qf-desc')?.value || '',
     notesInternal: document.getElementById('qf-notes-internal')?.value || '',
@@ -1905,6 +1920,8 @@ function openQuote(id) {
       <div class="dsect-t">Vehicle</div>
       <div class="drow"><span class="dk">Year / Make / Model</span><span class="dv">${esc(o.c)||'—'}</span></div>
       ${o.lp?`<div class="drow"><span class="dk">License Plate</span><span class="dv mono">${esc(o.lp)}</span></div>`:''}
+      ${o.mi?`<div class="drow"><span class="dk">Mileage</span><span class="dv">${Number(o.mi).toLocaleString('en-US')} mi</span></div>`:''}
+      ${o.eng?`<div class="drow"><span class="dk">Engine</span><span class="dv">${esc(o.eng)}</span></div>`:''}
       ${o.vin?`<div class="drow"><span class="dk">VIN</span><span class="dv mono">${esc(o.vin)}</span></div>`:''}
     </div>
     <div class="invoice-section">
@@ -1992,8 +2009,10 @@ function renderQuoteTotals(o, id) {
   const items = o.items || [];
   if (!items.length) return '';
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
-  const { sub, tax, fee, total } = calcTotals(items, taxPct);
+  const { sub, partsTotal, laborTotal, tax, fee, total } = calcTotals(items, taxPct);
   return `<div class="inv-totals">
+    <div class="inv-total-row"><span style="color:var(--text2)">Parts</span><span style="font-family:'IBM Plex Mono',monospace">$${partsTotal.toFixed(2)}</span></div>
+    <div class="inv-total-row"><span style="color:var(--text2)">Labor</span><span style="font-family:'IBM Plex Mono',monospace">$${laborTotal.toFixed(2)}</span></div>
     <div class="inv-total-row"><span style="color:var(--text2)">Subtotal</span><span style="font-family:'IBM Plex Mono',monospace">$${sub.toFixed(2)}</span></div>
     <div class="inv-total-row"><span style="color:var(--text2)">MA Tax (${taxPct}%, parts only)</span><span style="font-family:'IBM Plex Mono',monospace">$${tax.toFixed(2)}</span></div>
     <div class="inv-total-row"><span style="color:var(--text2)">Shop Fee</span><span style="font-family:'IBM Plex Mono',monospace">$${fee.toFixed(2)}</span></div>
@@ -2099,6 +2118,8 @@ async function convertQuoteToOrder(id) {
     lp: o.lp || '—',
     yr: o.yr || '', mk: o.mk || '', mo: o.mo || '',
     c: o.c || '—',
+    mi: o.mi || '',
+    eng: o.eng || '',
     vin: o.vin || '',
     ob: o.desc || '',
     inv: o.items ? o.items.slice() : [],
@@ -2318,6 +2339,7 @@ function openEditModal(id) {
   document.getElementById('e-mo').value = o.mo || '';
   document.getElementById('e-lp').value = o.lp || '';
   document.getElementById('e-mi').value = o.mi || '';
+  document.getElementById('e-eng').value = o.eng || '';
   document.getElementById('e-vin').value = o.vin || '';
   document.getElementById('e-ob').value = o.ob || '';
   document.getElementById('e-tech').value = o.tech || '';
@@ -2365,6 +2387,7 @@ function createEditModal() {
       <div class="fg"><label>Model</label><input id="e-mo" /></div>
       <div class="fg"><label>License Plate</label><input id="e-lp" class="plate-inp" maxlength="10" oninput="this.value=this.value.toUpperCase()" /></div>
       <div class="fg"><label>Mileage</label><input id="e-mi" type="number" /></div>
+      <div class="fg"><label>Engine</label><input id="e-eng" /></div>
       <div class="fg"><label>VIN</label>
         <div class="vin-row">
           <input id="e-vin" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
@@ -2429,6 +2452,7 @@ async function saveEdit() {
   if (o.yr !== yr || o.mk !== mk || o.mo !== mo) changes.push('Vehicle');
   if (o.lp !== lp) changes.push('License Plate');
   if ((o.mi||'') !== document.getElementById('e-mi').value) changes.push('Mileage');
+  if ((o.eng||'') !== document.getElementById('e-eng').value) changes.push('Engine');
   if ((o.vin||'') !== document.getElementById('e-vin').value) changes.push('VIN');
   if ((o.ob||'') !== document.getElementById('e-ob').value) changes.push('Complaint');
   if ((o.tech||'') !== document.getElementById('e-tech').value) changes.push('Technician');
@@ -2444,6 +2468,7 @@ async function saveEdit() {
     yr, mk, mo, lp,
     c: `${yr} ${mk} ${mo}`,
     mi: document.getElementById('e-mi').value,
+    eng: document.getElementById('e-eng').value.trim(),
     vin: document.getElementById('e-vin').value,
     ob: document.getElementById('e-ob').value,
     tech: document.getElementById('e-tech').value,
@@ -2476,6 +2501,8 @@ function openEditQuoteModal(id) {
   document.getElementById('qe-yr').value = o.yr || '';
   document.getElementById('qe-mk').value = o.mk || '';
   document.getElementById('qe-mo').value = o.mo || '';
+  document.getElementById('qe-mi').value = o.mi || '';
+  document.getElementById('qe-eng').value = o.eng || '';
   document.getElementById('qe-vin').value = o.vin || '';
   document.getElementById('qe-notes-internal').value = o.notesInternal || '';
   document.getElementById('qe-desc').value = o.desc || '';
@@ -2503,6 +2530,8 @@ function createEditQuoteModal() {
         <select id="qe-mk"><option value="">Select make</option>${MAKES.map(m=>`<option>${m}</option>`).join('')}</select>
       </div>
       <div class="fg full"><label>Model</label><input id="qe-mo" /></div>
+      <div class="fg"><label>Mileage</label><input id="qe-mi" type="number" /></div>
+      <div class="fg"><label>Engine</label><input id="qe-eng" /></div>
       <div class="fg full"><label>VIN <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label>
         <div class="vin-row">
           <input id="qe-vin" maxlength="17" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px;font-size:12px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
@@ -2543,6 +2572,8 @@ async function saveEditQuote() {
   const mk = document.getElementById('qe-mk').value;
   const mo = document.getElementById('qe-mo').value.trim();
   const lp = document.getElementById('qe-lp').value.trim().toUpperCase();
+  const mi = document.getElementById('qe-mi').value;
+  const eng = document.getElementById('qe-eng').value.trim();
   const vin = document.getElementById('qe-vin').value.trim().toUpperCase();
   const notesInternal = document.getElementById('qe-notes-internal').value;
   const desc = document.getElementById('qe-desc').value;
@@ -2556,6 +2587,8 @@ async function saveEditQuote() {
   if ((o.ph2||'') !== ph2) changes.push('Alternate Phone');
   if (o.yr !== yr || o.mk !== mk || o.mo !== mo) changes.push('Vehicle');
   if ((o.lp||'') !== lp) changes.push('License Plate');
+  if ((o.mi||'') !== mi) changes.push('Mileage');
+  if ((o.eng||'') !== eng) changes.push('Engine');
   if ((o.vin||'') !== vin) changes.push('VIN');
   if ((o.notesInternal||'') !== notesInternal) changes.push('Internal Notes');
   if ((o.desc||'') !== desc) changes.push('Notes');
@@ -2563,7 +2596,7 @@ async function saveEditQuote() {
   if ((o.followup||'') !== followup) changes.push('Follow-up Date');
 
   const id = editingQuoteId;
-  const updated = { n: fn, fn, ph, ph2, yr, mk, mo, c: carParts, lp, vin, notesInternal, desc, exp, followup };
+  const updated = { n: fn, fn, ph, ph2, yr, mk, mo, c: carParts, lp, mi, eng, vin, notesInternal, desc, exp, followup };
   Object.assign(o, updated);
   if (changes.length) {
     if (!o.h) o.h = [];
@@ -2681,9 +2714,11 @@ function taxableSubtotal(items) {
 const SHOP_FEE = 5.00;
 function calcTotals(items, taxPct) {
   const sub = (items||[]).reduce((s, it) => s + (parseFloat(it.q)||0) * (parseFloat(it.p)||0), 0);
-  const tax = taxableSubtotal(items) * (taxPct/100);
+  const partsTotal = taxableSubtotal(items);
+  const laborTotal = sub - partsTotal;
+  const tax = partsTotal * (taxPct/100);
   const fee = (items && items.length) ? SHOP_FEE : 0;
-  return { sub, tax, fee, total: sub + tax + fee };
+  return { sub, partsTotal, laborTotal, tax, fee, total: sub + tax + fee };
 }
 
 let toastT;
