@@ -271,6 +271,9 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .sms-send-btn{background:#25D366;color:#fff;}
 .sms-msg-btn{background:#007AFF;color:#fff;}
 .sms-cancel-btn{background:var(--surface2);color:var(--text2);border:1px solid var(--border2) !important;}
+.sms-lang-toggle{display:none;gap:6px;margin-bottom:12px;}
+.sms-lang-btn{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);}
+.sms-lang-btn.active{background:var(--planet-red);color:#fff;border-color:var(--planet-red);}
 
 /* === EDITABLE / EDIT MODE === */
 .edit-section{margin-bottom:16px;}
@@ -543,6 +546,10 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   <div class="sms-card">
     <h3 id="sms-title">💬 Send SMS to customer</h3>
     <p id="sms-subtitle">The message below will be sent via your phone's messaging app. You can edit it before sending.</p>
+    <div class="sms-lang-toggle" id="sms-lang-toggle">
+      <button type="button" class="sms-lang-btn active" data-lang="en" onclick="setSMSLang('en')">🇺🇸 English</button>
+      <button type="button" class="sms-lang-btn" data-lang="pt" onclick="setSMSLang('pt')">🇧🇷 Português</button>
+    </div>
     <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);">Message</label>
     <textarea id="sms-text" class="sms-preview" rows="5"></textarea>
     <p style="font-size:11px;color:var(--text3);margin-bottom:14px;">📞 Sending to: <span id="sms-phone" style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text)"></span></p>
@@ -1409,6 +1416,7 @@ function sendInvoice(id) {
   document.getElementById('sms-subtitle').textContent = 'The invoice breakdown will be sent. You can edit before sending.';
   document.getElementById('sms-text').value = msg;
   document.getElementById('sms-phone').textContent = o.ph;
+  document.getElementById('sms-lang-toggle').style.display = 'none';
   document.getElementById('sms-modal').classList.add('open');
 }
 async function nextEstimateNumber() {
@@ -2132,6 +2140,7 @@ function sendQuoteToCustomer(id) {
   document.getElementById('sms-subtitle').textContent = 'Send the estimate to the customer. You can edit before sending.';
   document.getElementById('sms-text').value = msg;
   document.getElementById('sms-phone').textContent = o.ph;
+  document.getElementById('sms-lang-toggle').style.display = 'none';
   document.getElementById('sms-modal').classList.add('open');
 }
 
@@ -2650,25 +2659,38 @@ function promptSendSMS(order, type) {
   if (!order || !order.ph) return;
   const name = order.fn || order.n || 'Customer';
   const car = order.c || 'your vehicle';
-  let msg;
+  let msg, msgPt = null;
   if (type === 'created') {
     msg = `Hi ${name}, this is Planet Automotive Group. We've received your ${car} (plate ${order.lp}) and our team will start working on it soon. We'll keep you updated. Thank you!`;
   } else if (type === 'completed') {
     msg = `Hi ${name}, your ${car} is ready for pickup at Planet Automotive Group! Service has been completed. Please contact us to arrange pickup. Thank you for choosing Planet Automotive!`;
+    msgPt = `Olá ${name}, seu ${car} está pronto para retirada na Planet Automotive Group! O serviço foi concluído. Entre em contato conosco para combinar a retirada. Obrigado por escolher a Planet Automotive!`;
   } else {
     msg = `Hi ${name}, this is Planet Automotive Group with an update on your ${car} (plate ${order.lp}).`;
   }
-  currentSMSData = { phone: order.ph, message: msg };
+  currentSMSData = { phone: order.ph, message: msg, msgEn: msg, msgPt };
   document.getElementById('sms-title').textContent = type === 'completed' ? '✓ Service Completed — Notify Customer' : '💬 Confirm Vehicle Received';
   document.getElementById('sms-subtitle').textContent = type === 'completed'
     ? 'Send a pickup notification to the customer. You can edit the message before sending.'
     : 'Send a confirmation that the vehicle is at Planet Automotive. You can edit the message before sending.';
   document.getElementById('sms-text').value = msg;
   document.getElementById('sms-phone').textContent = order.ph;
+  const langToggle = document.getElementById('sms-lang-toggle');
+  langToggle.style.display = msgPt ? 'flex' : 'none';
+  setSMSLangButtons('en');
   document.getElementById('sms-modal').classList.add('open');
+}
+function setSMSLang(lang) {
+  if (!currentSMSData) return;
+  document.getElementById('sms-text').value = lang === 'pt' ? (currentSMSData.msgPt || currentSMSData.msgEn) : currentSMSData.msgEn;
+  setSMSLangButtons(lang);
+}
+function setSMSLangButtons(lang) {
+  document.querySelectorAll('.sms-lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
 }
 function closeSMSModal() {
   currentSMSData = null;
+  document.getElementById('sms-lang-toggle').style.display = 'none';
   document.getElementById('sms-modal').classList.remove('open');
 }
 function getCleanPhone() {
