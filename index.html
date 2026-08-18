@@ -364,7 +364,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .inv-edit-btn:hover{opacity:0.88;}
 .inv-add-btn{padding:7px;background:none;border:1px dashed var(--border2);color:var(--text2);border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
 .inv-add-btn:hover{background:var(--bg);color:var(--text);border-color:var(--text3);}
-.inv-totals{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;}
+.inv-totals{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:1px;}
 .inv-total-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
 .inv-total-row.grand{font-size:16px;font-weight:700;margin-top:4px;padding-top:8px;border-top:1px solid var(--border);}
 .inv-total-row .tax-input{width:60px;font-size:12px;padding:4px 6px;height:28px;text-align:right;font-family:'IBM Plex Mono',monospace;}
@@ -999,9 +999,12 @@ function formHTML() {
           <button class="priobtn" id="pb-high" onclick="sp('high')">🔥 Urgent</button>
         </div>
       </div>
-      <div class="fg full"><label>Customer Complaint / Notes</label>
+      <div class="fg full"><label>🔒 Customer Complaint / Checklist <span style="font-weight:400;text-transform:none;color:var(--text3)">(private — staff only, never printed)</span></label>
         <textarea id="f-ob" placeholder="Enter one issue per line — each becomes a checklist item:&#10;Brake squeaking when stopping&#10;Check engine light is on&#10;Strange noise from front wheel&#10;Oil change overdue" rows="5"></textarea>
         <span class="field-hint">💡 Each line becomes a checklist item the mechanic can check off as completed.</span>
+      </div>
+      <div class="fg full"><label>Notes for Customer <span style="font-weight:400;text-transform:none;color:var(--text3)">(shown on the printed invoice)</span></label>
+        <textarea id="f-notes-customer" rows="3" placeholder="Anything you'd like the customer to see on their invoice..."></textarea>
       </div>
       <div class="fg full"><label>Assigned Technician <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional)</span></label><input id="f-tech" placeholder="Mike, Sarah..." /></div>
       <div class="fg"><label>Drop-off Date</label><input id="f-dod" type="date" /></div>
@@ -1065,6 +1068,7 @@ async function submitOrder() {
     eng: (document.getElementById('f-eng')?.value||'').trim(),
     vin: document.getElementById('f-vin')?.value||'',
     ob: document.getElementById('f-ob')?.value||'',
+    notesCustomer: document.getElementById('f-notes-customer')?.value||'',
     dod: document.getElementById('f-dod')?.value||'',
     pd: document.getElementById('f-pd')?.value||'',
     tech: document.getElementById('f-tech')?.value||'',
@@ -1127,9 +1131,11 @@ function openD(id) {
     ${(o.sv||[]).length?`<div class="dsect"><div class="dsect-t">Services Requested</div><div class="tags-wrap" style="padding-top:4px">${(o.sv||[]).map(s=>`<span class="tag on" style="pointer-events:none">${esc(s)}</span>`).join('')}</div></div>`:''}
 
     ${o.ob?`<div class="dsect">
-      <div class="dsect-t">Customer Complaint Checklist</div>
+      <div class="dsect-t">🔒 Customer Complaint Checklist <span style="font-weight:400;text-transform:none;color:var(--text3)">(staff only)</span></div>
       <div class="checklist" id="checklist-${id}">${renderChecklist(o, id)}</div>
     </div>`:''}
+
+    ${o.notesCustomer?`<div class="dsect"><div class="dsect-t">Notes <span style="font-weight:400;text-transform:none;color:var(--text3)">(shown to customer)</span></div><div class="obs-box">${esc(o.notesCustomer)}</div></div>`:''}
 
     <div class="edit-section">
       <div class="edit-section-title">
@@ -1457,11 +1463,12 @@ function estimateDocStyles() {
     .pl-badge.pl-l{background:#FAEEDA;color:#854F0B;}
     .bottom-block{margin-top:auto;}
     .totals{margin-left:auto;width:280px;font-size:10px;}
-    .totals div{display:flex;justify-content:space-between;padding:5px 0;}
+    .totals div{display:flex;justify-content:space-between;padding:2px 0;}
     .totals .grand{font-size:15px;font-weight:bold;color:#CC0000;border-top:2px solid #000;padding-top:8px;margin-top:4px;}
     .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;letter-spacing:1px;}
     .badge.yes{background:#dcf5e3;color:#1a6e35;}.badge.no{background:#fef3c7;color:#7a4f00;}.badge.neutral{background:#eee;color:#555;}
     .footer{margin-top:30px;text-align:center;color:#666;font-size:11px;border-top:1px solid #ddd;padding-top:14px;line-height:1.6;}
+    .footer-legal{font-size:9px;color:#999;margin:8px auto 0;line-height:1.5;max-width:480px;}
   `;
 }
 async function printInvoice(id) {
@@ -1474,14 +1481,14 @@ async function printInvoice(id) {
   const invoiceNo = await getEstimateNumber('orders', o, id);
   const logoUrl = await getLogoDataUrl();
   const printScript = `(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();`;
-  const html = `<!DOCTYPE html><html><head><title>Estimate ${invoiceNo}</title><style>${estimateDocStyles()}</style></head><body>
+  const html = `<!DOCTYPE html><html><head><title>Invoice ${invoiceNo}</title><style>${estimateDocStyles()}</style></head><body>
     <div class="print-tip">📄 Before saving: in the print dialog, open "More settings" and uncheck "Headers and footers" to avoid the page URL/date being added to the PDF.</div>
     <div class="hdr">
       <div class="hdr-brand">
         <div class="hdr-logo-wrap"><img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" /></div>
         <div><h1>PLANET AUTOMOTIVE GROUP</h1><p>567 Concord St, Holliston MA 01746</p><p>(508) 429-9444</p></div>
       </div>
-      <div style="text-align:right"><div style="font-size:16px;font-weight:bold">Estimate #${invoiceNo}</div><div style="font-size:12px;color:#666">${fdt(o.at)}</div><div style="margin-top:6px"><span class="badge ${o.paid?'yes':'no'}">${o.paid?'PAID':'UNPAID'}</span></div></div>
+      <div style="text-align:right"><div style="font-size:16px;font-weight:bold">Invoice #${invoiceNo}</div><div style="font-size:12px;color:#666">${fdt(o.at)}</div><div style="margin-top:6px"><span class="badge ${o.paid?'yes':'no'}">${o.paid?'PAID':'UNPAID'}</span></div></div>
     </div>
     <div class="info">
       <div><h3>Bill To</h3><div><strong>${esc(o.n)||'—'}</strong></div>${o.ph?`<div>${esc(o.ph)}</div>`:''}</div>
@@ -1500,7 +1507,7 @@ async function printInvoice(id) {
     <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
     <tbody>${items.map(it=>{const lt=(parseFloat(it.q)||0)*(parseFloat(it.p)||0);return `<tr><td style="text-align:center"><span class="pl-badge${it.labor?' pl-l':''}">${it.labor?'L':'P'}</span></td><td>${esc(it.d)||'—'}</td><td style="text-align:center">${it.q||0}</td><td style="text-align:right;font-family:monospace">$${parseFloat(it.p||0).toFixed(2)}</td><td style="text-align:right;font-family:monospace">$${lt.toFixed(2)}</td></tr>`}).join('')}</tbody></table>
     <div class="bottom-block">
-      ${o.ob?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.ob)}</div></div></div>`:''}
+      ${o.notesCustomer?`<div class="info" style="grid-template-columns:1fr;margin-bottom:14px;"><div><h3>Notes</h3><div style="white-space:pre-wrap;">${esc(o.notesCustomer)}</div></div></div>`:''}
       <div class="totals">
         <div><span>Parts</span><span style="font-family:monospace">$${partsTotal.toFixed(2)}</span></div>
         <div><span>Labor</span><span style="font-family:monospace">$${laborTotal.toFixed(2)}</span></div>
@@ -1509,7 +1516,7 @@ async function printInvoice(id) {
         <div><span>Shop Fee</span><span style="font-family:monospace">$${fee.toFixed(2)}</span></div>
         <div class="grand"><span>TOTAL DUE</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
       </div>
-      <div class="footer">Thank you for choosing Planet Automotive Group</div>
+      <div class="footer">Thank you for choosing Planet Automotive Group<div class="footer-legal">The prices shown are estimates and may change if unexpected issues or additional parts/services are identified during the repair. Any changes in price will be discussed with the customer and will only be made with the customer's approval.</div></div>
     </div>
     <script>${printScript}<\/script>
   </body></html>`;
@@ -1564,7 +1571,7 @@ async function printQuote(id) {
         <div class="grand"><span>ESTIMATED TOTAL</span><span style="font-family:monospace">$${total.toFixed(2)}</span></div>
       </div>
       ${o.exp?`<div style="text-align:center;font-size:12px;color:#666;margin-top:-4px;margin-bottom:10px;">Valid until ${fmtDate(o.exp)}</div>`:''}
-      <div class="footer">Thank you for choosing Planet Automotive Group</div>
+      <div class="footer">Thank you for choosing Planet Automotive Group<div class="footer-legal">The prices shown are estimates and may change if unexpected issues or additional parts/services are identified during the repair. Any changes in price will be discussed with the customer and will only be made with the customer's approval.</div></div>
     </div>
     <script>${printScript}<\/script>
   </body></html>`;
@@ -2141,7 +2148,8 @@ async function convertQuoteToOrder(id) {
     mi: o.mi || '',
     eng: o.eng || '',
     vin: o.vin || '',
-    ob: o.desc || '',
+    ob: o.notesInternal || '',
+    notesCustomer: o.desc || '',
     inv: o.items ? o.items.slice() : [],
     tax: o.tax !== undefined ? o.tax : 6.25,
     sv: [], pr: 'normal', s: 'waiting',
@@ -2362,6 +2370,7 @@ function openEditModal(id) {
   document.getElementById('e-eng').value = o.eng || '';
   document.getElementById('e-vin').value = o.vin || '';
   document.getElementById('e-ob').value = o.ob || '';
+  document.getElementById('e-notes-customer').value = o.notesCustomer || '';
   document.getElementById('e-tech').value = o.tech || '';
   document.getElementById('e-dod').value = o.dod || '';
   document.getElementById('e-pd').value = o.pd || '';
@@ -2426,8 +2435,11 @@ function createEditModal() {
           <button class="priobtn" id="e-pb-high" onclick="setEditPrio('high')">🔥 Urgent</button>
         </div>
       </div>
-      <div class="fg full"><label>Customer Complaint / Notes</label>
+      <div class="fg full"><label>🔒 Customer Complaint / Checklist <span style="font-weight:400;text-transform:none;color:var(--text3)">(private — staff only, never printed)</span></label>
         <textarea id="e-ob" rows="4"></textarea>
+      </div>
+      <div class="fg full"><label>Notes for Customer <span style="font-weight:400;text-transform:none;color:var(--text3)">(shown on the printed invoice)</span></label>
+        <textarea id="e-notes-customer" rows="3"></textarea>
       </div>
       <div class="fg full"><label>Assigned Technician</label><input id="e-tech" /></div>
       <div class="fg"><label>Drop-off Date</label><input id="e-dod" type="date" /></div>
@@ -2475,6 +2487,7 @@ async function saveEdit() {
   if ((o.eng||'') !== document.getElementById('e-eng').value) changes.push('Engine');
   if ((o.vin||'') !== document.getElementById('e-vin').value) changes.push('VIN');
   if ((o.ob||'') !== document.getElementById('e-ob').value) changes.push('Complaint');
+  if ((o.notesCustomer||'') !== document.getElementById('e-notes-customer').value) changes.push('Notes for Customer');
   if ((o.tech||'') !== document.getElementById('e-tech').value) changes.push('Technician');
   if ((o.dod||'') !== document.getElementById('e-dod').value) changes.push('Drop-off Date');
   if ((o.pd||'') !== document.getElementById('e-pd').value) changes.push('Promised Date');
@@ -2491,6 +2504,7 @@ async function saveEdit() {
     eng: document.getElementById('e-eng').value.trim(),
     vin: document.getElementById('e-vin').value,
     ob: document.getElementById('e-ob').value,
+    notesCustomer: document.getElementById('e-notes-customer').value,
     tech: document.getElementById('e-tech').value,
     dod: document.getElementById('e-dod').value,
     pd: document.getElementById('e-pd').value,
