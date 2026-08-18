@@ -1495,13 +1495,13 @@ async function printInvoice(id) {
       <div><h3>Vehicle</h3>
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
           <strong>${esc(o.c)||'—'}</strong>
-          ${o.vin?`<span style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</span>`:''}
+          ${o.vin?`<span style="font-family:monospace;font-size:11px"><b>VIN:</b> ${esc(o.vin)}</span>`:''}
         </div>
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;font-family:monospace;font-size:11px;">
-          <span>Plate: ${esc(o.lp)||'—'}</span>
-          ${o.mi?`<span>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</span>`:''}
+          <span><b>Plate:</b> ${esc(o.lp)||'—'}</span>
+          ${o.mi?`<span><b>Mileage:</b> ${Number(o.mi).toLocaleString('en-US')} mi</span>`:''}
         </div>
-        ${o.eng?`<div style="font-family:monospace;font-size:11px;margin-top:2px;">Engine: ${esc(o.eng)}</div>`:''}
+        ${o.eng?`<div style="font-family:monospace;font-size:11px;margin-top:2px;"><b>Engine:</b> ${esc(o.eng)}</div>`:''}
       </div>
     </div>
     <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
@@ -1549,13 +1549,13 @@ async function printQuote(id) {
       <div><h3>Vehicle</h3>
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
           <strong>${esc(o.c)||'—'}</strong>
-          ${o.vin?`<span style="font-family:monospace;font-size:11px">VIN: ${esc(o.vin)}</span>`:''}
+          ${o.vin?`<span style="font-family:monospace;font-size:11px"><b>VIN:</b> ${esc(o.vin)}</span>`:''}
         </div>
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;font-family:monospace;font-size:11px;">
-          ${o.lp?`<span>Plate: ${esc(o.lp)}</span>`:''}
-          ${o.mi?`<span>Mileage: ${Number(o.mi).toLocaleString('en-US')} mi</span>`:''}
+          ${o.lp?`<span><b>Plate:</b> ${esc(o.lp)}</span>`:''}
+          ${o.mi?`<span><b>Mileage:</b> ${Number(o.mi).toLocaleString('en-US')} mi</span>`:''}
         </div>
-        ${o.eng?`<div style="font-family:monospace;font-size:11px;margin-top:2px;">Engine: ${esc(o.eng)}</div>`:''}
+        ${o.eng?`<div style="font-family:monospace;font-size:11px;margin-top:2px;"><b>Engine:</b> ${esc(o.eng)}</div>`:''}
       </div>
     </div>
     <table><thead><tr><th style="width:30px;text-align:center;">P/L</th><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:100px">Unit Price</th><th style="text-align:right;width:100px">Total</th></tr></thead>
