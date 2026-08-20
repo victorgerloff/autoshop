@@ -1189,6 +1189,7 @@ function openD(id) {
         <button class="inv-action-btn toggle-paid ${o.paid?'is-paid':''}" onclick="togglePaid('${id}')">${o.paid?'✓ Paid':'Mark as Paid'}</button>
         <button class="inv-action-btn send-green" onclick="sendInvoice('${id}')">📩 Send to Customer</button>
         <button class="inv-action-btn secondary" onclick="printInvoice('${id}')">🖨 Print/PDF</button>
+        ${o.ph?`<button class="inv-action-btn secondary" onclick="sharePdf('invoice','${id}')">📤 Send PDF</button>`:''}
       </div>` : ''}
     </div>
 
@@ -1471,18 +1472,15 @@ function estimateDocStyles() {
     .footer-legal{font-size:9px;color:#999;margin:8px auto 0;line-height:1.5;max-width:480px;}
   `;
 }
-async function printInvoice(id) {
-  const o = orders[id]; if (!o) return;
+function buildInvoiceHtml(o, invoiceNo, logoUrl, opts) {
+  opts = opts || {};
   const items = o.inv || [];
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
   const { sub, partsTotal, laborTotal, tax, fee, total } = calcTotals(items, taxPct);
-  const w = window.open('', '_blank');
-  if (!w) { toast('⚠ Allow popups to print'); return; }
-  const invoiceNo = await getEstimateNumber('orders', o, id);
-  const logoUrl = await getLogoDataUrl();
-  const printScript = `(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();`;
-  const html = `<!DOCTYPE html><html><head><title>Invoice ${invoiceNo}</title><style>${estimateDocStyles()}</style></head><body>
-    <div class="print-tip">📄 Before saving: in the print dialog, open "More settings" and uncheck "Headers and footers" to avoid the page URL/date being added to the PDF.</div>
+  const printTip = opts.printTip === false ? '' : `<div class="print-tip">📄 Before saving: in the print dialog, open "More settings" and uncheck "Headers and footers" to avoid the page URL/date being added to the PDF.</div>`;
+  const printScript = opts.autoPrint === false ? '' : `<script>(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();<\/script>`;
+  return `<!DOCTYPE html><html><head><title>Invoice ${invoiceNo}</title><style>${estimateDocStyles()}</style></head><body>
+    ${printTip}
     <div class="hdr">
       <div class="hdr-brand">
         <div class="hdr-logo-wrap"><img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" /></div>
@@ -1518,25 +1516,20 @@ async function printInvoice(id) {
       </div>
       <div class="footer">Thank you for choosing Planet Automotive Group<div class="footer-legal">The prices shown are estimates and may change if unexpected issues or additional parts/services are identified during the repair. Any changes in price will be discussed with the customer and will only be made with the customer's approval.</div></div>
     </div>
-    <script>${printScript}<\/script>
+    ${printScript}
   </body></html>`;
-  w.document.write(html);
-  w.document.close();
 }
-async function printQuote(id) {
-  const o = quotes[id]; if (!o) return;
+function buildQuoteHtml(o, quoteNo, logoUrl, opts) {
+  opts = opts || {};
   const items = o.items || [];
   const taxPct = o.tax !== undefined ? o.tax : 6.25;
   const { sub, partsTotal, laborTotal, tax, fee, total } = calcTotals(items, taxPct);
-  const w = window.open('', '_blank');
-  if (!w) { toast('⚠ Allow popups to print'); return; }
-  const quoteNo = await getEstimateNumber('quotes', o, id);
   const statusLabels = {open:'OPEN', accepted:'ACCEPTED', declined:'DECLINED', expired:'EXPIRED'};
   const statusClass = o.s === 'accepted' ? 'yes' : (o.s === 'declined' || o.s === 'expired' ? 'no' : 'neutral');
-  const logoUrl = await getLogoDataUrl();
-  const printScript = `(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();`;
-  const html = `<!DOCTYPE html><html><head><title>Estimate ${quoteNo}</title><style>${estimateDocStyles()}</style></head><body>
-    <div class="print-tip">📄 Before saving: in the print dialog, open "More settings" and uncheck "Headers and footers" to avoid the page URL/date being added to the PDF.</div>
+  const printTip = opts.printTip === false ? '' : `<div class="print-tip">📄 Before saving: in the print dialog, open "More settings" and uncheck "Headers and footers" to avoid the page URL/date being added to the PDF.</div>`;
+  const printScript = opts.autoPrint === false ? '' : `<script>(function(){var img=document.querySelector('.hdr-logo');var done=false;function go(){if(done)return;done=true;window.print();}if(img&&!img.complete){img.addEventListener('load',go);img.addEventListener('error',go);setTimeout(go,1200);}else{go();}})();<\/script>`;
+  return `<!DOCTYPE html><html><head><title>Estimate ${quoteNo}</title><style>${estimateDocStyles()}</style></head><body>
+    ${printTip}
     <div class="hdr">
       <div class="hdr-brand">
         <div class="hdr-logo-wrap"><img src="${logoUrl}" alt="Planet Automotive Group" class="hdr-logo" /></div>
@@ -1573,10 +1566,121 @@ async function printQuote(id) {
       ${o.exp?`<div style="text-align:center;font-size:12px;color:#666;margin-top:-4px;margin-bottom:10px;">Valid until ${fmtDate(o.exp)}</div>`:''}
       <div class="footer">Thank you for choosing Planet Automotive Group<div class="footer-legal">The prices shown are estimates and may change if unexpected issues or additional parts/services are identified during the repair. Any changes in price will be discussed with the customer and will only be made with the customer's approval.</div></div>
     </div>
-    <script>${printScript}<\/script>
+    ${printScript}
   </body></html>`;
+}
+async function printInvoice(id) {
+  const o = orders[id]; if (!o) return;
+  const w = window.open('', '_blank');
+  if (!w) { toast('⚠ Allow popups to print'); return; }
+  const invoiceNo = await getEstimateNumber('orders', o, id);
+  const logoUrl = await getLogoDataUrl();
+  const html = buildInvoiceHtml(o, invoiceNo, logoUrl);
   w.document.write(html);
   w.document.close();
+}
+async function printQuote(id) {
+  const o = quotes[id]; if (!o) return;
+  const w = window.open('', '_blank');
+  if (!w) { toast('⚠ Allow popups to print'); return; }
+  const quoteNo = await getEstimateNumber('quotes', o, id);
+  const logoUrl = await getLogoDataUrl();
+  const html = buildQuoteHtml(o, quoteNo, logoUrl);
+  w.document.write(html);
+  w.document.close();
+}
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Failed to load ' + src));
+    document.head.appendChild(s);
+  });
+}
+let _pdfLibsPromise = null;
+function ensurePdfLibs() {
+  if (!_pdfLibsPromise) {
+    _pdfLibsPromise = Promise.all([
+      loadScriptOnce('./vendor/html2canvas.min.js'),
+      loadScriptOnce('./vendor/jspdf.umd.min.js'),
+    ]);
+  }
+  return _pdfLibsPromise;
+}
+async function renderHtmlToPdfBlob(htmlString) {
+  await ensurePdfLibs();
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:816px;height:1400px;border:0;background:#fff;';
+  document.body.appendChild(iframe);
+  try {
+    await new Promise((resolve) => {
+      iframe.onload = resolve;
+      iframe.srcdoc = htmlString;
+    });
+    const doc = iframe.contentDocument;
+    const img = doc.querySelector('.hdr-logo');
+    if (img && !img.complete) {
+      await new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; setTimeout(resolve, 1500); });
+    }
+    const contentHeight = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+    iframe.style.height = (contentHeight + 20) + 'px';
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const canvas = await window.html2canvas(doc.documentElement, {
+      scale: 2, useCORS: true, backgroundColor: '#ffffff',
+      windowWidth: 816, windowHeight: contentHeight,
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const { jsPDF } = window.jspdf;
+    const pageW = canvas.width / 2, pageH = canvas.height / 2;
+    const pdf = new jsPDF({ unit: 'px', format: [pageW, pageH] });
+    pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH);
+    return pdf.output('blob');
+  } finally {
+    document.body.removeChild(iframe);
+  }
+}
+async function sharePdf(kind, id) {
+  const o = kind === 'invoice' ? orders[id] : quotes[id];
+  if (!o) return;
+  if (!o.ph) { toast('⚠ No customer phone on file'); return; }
+  toast('⏳ Generating PDF...');
+  try {
+    const logoUrl = await getLogoDataUrl();
+    let html, docNo, fileNamePrefix;
+    if (kind === 'invoice') {
+      docNo = await getEstimateNumber('orders', o, id);
+      html = buildInvoiceHtml(o, docNo, logoUrl, { printTip: false, autoPrint: false });
+      fileNamePrefix = 'Invoice';
+    } else {
+      docNo = await getEstimateNumber('quotes', o, id);
+      html = buildQuoteHtml(o, docNo, logoUrl, { printTip: false, autoPrint: false });
+      fileNamePrefix = 'Estimate';
+    }
+    const blob = await renderHtmlToPdfBlob(html);
+    const fileName = `${fileNamePrefix}-${docNo}.pdf`;
+    const file = new File([blob], fileName, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: `${fileNamePrefix} #${docNo}`, text: `${fileNamePrefix} from Planet Automotive Group` });
+        toast('✓ Shared');
+        return;
+      } catch (shareErr) {
+        if (shareErr && shareErr.name === 'AbortError') return;
+        // fall through to download fallback
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast('✓ PDF downloaded — attach it in your messaging app');
+  } catch (e) {
+    console.error(e);
+    toast('⚠ Could not generate PDF');
+  }
 }
 
 function maybeClose(e){ if(e.target===document.getElementById('overlay')) closeD(); }
@@ -1987,6 +2091,7 @@ function openQuote(id) {
       <div style="display:flex;gap:6px;">
         <button class="inv-action-btn secondary" onclick="openEditQuoteModal('${id}')" style="flex:1;">✎ Edit</button>
         <button class="inv-action-btn secondary" onclick="printQuote('${id}')" style="flex:1;">🖨 Print/PDF</button>
+        ${o.ph?`<button class="inv-action-btn secondary" onclick="sharePdf('quote','${id}')" style="flex:1;">📤 Send PDF</button>`:''}
       </div>
     </div>
     <div class="dsect">
