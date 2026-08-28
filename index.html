@@ -1039,6 +1039,30 @@ function sp(p) {
   });
 }
 
+function findDuplicateOrder(ph, lp) {
+  const phoneDigits = (ph||'').replace(/\D/g,'');
+  const plateNorm = (lp||'').trim().toUpperCase();
+  if (!phoneDigits || !plateNorm) return null;
+  for (const [id, o] of Object.entries(orders)) {
+    if (o.s === 'done') continue; // completed jobs aren't duplicates, they're history
+    if ((o.ph||'').replace(/\D/g,'') === phoneDigits && (o.lp||'').trim().toUpperCase() === plateNorm) {
+      return { id, o };
+    }
+  }
+  return null;
+}
+function findDuplicateQuote(ph, lp, carDesc) {
+  const phoneDigits = (ph||'').replace(/\D/g,'');
+  const plateNorm = (lp||'').trim().toUpperCase();
+  if (!phoneDigits) return null;
+  for (const [id, o] of Object.entries(quotes)) {
+    if (o.s && o.s !== 'open') continue; // only still-open estimates are duplicates
+    if ((o.ph||'').replace(/\D/g,'') !== phoneDigits) continue;
+    if (plateNorm && (o.lp||'').trim().toUpperCase() === plateNorm) return { id, o };
+    if (!plateNorm && !(o.lp||'').trim() && (o.c||'').trim().toLowerCase() === (carDesc||'').trim().toLowerCase()) return { id, o };
+  }
+  return null;
+}
 async function submitOrder() {
   const fn = (document.getElementById('f-fn')?.value||'').trim();
   const ph = (document.getElementById('f-ph')?.value||'').trim();
@@ -1053,6 +1077,12 @@ async function submitOrder() {
   if (phoneDigits.length < 10) { toast('⚠ Phone must have 10 digits'); return; }
   if (!lp) { toast('⚠ License Plate is required'); return; }
   if (!mo) { toast('⚠ Model is required'); return; }
+
+  const dupOrder = findDuplicateOrder(ph, lp);
+  if (dupOrder) {
+    const proceed = confirm(`⚠ There is already an active work order for ${dupOrder.o.fn||dupOrder.o.n} — ${dupOrder.o.lp} (${dupOrder.o.c}).\n\nCreate a duplicate anyway?`);
+    if (!proceed) return;
+  }
 
   const btn = document.getElementById('sbtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
@@ -1918,19 +1948,27 @@ async function submitQuote() {
   const phoneDigits = ph.replace(/\D/g,'');
   if (phoneDigits.length < 10) { toast('⚠ Phone must have 10 digits'); return; }
 
-  const btn = document.getElementById('qsbtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-
   const yr = document.getElementById('qf-yr')?.value || '';
   const mk = document.getElementById('qf-mk')?.value || '';
   const mo = (document.getElementById('qf-mo')?.value || '').trim();
   const carParts = [yr, mk, mo].filter(p=>p).join(' ') || '—';
+  const lp = (document.getElementById('qf-lp')?.value||'').trim().toUpperCase();
+
+  const dupQuote = findDuplicateQuote(ph, lp, carParts);
+  if (dupQuote) {
+    const proceed = confirm(`⚠ There is already an open estimate for ${dupQuote.o.fn||dupQuote.o.n} — ${dupQuote.o.lp||dupQuote.o.c}.\n\nCreate a duplicate anyway?`);
+    if (!proceed) return;
+  }
+
+  const btn = document.getElementById('qsbtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
   const invoiceNo = await nextEstimateNumber();
 
   const quote = {
     n: fn, fn, ph,
     ph2: (document.getElementById('qf-ph2')?.value||'').trim(),
-    lp: (document.getElementById('qf-lp')?.value||'').trim().toUpperCase(),
+    lp,
     yr, mk, mo,
     c: carParts,
     mi: document.getElementById('qf-mi')?.value || '',
