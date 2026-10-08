@@ -854,7 +854,7 @@ function render() {
       <div class="sec-title">${titles[view]||'Orders'}</div>
       <div class="searchbox">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search name, plate, vehicle..." value="${q}" oninput="q=this.value;renderList()" />
+        <input type="text" placeholder="Search name, phone, invoice #, vehicle, plate, VIN..." value="${q}" oninput="q=this.value;renderList()" />
       </div>
     </div>
     <div class="date-filters">
@@ -874,12 +874,18 @@ function renderList() {
   if (el) el.innerHTML = listHTML(getList());
 }
 
+function matchesSearch(o, sq) {
+  if (!sq) return true;
+  const haystack = [o.n, o.fn, o.ph, o.ph2, (o.ph||'').replace(/\D/g,''), o.invoiceNo, o.c, o.lp, o.vin]
+    .filter(Boolean).join(' ').toLowerCase();
+  return haystack.includes(sq);
+}
 function getList() {
   const sq = q.toLowerCase();
   return Object.entries(orders)
     .filter(([,o]) => {
       if (view !== 'all' && o.s !== view) return false;
-      if (sq && !((o.n||'').toLowerCase().includes(sq)||(o.lp||'').toLowerCase().includes(sq)||(o.c||'').toLowerCase().includes(sq))) return false;
+      if (!matchesSearch(o, sq)) return false;
       if (!matchesDateFilter(o)) return false;
       return true;
     })
@@ -2002,12 +2008,6 @@ function renderQuotesList() {
   const cOpen = all.filter(o=>o.s==='open' || !o.s).length;
   const cAcc = all.filter(o=>o.s==='accepted').length;
   const cDec = all.filter(o=>o.s==='declined' || o.s==='expired').length;
-  const list = Object.entries(quotes).sort((a,b)=> new Date(b[1].at)-new Date(a[1].at));
-  const sq = q.toLowerCase();
-  const filtered = list.filter(([,o]) => {
-    if (!sq) return true;
-    return ((o.n||'').toLowerCase().includes(sq) || (o.lp||'').toLowerCase().includes(sq) || (o.c||'').toLowerCase().includes(sq));
-  });
   el.innerHTML = `
     <div class="stats">
       <div class="statcard"><div class="stat-n">${all.length}</div><div class="stat-l">Total Quotes</div></div>
@@ -2024,11 +2024,21 @@ function renderQuotesList() {
         </button>
         <div class="searchbox">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search..." value="${q}" oninput="q=this.value;renderQuotesList()" />
+          <input type="text" placeholder="Search name, phone, estimate #, vehicle, plate, VIN..." value="${q}" oninput="q=this.value;renderQuoteListBody()" />
         </div>
       </div>
     </div>
-    <div>${quoteListHTML(filtered)}</div>`;
+    <div id="quote-list-body"></div>`;
+  renderQuoteListBody();
+}
+function renderQuoteListBody() {
+  const el = document.getElementById('quote-list-body');
+  if (!el) return;
+  const sq = q.toLowerCase();
+  const filtered = Object.entries(quotes)
+    .filter(([,o]) => matchesSearch(o, sq))
+    .sort((a,b)=> new Date(b[1].at)-new Date(a[1].at));
+  el.innerHTML = quoteListHTML(filtered);
 }
 
 function quoteListHTML(list) {
