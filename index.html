@@ -485,6 +485,12 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
       All Quotes
       <span class="navcount" id="nb-q">0</span>
     </button>
+    <div class="nav-label" style="margin-top:12px;">Backup</div>
+    <button class="navbtn" id="n-trash" onclick="gv('trash')">
+      <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a2 2 0 012-2h0a2 2 0 012 2v2"/></svg>
+      Trash
+      <span class="navcount" id="nb-trash">0</span>
+    </button>
     <div class="sidebar-footer">
       <button class="navbtn" onclick="openDeviceModal()" style="margin-bottom:8px;font-size:12px;">
         <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
@@ -592,6 +598,10 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
     <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
     Active
   </button>
+  <button class="mob-btn" onclick="gv('trash')">
+    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a2 2 0 012-2h0a2 2 0 012 2v2"/></svg>
+    Trash
+  </button>
 </nav>
 
 <!-- NEW ITEM MENU (mobile) -->
@@ -626,6 +636,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 <script>
 let FIREBASE_URL = localStorage.getItem('autoshop_fb_url') || '';
 let orders = {}, quotes = {}, view = 'all', detailId = null, prio = 'normal', q = '', pollT;
+let trashOrders = {}, trashQuotes = {};
 let dateFilter = 'all';
 let dateFrom = '', dateTo = '';
 let lastSeenOrders = {}, lastSeenQuotes = {}, isFirstLoad = true;
@@ -662,11 +673,14 @@ const fbDel = async p => { try { await fetch(fbUrl(p), { method:'DELETE' }); } c
 async function loadData() {
   if (!FIREBASE_URL) return;
   try {
-    const [oData, qData] = await Promise.all([fbGet('orders'), fbGet('quotes')]);
+    const [oData, qData, tData] = await Promise.all([fbGet('orders'), fbGet('quotes'), fbGet('trash')]);
     const prevOrders = JSON.stringify(orders);
     const prevQuotes = JSON.stringify(quotes);
+    const prevTrash = JSON.stringify({ o: trashOrders, q: trashQuotes });
     orders = oData || {};
     quotes = qData || {};
+    trashOrders = (tData && tData.orders) || {};
+    trashQuotes = (tData && tData.quotes) || {};
     if (!isFirstLoad) {
       checkForChanges(orders, lastSeenOrders, 'order');
       checkForChanges(quotes, lastSeenQuotes, 'quote');
@@ -674,7 +688,8 @@ async function loadData() {
     lastSeenOrders = JSON.parse(JSON.stringify(orders));
     lastSeenQuotes = JSON.parse(JSON.stringify(quotes));
     isFirstLoad = false;
-    if (JSON.stringify(orders) !== prevOrders || JSON.stringify(quotes) !== prevQuotes) {
+    const trashChanged = JSON.stringify({ o: trashOrders, q: trashQuotes }) !== prevTrash;
+    if (JSON.stringify(orders) !== prevOrders || JSON.stringify(quotes) !== prevQuotes || trashChanged) {
       render(); counts();
     }
     setSync(true);
@@ -815,7 +830,7 @@ function setSync(ok) {
 function gv(v) {
   view = v;
   document.querySelectorAll('.navbtn,.mob-btn').forEach(b => b.classList.remove('active'));
-  const map = { new:'n-new', all:'n-all', waiting:'n-waiting', progress:'n-progress', done:'n-done', newquote:'n-newquote', quotes:'n-quotes' };
+  const map = { new:'n-new', all:'n-all', waiting:'n-waiting', progress:'n-progress', done:'n-done', newquote:'n-newquote', quotes:'n-quotes', trash:'n-trash' };
   if (map[v]) document.getElementById(map[v])?.classList.add('active');
   render();
 }
@@ -826,7 +841,8 @@ function counts() {
   const cp = all.filter(o=>o.s==='progress').length;
   const cd = all.filter(o=>o.s==='done').length;
   const cq = Object.values(quotes).filter(qq=>qq.s==='open').length;
-  [['nb-all',all.length],['nb-w',cw],['nb-p',cp],['nb-d',cd],['nb-q',cq]].forEach(([id,n])=>{
+  const ct = Object.keys(trashOrders).length + Object.keys(trashQuotes).length;
+  [['nb-all',all.length],['nb-w',cw],['nb-p',cp],['nb-d',cd],['nb-q',cq],['nb-trash',ct]].forEach(([id,n])=>{
     const el=document.getElementById(id); if(el)el.textContent=n;
   });
 }
@@ -837,6 +853,7 @@ function render() {
   if (view === 'new') { el.innerHTML = formHTML(); initForm(); return; }
   if (view === 'newquote') { el.innerHTML = quoteFormHTML(); initQuoteForm(); return; }
   if (view === 'quotes') { renderQuotesList(); return; }
+  if (view === 'trash') { renderTrashList(); return; }
   const all = Object.values(orders);
   const cw = all.filter(o=>o.s==='waiting').length;
   const cp = all.filter(o=>o.s==='progress').length;
@@ -1741,11 +1758,16 @@ async function chS(s) {
 
 async function delO() {
   if (!detailId) return;
-  if (!confirm('Delete this work order? This cannot be undone.')) return;
-  await fbDel('orders/'+detailId);
-  delete orders[detailId];
+  const o = orders[detailId]; if (!o) return;
+  if (!confirm('Delete this work order? It will be moved to Trash and can be restored later.')) return;
+  const id = detailId;
+  const trashed = { ...o, deletedAt: new Date().toISOString() };
+  await fbPatch('trash/orders/'+id, trashed);
+  await fbDel('orders/'+id);
+  trashOrders[id] = trashed;
+  delete orders[id];
   closeD(); render();
-  toast('Work order deleted');
+  toast('Work order moved to Trash');
 }
 
 function openShare() {
@@ -2041,6 +2063,68 @@ function renderQuoteListBody() {
   el.innerHTML = quoteListHTML(filtered);
 }
 
+function renderTrashList() {
+  const el = document.getElementById('main');
+  const orderEntries = Object.entries(trashOrders).map(([id,o]) => [id, o, 'order']);
+  const quoteEntries = Object.entries(trashQuotes).map(([id,o]) => [id, o, 'quote']);
+  const combined = [...orderEntries, ...quoteEntries]
+    .sort((a,b) => new Date(b[1].deletedAt||b[1].at) - new Date(a[1].deletedAt||a[1].at));
+  el.innerHTML = `
+    <div class="sec-head">
+      <div class="sec-title">🗑 Trash</div>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">Deleted work orders and estimates are kept here as a backup. Restore them anytime, or remove them permanently.</p>
+    <div>${trashListHTML(combined)}</div>`;
+}
+
+function trashListHTML(list) {
+  if (!list.length) return `<div class="empty"><div class="empty-icon">🗑</div>Trash is empty</div>`;
+  return list.map(([id, o, kind]) => {
+    const label = kind === 'order' ? 'Work Order' : 'Estimate';
+    return `<div class="ocard">
+      <div class="oc-top">
+        <div class="oc-car">
+          <span class="chip">${label}</span>
+          ${esc(o.c)||'—'} ${o.lp?`<span class="plate-badge">${esc(o.lp)}</span>`:''}
+        </div>
+      </div>
+      <div class="oc-cli">
+        <span>👤 ${esc(o.n)||'—'}</span>
+        ${o.ph?`<span>📞 ${esc(o.ph)}</span>`:''}
+      </div>
+      <div class="oc-foot">
+        <span class="otime">Deleted ${ft(o.deletedAt||o.at)}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        <button class="inv-action-btn secondary" style="flex:1;" onclick="restoreFromTrash('${kind}','${id}')">↩ Restore</button>
+        <button class="inv-action-btn" style="flex:1;background:var(--red-bg);color:var(--red);" onclick="permanentlyDeleteTrash('${kind}','${id}')">🗑 Delete Forever</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function restoreFromTrash(kind, id) {
+  const store = kind === 'order' ? trashOrders : trashQuotes;
+  const o = store[id]; if (!o) return;
+  const restored = { ...o };
+  delete restored.deletedAt;
+  const collection = kind === 'order' ? 'orders' : 'quotes';
+  await fbPatch(collection+'/'+id, restored);
+  await fbDel('trash/'+(kind==='order'?'orders':'quotes')+'/'+id);
+  if (kind === 'order') { orders[id] = restored; delete trashOrders[id]; }
+  else { quotes[id] = restored; delete trashQuotes[id]; }
+  toast(kind === 'order' ? '✓ Work order restored' : '✓ Estimate restored');
+  render();
+}
+
+async function permanentlyDeleteTrash(kind, id) {
+  if (!confirm('Permanently delete this? It cannot be recovered after this.')) return;
+  await fbDel('trash/'+(kind==='order'?'orders':'quotes')+'/'+id);
+  if (kind === 'order') delete trashOrders[id]; else delete trashQuotes[id];
+  toast('Permanently deleted');
+  render();
+}
+
 function quoteListHTML(list) {
   if (!list.length) return `<div class="empty"><div class="empty-icon">📋</div>No quotes saved yet</div>`;
   return list.map(([id, o]) => {
@@ -2260,12 +2344,16 @@ async function chQuoteStatus(id, s) {
 }
 
 async function deleteQuote(id) {
-  if (!confirm('Delete this quote? This cannot be undone.')) return;
+  const o = quotes[id]; if (!o) return;
+  if (!confirm('Delete this quote? It will be moved to Trash and can be restored later.')) return;
+  const trashed = { ...o, deletedAt: new Date().toISOString() };
+  await fbPatch('trash/quotes/'+id, trashed);
   await fbDel('quotes/'+id);
+  trashQuotes[id] = trashed;
   delete quotes[id];
   closeD();
   render();
-  toast('Quote deleted');
+  toast('Quote moved to Trash');
 }
 
 function sendQuoteToCustomer(id) {
