@@ -957,7 +957,10 @@ function listHTML(list) {
       </div>
       ${chips ? `<div class="oc-chips">${chips}</div>` : ''}
       <div class="oc-foot">
-        <span class="sbadge ${sc.c}"><span class="sdot"></span>${sc.l}</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span class="sbadge ${sc.c}"><span class="sdot"></span>${sc.l}</span>
+          <span class="plate-badge">#${o.invoiceNo||'—'}</span>
+        </span>
         <span class="otime">${ft(o.at)}</span>
       </div>
     </div>`;
@@ -2143,7 +2146,10 @@ function quoteListHTML(list) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           ${esc(o.c)||'—'} ${o.lp?`<span class="plate-badge">${esc(o.lp)}</span>`:''}
         </div>
-        <span class="prio-pill pp-${o.s==='accepted'?'low':(o.s==='declined'||o.s==='expired'?'normal':'high')}" style="background:${o.s==='accepted'?'var(--green-bg)':o.s==='declined'||o.s==='expired'?'var(--surface2)':'var(--amber-bg)'};color:${o.s==='accepted'?'var(--green)':o.s==='declined'||o.s==='expired'?'var(--text2)':'var(--amber)'}">${statusInfo.l}</span>
+        <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          <span class="plate-badge">#${o.invoiceNo||'—'}</span>
+          <span class="prio-pill pp-${o.s==='accepted'?'low':(o.s==='declined'||o.s==='expired'?'normal':'high')}" style="background:${o.s==='accepted'?'var(--green-bg)':o.s==='declined'||o.s==='expired'?'var(--surface2)':'var(--amber-bg)'};color:${o.s==='accepted'?'var(--green)':o.s==='declined'||o.s==='expired'?'var(--text2)':'var(--amber)'}">${statusInfo.l}</span>
+        </span>
       </div>
       <div class="oc-cli">
         <span>👤 ${esc(o.n)||'—'}</span>
@@ -2211,7 +2217,7 @@ function openQuote(id) {
       <div class="dsect-t">Quote Status</div>
       <div class="status-btns">
         <button class="sts-btn${o.s==='open'||!o.s?' on-w':''}" onclick="chQuoteStatus('${id}','open')">📋 Open</button>
-        <button class="sts-btn${o.s==='accepted'?' on-d':''}" onclick="chQuoteStatus('${id}','accepted')">✓ Accepted</button>
+        <button class="sts-btn" onclick="convertQuoteToOrder('${id}')">✓ Accepted</button>
         <button class="sts-btn${o.s==='declined'?' on-p':''}" onclick="chQuoteStatus('${id}','declined')">✗ Declined</button>
       </div>
     </div>
@@ -2378,9 +2384,8 @@ function sendQuoteToCustomer(id) {
 
 async function convertQuoteToOrder(id) {
   const o = quotes[id]; if (!o) return;
-  if (!confirm('Convert this quote to a Work Order? The quote will be marked as Accepted.')) return;
-  // Create work order from quote
-  const invoiceNo = await nextEstimateNumber();
+  if (!confirm('Accept this quote? It will move to Work Orders (no separate copy is kept in Quotes).')) return;
+  // Move the quote into Work Orders, keeping the same id and estimate number — no duplicate record.
   const order = {
     n: o.n, fn: o.fn || o.n, ph: o.ph, ph2: o.ph2 || '',
     lp: o.lp || '—',
@@ -2394,24 +2399,20 @@ async function convertQuoteToOrder(id) {
     inv: o.items ? o.items.slice() : [],
     tax: o.tax !== undefined ? o.tax : 6.25,
     sv: [], pr: 'normal', s: 'waiting',
-    at: new Date().toISOString(),
+    at: o.at || new Date().toISOString(),
     dev: getDeviceName(),
     quoteId: id,
-    invoiceNo,
-    h: [{ ts: new Date().toISOString(), dev: getDeviceName(), action: `Created from Estimate #${o.invoiceNo || id.slice(-6).toUpperCase()}` }]
+    invoiceNo: o.invoiceNo,
+    h: [...(o.h||[]), { ts: new Date().toISOString(), dev: getDeviceName(), action: `Estimate #${o.invoiceNo || id.slice(-6).toUpperCase()} accepted — moved to Work Orders` }]
   };
-  const key = await fbPush('orders', order);
-  if (key) {
-    orders[key] = order;
-    // Mark quote as accepted
-    await chQuoteStatus(id, 'accepted');
-    toast('✓ Converted to Work Order');
-    closeD();
-    gv('all');
-    setTimeout(() => openD(key), 400);
-  } else {
-    toast('⚠ Failed to convert');
-  }
+  await fbPatch('orders/'+id, order);
+  await fbDel('quotes/'+id);
+  orders[id] = order;
+  delete quotes[id];
+  toast('✓ Quote accepted — moved to Work Orders');
+  closeD();
+  gv('all');
+  setTimeout(() => openD(id), 400);
 }
 
 // ── CUSTOMER AUTOCOMPLETE ──
