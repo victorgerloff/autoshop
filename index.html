@@ -474,6 +474,27 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
       All Quotes
       <span class="navcount" id="nb-q">0</span>
     </button>
+    <div class="nav-label" style="margin-top:12px;">By Status</div>
+    <button class="navbtn" id="n-qopen" onclick="gv('qopen')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Open
+      <span class="navcount" id="nb-qopen">0</span>
+    </button>
+    <button class="navbtn" id="n-qaccepted" onclick="gv('qaccepted')">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Accepted
+      <span class="navcount" id="nb-qaccepted">0</span>
+    </button>
+    <button class="navbtn" id="n-qdeclined" onclick="gv('qdeclined')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      Declined
+      <span class="navcount" id="nb-qdeclined">0</span>
+    </button>
+    <button class="navbtn" id="n-qexpired" onclick="gv('qexpired')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Expired
+      <span class="navcount" id="nb-qexpired">0</span>
+    </button>
     <div class="nav-label" style="margin-top:12px;">Backup</div>
     <button class="navbtn" id="n-trash" onclick="gv('trash')">
       <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a2 2 0 012-2h0a2 2 0 012 2v2"/></svg>
@@ -819,9 +840,14 @@ function setSync(ok) {
 function gv(v) {
   view = v;
   document.querySelectorAll('.navbtn,.mob-btn').forEach(b => b.classList.remove('active'));
-  const map = { new:'n-new', all:'n-all', waiting:'n-waiting', progress:'n-progress', done:'n-done', newquote:'n-newquote', quotes:'n-quotes', trash:'n-trash' };
+  const map = { new:'n-new', all:'n-all', waiting:'n-waiting', progress:'n-progress', done:'n-done', newquote:'n-newquote', quotes:'n-quotes', qopen:'n-qopen', qaccepted:'n-qaccepted', qdeclined:'n-qdeclined', qexpired:'n-qexpired', trash:'n-trash' };
   if (map[v]) document.getElementById(map[v])?.classList.add('active');
   render();
+}
+
+function isQuoteExpired(o) {
+  const expDate = o.exp ? new Date(o.exp) : null;
+  return !!(expDate && expDate < new Date() && (o.s === 'open' || !o.s));
 }
 
 function counts() {
@@ -829,9 +855,14 @@ function counts() {
   const cw = all.filter(o=>o.s==='waiting').length;
   const cp = all.filter(o=>o.s==='progress').length;
   const cd = all.filter(o=>o.s==='done').length;
-  const cq = Object.values(quotes).filter(qq=>qq.s==='open').length;
+  const qAll = Object.values(quotes);
+  const cq = qAll.filter(qq=>qq.s==='open').length;
+  const cQOpen = qAll.filter(o=>(o.s==='open'||!o.s) && !isQuoteExpired(o)).length;
+  const cQAccepted = qAll.filter(o=>o.s==='accepted').length;
+  const cQDeclined = qAll.filter(o=>o.s==='declined').length;
+  const cQExpired = qAll.filter(isQuoteExpired).length;
   const ct = Object.keys(trashOrders).length + Object.keys(trashQuotes).length;
-  [['nb-all',all.length],['nb-w',cw],['nb-p',cp],['nb-d',cd],['nb-q',cq],['nb-trash',ct]].forEach(([id,n])=>{
+  [['nb-all',all.length],['nb-w',cw],['nb-p',cp],['nb-d',cd],['nb-q',cq],['nb-qopen',cQOpen],['nb-qaccepted',cQAccepted],['nb-qdeclined',cQDeclined],['nb-qexpired',cQExpired],['nb-trash',ct]].forEach(([id,n])=>{
     const el=document.getElementById(id); if(el)el.textContent=n;
   });
 }
@@ -841,7 +872,7 @@ function render() {
   const el = document.getElementById('main');
   if (view === 'new') { el.innerHTML = formHTML(); initForm(); return; }
   if (view === 'newquote') { el.innerHTML = quoteFormHTML(); initQuoteForm(); return; }
-  if (view === 'quotes') { renderQuotesList(); return; }
+  if (view === 'quotes' || view === 'qopen' || view === 'qaccepted' || view === 'qdeclined' || view === 'qexpired') { renderQuotesList(); return; }
   if (view === 'trash') { renderTrashList(); return; }
   const all = Object.values(orders);
   const cw = all.filter(o=>o.s==='waiting').length;
@@ -863,16 +894,20 @@ function render() {
         <input type="text" placeholder="Search name, phone, invoice #, vehicle, plate, VIN..." value="${q}" oninput="q=this.value;renderList()" />
       </div>
     </div>
-    <div class="date-filters">
+    ${dateFiltersHTML('renderList')}
+    <div id="list-body">${listHTML(list)}</div>`;
+}
+
+function dateFiltersHTML(refreshFn) {
+  return `<div class="date-filters">
       <span class="date-filter-label">Date:</span>
       <button class="date-pill ${dateFilter==='all'?'on':''}" onclick="setDateFilter('all')">All time</button>
       <button class="date-pill ${dateFilter==='today'?'on':''}" onclick="setDateFilter('today')">Today</button>
       <button class="date-pill ${dateFilter==='week'?'on':''}" onclick="setDateFilter('week')">Last 7 days</button>
       <button class="date-pill ${dateFilter==='month'?'on':''}" onclick="setDateFilter('month')">Last 30 days</button>
       <button class="date-pill ${dateFilter==='custom'?'on':''}" onclick="setDateFilter('custom')">Custom</button>
-      ${dateFilter==='custom'?`<div class="date-range"><input type="date" value="${dateFrom}" onchange="dateFrom=this.value;renderList()" /> to <input type="date" value="${dateTo}" onchange="dateTo=this.value;renderList()" /></div>`:''}
-    </div>
-    <div id="list-body">${listHTML(list)}</div>`;
+      ${dateFilter==='custom'?`<div class="date-range"><input type="date" value="${dateFrom}" onchange="dateFrom=this.value;${refreshFn}()" /> to <input type="date" value="${dateTo}" onchange="dateTo=this.value;${refreshFn}()" /></div>`:''}
+    </div>`;
 }
 
 function renderList() {
@@ -1999,7 +2034,8 @@ function renderQuotesList() {
   const all = Object.values(quotes);
   const cOpen = all.filter(o=>o.s==='open' || !o.s).length;
   const cAcc = all.filter(o=>o.s==='accepted').length;
-  const cDec = all.filter(o=>o.s==='declined' || o.s==='expired').length;
+  const cDec = all.filter(o=>o.s==='declined').length + all.filter(isQuoteExpired).length;
+  const titles = { quotes:'All Quotes', qopen:'Open', qaccepted:'Accepted', qdeclined:'Declined', qexpired:'Expired' };
   el.innerHTML = `
     <div class="stats">
       <div class="statcard"><div class="stat-n">${all.length}</div><div class="stat-l">Total Quotes</div></div>
@@ -2008,7 +2044,7 @@ function renderQuotesList() {
       <div class="statcard"><div class="stat-n g">${cDec}</div><div class="stat-l">Closed</div></div>
     </div>
     <div class="sec-head">
-      <div class="sec-title">Quotes / Estimates</div>
+      <div class="sec-title">${titles[view]||'Quotes / Estimates'}</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <button onclick="gv('newquote')" style="padding:8px 14px;background:var(--planet-red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:flex;align-items:center;gap:6px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2020,15 +2056,25 @@ function renderQuotesList() {
         </div>
       </div>
     </div>
+    ${dateFiltersHTML('renderQuoteListBody')}
     <div id="quote-list-body"></div>`;
   renderQuoteListBody();
+}
+function matchesQuoteView(o) {
+  if (view === 'qopen') return (o.s==='open'||!o.s) && !isQuoteExpired(o);
+  if (view === 'qaccepted') return o.s==='accepted';
+  if (view === 'qdeclined') return o.s==='declined';
+  if (view === 'qexpired') return isQuoteExpired(o);
+  return true;
 }
 function renderQuoteListBody() {
   const el = document.getElementById('quote-list-body');
   if (!el) return;
   const sq = q.toLowerCase();
   const filtered = Object.entries(quotes)
+    .filter(([,o]) => matchesQuoteView(o))
     .filter(([,o]) => matchesSearch(o, sq))
+    .filter(([,o]) => matchesDateFilter(o))
     .sort((a,b)=> new Date(b[1].at)-new Date(a[1].at));
   el.innerHTML = quoteListHTML(filtered);
 }
@@ -2105,8 +2151,7 @@ function quoteListHTML(list) {
       declined: {c:'sb-p', l:'✗ Declined'},
       expired: {c:'sb-w', l:'Expired'}
     }[o.s || 'open'];
-    const expDate = o.exp ? new Date(o.exp) : null;
-    const isExpired = expDate && expDate < new Date() && (o.s === 'open' || !o.s);
+    const isExpired = isQuoteExpired(o);
     return `<div class="ocard${isExpired?' urgent':''}" onclick="openQuote('${id}')">
       <div class="oc-top">
         <div class="oc-car">
