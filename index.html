@@ -286,17 +286,6 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .btn-save{background:var(--planet-red);color:#fff;border:none;}
 .btn-cancel-sm{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
 
-/* === COMPLAINT CHECKLIST === */
-.checklist{display:flex;flex-direction:column;gap:5px;}
-.checklist-item{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.5;cursor:pointer;transition:background 0.1s;}
-.checklist-item:hover{background:var(--surface2);}
-.checklist-item.checked{opacity:0.55;background:var(--surface2);}
-.checklist-item.checked .check-text{text-decoration:line-through;color:var(--text2);}
-.check-box{width:18px;height:18px;border:2px solid var(--border2);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;background:var(--surface);transition:all 0.12s;}
-.checklist-item.checked .check-box{background:var(--planet-red);border-color:var(--planet-red);}
-.check-box svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;opacity:0;}
-.checklist-item.checked .check-box svg{opacity:1;}
-.check-text{flex:1;color:var(--text);}
 
 /* === CUSTOMER AUTOCOMPLETE === */
 .autocomplete-wrap{position:relative;}
@@ -1025,9 +1014,8 @@ function formHTML() {
           <button class="priobtn" id="pb-high" onclick="sp('high')">🔥 Urgent</button>
         </div>
       </div>
-      <div class="fg full"><label>🔒 Customer Complaint / Checklist <span style="font-weight:400;text-transform:none;color:var(--text3)">(private — staff only, never printed)</span></label>
-        <textarea id="f-ob" placeholder="Enter one issue per line — each becomes a checklist item:&#10;Brake squeaking when stopping&#10;Check engine light is on&#10;Strange noise from front wheel&#10;Oil change overdue" rows="5"></textarea>
-        <span class="field-hint">💡 Each line becomes a checklist item the mechanic can check off as completed.</span>
+      <div class="fg full"><label>🔒 Internal Notes <span style="font-weight:400;text-transform:none;color:var(--text3)">(private — staff only, never printed)</span></label>
+        <textarea id="f-ob" rows="3" placeholder="Internal reminders, diagnostics, parts to check, anything not meant for the customer..."></textarea>
       </div>
       <div class="fg full"><label>Notes for Customer <span style="font-weight:400;text-transform:none;color:var(--text3)">(shown on the printed invoice)</span></label>
         <textarea id="f-notes-customer" rows="3" placeholder="Anything you'd like the customer to see on their invoice..."></textarea>
@@ -1187,8 +1175,8 @@ function openD(id) {
     ${(o.sv||[]).length?`<div class="dsect"><div class="dsect-t">Services Requested</div><div class="tags-wrap" style="padding-top:4px">${(o.sv||[]).map(s=>`<span class="tag on" style="pointer-events:none">${esc(s)}</span>`).join('')}</div></div>`:''}
 
     ${o.ob?`<div class="dsect">
-      <div class="dsect-t">🔒 Customer Complaint Checklist <span style="font-weight:400;text-transform:none;color:var(--text3)">(staff only)</span></div>
-      <div class="checklist" id="checklist-${id}">${renderChecklist(o, id)}</div>
+      <div class="dsect-t">🔒 Internal Notes <span style="font-weight:400;text-transform:none;color:var(--text3)">(staff only)</span></div>
+      <div class="obs-box">${esc(o.ob)}</div>
     </div>`:''}
 
     ${o.notesCustomer?`<div class="dsect"><div class="dsect-t">Notes <span style="font-weight:400;text-transform:none;color:var(--text3)">(shown to customer)</span></div><div class="obs-box">${esc(o.notesCustomer)}</div></div>`:''}
@@ -1272,27 +1260,6 @@ function openD(id) {
 
     <button class="del-btn" onclick="delO()">🗑 Delete Work Order</button>`;
   document.getElementById('overlay').classList.add('open');
-}
-
-// ── COMPLAINT CHECKLIST ──
-function renderChecklist(o, id) {
-  if (!o.ob) return '';
-  const lines = o.ob.split('\n').map(l => l.trim()).filter(l => l);
-  const checked = o.cl || {};
-  return lines.map((line, i) => {
-    const isChecked = checked[i];
-    return `<div class="checklist-item${isChecked?' checked':''}" onclick="toggleCheckItem('${id}',${i})">
-      <div class="check-box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="check-text">${esc(line)}</div>
-    </div>`;
-  }).join('');
-}
-async function toggleCheckItem(id, idx) {
-  const o = orders[id]; if (!o) return;
-  if (!o.cl) o.cl = {};
-  o.cl[idx] = !o.cl[idx];
-  await fbPatch('orders/'+id, {cl: o.cl});
-  document.getElementById('checklist-'+id).innerHTML = renderChecklist(o, id);
 }
 
 // ── MECHANIC NOTES ──
@@ -2677,8 +2644,8 @@ function createEditModal() {
           <button class="priobtn" id="e-pb-high" onclick="setEditPrio('high')">🔥 Urgent</button>
         </div>
       </div>
-      <div class="fg full"><label>🔒 Customer Complaint / Checklist <span style="font-weight:400;text-transform:none;color:var(--text3)">(private — staff only, never printed)</span></label>
-        <textarea id="e-ob" rows="4"></textarea>
+      <div class="fg full"><label>🔒 Internal Notes <span style="font-weight:400;text-transform:none;color:var(--text3)">(private — staff only, never printed)</span></label>
+        <textarea id="e-ob" rows="3"></textarea>
       </div>
       <div class="fg full"><label>Notes for Customer <span style="font-weight:400;text-transform:none;color:var(--text3)">(shown on the printed invoice)</span></label>
         <textarea id="e-notes-customer" rows="3"></textarea>
@@ -2728,7 +2695,7 @@ async function saveEdit() {
   if ((o.mi||'') !== document.getElementById('e-mi').value) changes.push('Mileage');
   if ((o.eng||'') !== document.getElementById('e-eng').value) changes.push('Engine');
   if ((o.vin||'') !== document.getElementById('e-vin').value) changes.push('VIN');
-  if ((o.ob||'') !== document.getElementById('e-ob').value) changes.push('Complaint');
+  if ((o.ob||'') !== document.getElementById('e-ob').value) changes.push('Internal Notes');
   if ((o.notesCustomer||'') !== document.getElementById('e-notes-customer').value) changes.push('Notes for Customer');
   if ((o.tech||'') !== document.getElementById('e-tech').value) changes.push('Technician');
   if ((o.dod||'') !== document.getElementById('e-dod').value) changes.push('Drop-off Date');
