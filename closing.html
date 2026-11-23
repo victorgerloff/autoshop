@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Planet Automotive — Daily Closing</title>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#CC0000; --red-dark:#990000; --red-bg:#ffe6e6;
+  --bg:#F0F0F0; --surface:#fff; --surface2:#ececec; --border:#d4d4d4; --border2:#a8a8a8;
+  --text:#000; --text2:#4a4a4a; --text3:#808080;
+  --ok:#1a6e35; --ok-bg:#dcf5e3; --warn:#8a5a00; --warn-bg:#fff2d6;
+  --r:8px; --mono:'IBM Plex Mono',monospace;
+}
+html{-webkit-text-size-adjust:100%;}
+body{font-family:'IBM Plex Sans',sans-serif;background:#000;color:var(--text);font-size:14px;line-height:1.45;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:url('./assets/bg-texture.jpg') center/min(900px,90vw) auto no-repeat fixed;opacity:.45;z-index:0;pointer-events:none;}
+body>*{position:relative;z-index:1;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border2);border-radius:6px;padding:6px 8px;background:#fff;color:var(--text);width:100%;min-width:0;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--red);outline-offset:-1px;border-color:var(--red);}
+input.num{text-align:right;font-family:var(--mono);}
+input.auto{color:var(--text3);font-style:italic;}
+input.bad{background:var(--red-bg);border-color:var(--red);}
+
+/* TOPBAR */
+.topbar{background:#000;color:#F0F0F0;padding:env(safe-area-inset-top,0) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));position:sticky;top:0;z-index:50;border-bottom:2px solid var(--red);}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;height:54px;gap:10px;}
+.brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;}
+.brand img{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid rgba(204,0,0,.4);}
+.brand-name{font-size:15px;font-weight:600;}
+.brand-sub{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--red);}
+.top-actions{display:flex;gap:8px;align-items:center;}
+.pill{background:rgba(255,255,255,.12);border:none;color:#F0F0F0;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px;text-decoration:none;}
+.pill:hover{background:rgba(255,255,255,.2);}
+.dot{width:7px;height:7px;border-radius:50%;background:#888;}
+.dot.on{background:#2ecc71;} .dot.off{background:var(--red);}
+
+/* TABS */
+.tabs{display:flex;gap:4px;padding:10px max(16px,env(safe-area-inset-left)) 0;max-width:1200px;margin:0 auto;overflow-x:auto;}
+.tab{background:rgba(255,255,255,.12);color:#eee;border:none;padding:9px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:600;white-space:nowrap;}
+.tab.active{background:var(--bg);color:#000;}
+.wrap{max-width:1200px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left)) 90px;}
+.page{background:var(--bg);border-radius:0 8px 8px 8px;padding:16px;min-height:60vh;}
+
+/* GENERIC */
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.spacer{flex:1;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.card h3 .spacer{flex:1}
+.btn{border:1px solid var(--border2);background:#fff;color:var(--text);padding:7px 12px;border-radius:var(--r);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn:hover{background:var(--surface2);}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff;}
+.btn.primary:hover{background:var(--red-dark);}
+.btn.dark{background:#000;border-color:#000;color:#fff;}
+.btn.sm{padding:4px 8px;font-size:11px;}
+.btn.icon{padding:4px 8px;color:var(--text3);}
+.btn.icon:hover{color:var(--red);border-color:var(--red);background:var(--red-bg);}
+.muted{color:var(--text3);font-size:12px;}
+.mono{font-family:var(--mono);}
+.right{text-align:right;}
+.neg{color:var(--red);}
+.pos{color:var(--ok);}
+.datebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.datebar input[type=date]{width:auto;font-size:14px;padding:7px 10px;}
+.datebar .big{font-size:18px;font-weight:700;}
+.chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text2);}
+.chip.red{background:var(--red-bg);color:var(--red);}
+.chip.ok{background:var(--ok-bg);color:var(--ok);}
+
+/* TICKETS */
+.thead,.trow{display:grid;grid-template-columns:28px 92px 170px 82px 82px 74px 64px 86px 86px 120px 140px 30px;gap:6px;align-items:center;}
+.thead{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);padding:0 0 6px;}
+.trow{padding:6px 0;border-top:1px solid var(--surface2);}
+.trow .n{font-size:11px;color:var(--text3);font-family:var(--mono);text-align:center;}
+.trow .calc{font-family:var(--mono);font-size:12px;text-align:right;padding-right:4px;}
+.trow .calc.total{font-weight:700;}
+.trow .lbl{display:none;}
+.tscroll{overflow-x:auto;}
+.tscroll-inner{min-width:1120px;}
+.split{grid-column:3 / -2;display:grid;grid-template-columns:repeat(4,1fr) 1.4fr;gap:6px;background:var(--surface2);padding:6px;border-radius:6px;}
+.split label,.field label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:2px;}
+.cost-wrap{position:relative;}
+.cost-wrap input{padding-right:18px;}
+.cost-wrap .reset{position:absolute;right:2px;top:50%;transform:translateY(-50%);border:none;background:none;color:var(--text3);font-size:12px;padding:2px 4px;}
+.unpaid-flag{font-size:10px;color:var(--red);font-weight:700;}
+
+@media(max-width:820px){
+  .tscroll-inner{min-width:0;}
+  .thead{display:none;}
+  .trow{grid-template-columns:repeat(4,1fr);gap:6px 8px;padding:10px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;background:#fff;}
+  .trow .lbl{display:block;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:2px;}
+  .trow>.n{grid-column:1 / 4;text-align:left;font-size:12px;font-weight:700;color:var(--text);}
+  .trow>.del{grid-column:4;justify-self:end;}
+  .trow>.c-inv{grid-column:span 2;} .trow>.c-svc{grid-column:span 2;}
+  .trow>.c-pay{grid-column:span 2;} .trow>.c-acct{grid-column:span 2;} .trow>.c-total{grid-column:span 2;}
+  .trow .calc{text-align:left;}
+  .split{grid-column:1 / -1;grid-template-columns:repeat(2,1fr);}
+}
+
+/* TOTALS GRID (like the sheet's DAY TOTALS) */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr;}}
+table.t{width:100%;border-collapse:collapse;font-size:13px;}
+table.t td,table.t th{padding:5px 6px;border-bottom:1px solid var(--surface2);}
+table.t th{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);text-align:left;font-weight:700;}
+table.t td.v,table.t th.v{text-align:right;font-family:var(--mono);white-space:nowrap;}
+table.t tr.tot td{font-weight:700;border-top:2px solid #000;border-bottom:none;}
+table.t tr.sub td{color:var(--text2);}
+table.t tr.hl td{background:#fff7f7;}
+table.t input{padding:4px 6px;font-size:12px;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;border-left:4px solid #000;}
+.kpi.red{border-left-color:var(--red);}
+.kpi.green{border-left-color:var(--ok);}
+.kpi .v{font-size:20px;font-weight:700;font-family:var(--mono);letter-spacing:-.5px;}
+.kpi .l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);font-weight:600;}
+.kpi .s{font-size:11px;color:var(--text2);}
+.counter{display:flex;align-items:center;gap:4px;}
+.counter button{width:30px;height:30px;border:1px solid var(--border2);background:#fff;border-radius:6px;font-size:16px;font-weight:700;}
+.counter input{width:52px;text-align:center;font-family:var(--mono);}
+.list-row{display:grid;grid-template-columns:150px 1fr 110px 30px;gap:6px;margin-bottom:6px;align-items:center;}
+@media(max-width:600px){.list-row{grid-template-columns:1fr 1fr;}.list-row>*:nth-child(2){grid-column:1 / -1;order:3}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:#000;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:200;transition:transform .25s;border:1px solid var(--red);max-width:90vw;}
+.toast{opacity:0;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+@media(max-width:600px){.brand-name,.brand-sub,#sync-txt{display:none;}.datebar .big{font-size:15px;width:100%;}}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:8px 10px;font-size:12px;margin-bottom:10px;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:150;padding:16px;}
+.modal.show{display:flex;}
+.modal .box{background:#fff;border-radius:12px;padding:18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;}
+.modal h2{font-size:16px;margin-bottom:10px;}
+
+/* REPORT (print) */
+#print-area{display:none;}
+.rep{font-size:11px;color:#000;}
+.rep h1{font-size:18px;margin-bottom:2px;}
+.rep h2{font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 4px;border-bottom:2px solid #CC0000;padding-bottom:2px;}
+.rep table{width:100%;border-collapse:collapse;}
+.rep td,.rep th{border-bottom:1px solid #ddd;padding:3px 5px;text-align:left;}
+.rep th{font-size:9px;text-transform:uppercase;color:#555;}
+.rep .v{text-align:right;font-family:var(--mono);}
+.rep tr.tot td{font-weight:700;border-top:1.5px solid #000;}
+.rep .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.rep .kp{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
+.rep .kp div{border:1px solid #ccc;border-left:3px solid #CC0000;padding:4px 6px;}
+.rep .kp b{display:block;font-size:14px;font-family:var(--mono);}
+@media print{
+  @page{size:letter;margin:12mm;}
+  body{background:#fff;}
+  body::before{display:none;}
+  body>*{display:none !important;}
+  #print-area{display:block !important;}
+  .rep h2{break-after:avoid;}
+  .rep table{break-inside:auto;}
+  .rep tr{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="./index.html">
+      <img src="./icons/icon-192.png" alt="">
+      <div><div class="brand-name">Planet Automotive</div><div class="brand-sub" data-t="appSub"></div></div>
+    </a>
+    <div class="top-actions">
+      <a class="pill" href="./index.html" data-t="backOrders"></a>
+      <button class="pill" onclick="toggleLang()" id="lang-btn">EN</button>
+      <span class="pill"><span class="dot" id="sync-dot"></span><span id="sync-txt"></span></span>
+    </div>
+  </div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div class="wrap"><div class="page" id="page"></div></div>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="box" id="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+<div id="print-area"></div>
+<input type="file" id="file-xls" accept=".xls,.xlsx" style="display:none" onchange="importSheet(this)">
+<input type="file" id="file-json" accept=".json,application/json" style="display:none" onchange="importBackup(this)">
+
+<script src="./vendor/xlsx.full.min.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   Planet Automotive — Daily Closing (Fechamento diário)
+   Replaces the old password-locked "Garage" weekly spreadsheet.
+   Same math as the sheet:
+     Tax           = Parts × 6.25%  (parts only)
+     Total invoice = Labor + Parts + Misc(no tax) + Tax
+     Part cost     = service cost (oil changes etc.) + Parts ÷ (1 + markup)
+                     — auto, but can be overwritten per ticket
+     Inspections   = count × $35, cost count × $12 (kept out of Total invoice,
+                     like the sheet, but included in payments)
+     Profit (week) = Total invoice + Misc cash in − Part cost − Sales tax
+                     − Payroll − Other deductions (labour checks)
+   Data syncs through the same Firebase database as the Service Orders app
+   (path /closing) or stays on this device if no database is configured.
+   ===================================================================== */
+
+/* ---------- i18n ---------- */
+const L = {
+pt:{appSub:'Fechamento diário',backOrders:'← Ordens',tabDay:'Fechamento do dia',tabWeek:'Relatório semanal',tabHouse:'In House',tabSet:'Configurações',
+ synced:'Sincronizado',offline:'Sem conexão',local:'Só neste aparelho',saving:'Salvando…',
+ today:'Hoje',tickets:'Tickets / Invoices do dia',addTicket:'+ Adicionar ticket',add3:'+3',
+ inv:'Invoice #',svc:'Serviço',labor:'Labor',parts:'Peças',misc:'Misc s/ tax',tax:'Tax',total:'Total',cost:'Custo peças',pay:'Pagamento',paid:'Pago',acct:'Conta in house',
+ cash:'Cash',credit:'Cartão',check:'Cheque',house:'In house',splitPay:'Dividido',unpaid:'Não pago',noTickets:'Nenhum ticket lançado neste dia.',
+ custom:'Outro (digitar)…',none:'— (só invoice)',svcName:'Nome do serviço',
+ insp:'Inspeções',inspHouse:'Inspeções in house (por conta)',addAcct:'+ conta',
+ moves:'Caixa: entradas e saídas do dia',addMove:'+ Lançamento',desc:'Descrição',amount:'Valor',
+ mv_miscin:'Misc. cash in',mv_partout:'Part paid out',mv_expense:"Expense P.O.",mv_food:'Food & misc P.O.',mv_deposit:'Depósito no banco',
+ collections:'Collections H.C. (recebido em cash de in house)',
+ dayTotals:'Totais do dia',totalInvoice:'Total invoices',partCost:'Custo das peças',grossDay:'Lucro bruto do dia (invoices − tax − custo)',
+ payments:'Pagamentos recebidos',unpaidBal:'Saldo não pago',inspAmt:'Valor inspeções',inspCost:'Custo inspeções',
+ cashToday:'Cash do dia (entradas − saídas)',cashUpTo:'Cash que deve ter (acumulado da semana)',dayNote:'Observações do dia',
+ week:'Semana',weekOf:'Semana de',to:'a',prevW:'← Semana anterior',nextW:'Próxima semana →',
+ profit:'Lucro da semana',payroll:'Payroll',invoices:'Invoices',oilChanges:'Trocas de óleo',inspections:'Inspeções',
+ svcCount:'Quantas vezes cada serviço',qty:'Qtd',revenue:'Receita',inspProfit:'Lucro inspeções',
+ addPay:'+ Funcionário',employee:'Funcionário',fromCash:'Pago do caixa',deducts:'Outras deduções do lucro (cheques de labour, etc.)',addDed:'+ Dedução',date:'Data',
+ profitCalc:'Cálculo do lucro',plusMisc:'+ Misc. cash in',minusCost:'− Custo das peças',minusTax:'− Sales tax',minusPay:'− Payroll',minusDed:'− Outras deduções',
+ profitAll:'Lucro + lucro de inspeções',cashRec:'Conferência do caixa',startCash:'Cash inicial (da semana anterior)',cashIn:'+ Cash recebido (invoices + inspeções)',
+ cashMisc:'+ Misc cash in + collections H.C.',cashOut:'− Paid outs / expenses / food',cashDep:'− Depósitos no banco',cashPay:'− Payroll pago do caixa',
+ cashShould:'= Cash que deve ter',cashHave:'Cash que temos (contado)',diff:'Diferença',
+ byDay:'Resumo por dia',day:'Dia',exportPdf:'Exportar PDF',exportXls:'Exportar Excel',exportDayPdf:'PDF do dia',
+ houseTitle:'Contas In House',thisWeek:'Total desta semana',pastDue:'Atrasado (semanas anteriores)',totalDue:'Total devido',amtPaid:'Pago nesta semana',outstanding:'Saldo em aberto',
+ addHousePay:'+ Registrar pagamento',payType:'Forma',ledger:'Extrato',account:'Conta',charges:'Lançamentos',openBal:'Saldo inicial / lançamento manual',addCharge:'+ Lançamento manual',
+ allTime:'Saldo total',noAcct:'(sem conta)',
+ settings:'Configurações',taxRate:'Sales tax sobre peças (%)',markup:'Markup das peças (%) — custo = peças ÷ (1 + markup)',inspPrice:'Preço da inspeção ($)',inspCostS:'Custo da inspeção ($)',
+ svcCatalog:'Catálogo de serviços (preço e custo)',price:'Preço',isOil:'Troca de óleo',addSvc:'+ Serviço',accounts:'Contas in house',addAccount:'+ Conta',employees:'Funcionários (payroll)',addEmp:'+ Funcionário',
+ backup:'Backup e importação',exportJson:'Baixar backup (.json)',importJson:'Restaurar backup',importXls:'Importar planilha antiga (.xls)',
+ db:'Banco de dados (sincronização)',dbUrl:'URL do Firebase (a mesma do app de ordens)',saveDb:'Salvar',
+ imported:'Importado',confirmOverwrite:'Já existem lançamentos nestes dias. Substituir pelos da planilha?',
+ delConfirm:'Apagar este item?',name:'Nome',example:'Ex.: 4,25% — use ponto ou vírgula',
+ inspNote:'Inspeções ficam fora do “Total invoices” (igual à planilha), mas entram nos pagamentos e no caixa.',
+ dedNote:'Use para cheques de labour / officer que saem do lucro.',
+ importHelp:'Importa uma planilha semanal antiga (DAY(1)…DAY(7) + TOTALS) para o sistema. Seus dados atuais desses dias serão substituídos.',
+ importDone:'Planilha importada',weekProfitShort:'Lucro',reportTitle:'Relatório semanal',dayReport:'Fechamento do dia',
+ houseInv:'Invoices in house',noData:'Sem dados.',generated:'Gerado em',
+ houseWeekHint:'Os valores desta semana vêm dos tickets pagos “In house”. Registre aqui os pagamentos recebidos.',
+ cashNote:'O cash recebido em pagamentos de in house entra automaticamente como “Collections H.C.” no caixa do dia.',
+ viewWeek:'Ver semana',ok:'OK',cancel:'Cancelar',close:'Fechar',ref:'Ref',note:'Obs.',costShort:'custo',oilChip:'óleo'},
+en:{appSub:'Daily Closing',backOrders:'← Orders',tabDay:'Daily closing',tabWeek:'Weekly report',tabHouse:'House charges',tabSet:'Settings',
+ synced:'Synced',offline:'Offline',local:'This device only',saving:'Saving…',
+ today:'Today',tickets:"Today's tickets / invoices",addTicket:'+ Add ticket',add3:'+3',
+ inv:'Invoice #',svc:'Service',labor:'Labor',parts:'Parts',misc:'Misc no tax',tax:'Tax',total:'Total',cost:'Part cost',pay:'Payment',paid:'Paid',acct:'House account',
+ cash:'Cash',credit:'Credit card',check:'Check',house:'House charge',splitPay:'Split',unpaid:'Unpaid',noTickets:'No tickets entered for this day.',
+ custom:'Other (type)…',none:'— (invoice only)',svcName:'Service name',
+ insp:'Inspections',inspHouse:'House-charge inspections (by account)',addAcct:'+ account',
+ moves:'Daily cash in & out',addMove:'+ Entry',desc:'Description',amount:'Amount',
+ mv_miscin:'Misc. cash in',mv_partout:'Part paid out',mv_expense:"Expense P.O.",mv_food:'Food & misc P.O.',mv_deposit:'Bank deposit',
+ collections:'Collections H.C. (house payments received in cash)',
+ dayTotals:'Day totals',totalInvoice:'Total invoice',partCost:'Part cost',grossDay:'Day gross profit (invoice − tax − cost)',
+ payments:'Payments received',unpaidBal:'Unpaid balance',inspAmt:'Inspections amount',inspCost:'Inspections cost',
+ cashToday:'Cash today (in − out)',cashUpTo:'Cash should have (week to date)',dayNote:'Day notes',
+ week:'Week',weekOf:'Week of',to:'to',prevW:'← Previous week',nextW:'Next week →',
+ profit:'Weekly profit',payroll:'Payroll',invoices:'Invoices',oilChanges:'Oil changes',inspections:'Inspections',
+ svcCount:'Service count',qty:'Qty',revenue:'Revenue',inspProfit:'Inspection profit',
+ addPay:'+ Employee',employee:'Employee',fromCash:'Paid from cash',deducts:'Other profit deductions (labour checks, etc.)',addDed:'+ Deduction',date:'Date',
+ profitCalc:'Profit calculation',plusMisc:'+ Misc. cash in',minusCost:'− Part cost',minusTax:'− Sales tax',minusPay:'− Payroll',minusDed:'− Other deductions',
+ profitAll:'Profit + inspection profit',cashRec:'Cash reconciliation',startCash:'Starting cash (from previous week)',cashIn:'+ Cash received (invoices + inspections)',
+ cashMisc:'+ Misc cash in + collections H.C.',cashOut:'− Paid outs / expenses / food',cashDep:'− Bank deposits',cashPay:'− Payroll paid from cash',
+ cashShould:'= Cash should have',cashHave:'Cash we have (counted)',diff:'Difference',
+ byDay:'By day',day:'Day',exportPdf:'Export PDF',exportXls:'Export Excel',exportDayPdf:'Day PDF',
+ houseTitle:'House charge accounts',thisWeek:'Total this week',pastDue:'Past due',totalDue:'Total due',amtPaid:'Paid this week',outstanding:'Total outstanding',
+ addHousePay:'+ Record payment',payType:'Type',ledger:'Statement',account:'Account',charges:'Charges',openBal:'Opening balance / manual charge',addCharge:'+ Manual charge',
+ allTime:'All-time balance',noAcct:'(no account)',
+ settings:'Settings',taxRate:'Sales tax on parts (%)',markup:'Parts markup (%) — cost = parts ÷ (1 + markup)',inspPrice:'Inspection price ($)',inspCostS:'Inspection cost ($)',
+ svcCatalog:'Service catalog (price & cost)',price:'Price',isOil:'Oil change',addSvc:'+ Service',accounts:'House accounts',addAccount:'+ Account',employees:'Employees (payroll)',addEmp:'+ Employee',
+ backup:'Backup & import',exportJson:'Download backup (.json)',importJson:'Restore backup',importXls:'Import old spreadsheet (.xls)',
+ db:'Database (sync)',dbUrl:'Firebase URL (same as the Orders app)',saveDb:'Save',
+ imported:'Imported',confirmOverwrite:'These days already have entries. Replace them with the spreadsheet?',
+ delConfirm:'Delete this item?',name:'Name',example:'e.g. 4.25',
+ inspNote:'Inspections are kept out of “Total invoice” (same as the sheet) but are included in payments and cash.',
+ dedNote:'Use for labour / officer checks that come out of profit.',
+ importHelp:'Imports an old weekly spreadsheet (DAY(1)…DAY(7) + TOTALS). Existing entries for those days are replaced.',
+ importDone:'Spreadsheet imported',weekProfitShort:'Profit',reportTitle:'Weekly report',dayReport:'Daily closing',
+ houseInv:'House-charge invoices',noData:'No data.',generated:'Generated',
+ houseWeekHint:'This week’s amounts come from tickets paid “House charge”. Record payments received here.',
+ cashNote:'Cash received from house accounts is added automatically as “Collections H.C.” in that day’s cash.',
+ viewWeek:'View week',ok:'OK',cancel:'Cancel',close:'Close',ref:'Ref',note:'Note',costShort:'cost',oilChip:'oil'}
+};
+let LANG = lsGet('closing_lang') || 'pt';
+const t = k => (L[LANG] && L[LANG][k]) || L.en[k] || k;
+
+/* ---------- safe helpers (never throw) ---------- */
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function num(v){
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  if (v === null || v === undefined) return 0;
+  let s = String(v).trim().replace(/[$\s]/g,'');
+  if (!s) return 0;
+  // "1.234,56" or "12,5" (pt-BR) → dot decimal; "1,234.56" → strip thousands
+  if (s.includes(',') && s.includes('.')) s = s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g,'').replace(',','.') : s.replace(/,/g,'');
+  else if (s.includes(',')) s = /,\d{1,2}$/.test(s) ? s.replace(',','.') : s.replace(/,/g,'');
+  const n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+const isBadNum = v => { const s = String(v ?? '').trim(); return s !== '' && !/^-?[$]?\s*[\d.,]+$/.test(s); };
+const r2 = n => Math.round((num(n) + Number.EPSILON) * 100) / 100;
+const money = n => { const v = r2(n); return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const arr = x => Array.isArray(x) ? x.filter(v => v != null) : (x && typeof x === 'object' ? Object.keys(x).sort((a,b)=>a-b).map(k=>x[k]).filter(v=>v!=null) : []);
+const norm = s => String(s ?? '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+function toast(m){ const el=document.getElementById('toast'); el.textContent=m; el.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'),2600); }
+
+/* ---------- dates (local, string based: YYYY-MM-DD) ---------- */
+const pad = n => String(n).padStart(2,'0');
+const dkey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const dparse = k => { const [y,m,d] = String(k).split('-').map(Number); return new Date(y, (m||1)-1, d||1); };
+const addDays = (k,n) => { const d = dparse(k); d.setDate(d.getDate()+n); return dkey(d); };
+const weekStart = k => { const d = dparse(k); const dow = (d.getDay()+6)%7; d.setDate(d.getDate()-dow); return dkey(d); }; // Monday
+const weekDays = ws => Array.from({length:7},(_,i)=>addDays(ws,i));
+const fmtDate = (k,opt) => dparse(k).toLocaleDateString(LANG==='pt'?'pt-BR':'en-US', opt || {weekday:'long', month:'short', day:'numeric', year:'numeric'});
+const fmtShort = k => dparse(k).toLocaleDateString(LANG==='pt'?'pt-BR':'en-US',{weekday:'short', month:'2-digit', day:'2-digit'});
+const todayKey = () => dkey(new Date());
+
+/* ---------- data ---------- */
+const DEFAULT_SETTINGS = {
+  taxRate: 6.25, markup: 40, inspPrice: 35, inspCost: 12,
+  services: [
+    {id:'s1',name:'SOC',price:95,cost:31,oil:true},
+    {id:'s2',name:'SOC',price:105,cost:36,oil:true},
+    {id:'s3',name:'SOC',price:115,cost:40,oil:true},
+    {id:'s4',name:'ROC',price:55,cost:16.2,oil:true},
+    {id:'s5',name:'W FLUID',price:10,cost:3.1,oil:false},
+    {id:'s6',name:'TIRE PLUG',price:25,cost:1.5,oil:false},
+    {id:'s7',name:'T ROTATION',price:60,cost:0,oil:false},
+    {id:'s8',name:'T MOUNT',price:0,cost:0,oil:false},
+    {id:'s9',name:'T DISPOSAL',price:0,cost:0,oil:false},
+    {id:'s10',name:'LABOR',price:0,cost:0,oil:false}
+  ],
+  accounts: ['MD AUTO SALES','EASY WAY AUTOBODY','NEW BEGGINNIG','PHC BUILDERS','CHARLES RIVER','EMPIRE AUTO GROUP','PLANET AUTOMOTIVE','ANIS','CP AUTO SALES','NEYLOR','COSTA AUTO GROUP','PATRIOTS BUIDERS'],
+  employees: ['ITALO','DAVY','VICTOR','GABRIEL']
+};
+let DB = { settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)), days:{}, weeks:{}, house:{charges:{}, payments:{}} };
+let FB = (lsGet('autoshop_fb_url') || '').replace(/\/$/,'');
+let syncState = FB ? 'synced' : 'local';
+let TAB = lsGet('closing_tab') || 'day';
+let CUR = todayKey();
+let CURW = weekStart(CUR);
+
+function S(){ const s = DB.settings || {}; return {
+  taxRate: s.taxRate ?? 6.25, markup: s.markup ?? 40, inspPrice: s.inspPrice ?? 35, inspCost: s.inspCost ?? 12,
+  services: arr(s.services), accounts: arr(s.accounts), employees: arr(s.employees) }; }
+
+function getDay(k){
+  const d = DB.days[k] || {};
+  return { tickets: arr(d.tickets).map(normTicket), insp: { cash:num(d.insp?.cash), credit:num(d.insp?.credit), check:num(d.insp?.check), house: arr(d.insp?.house) },
+           moves: arr(d.moves), note: d.note || '' };
+}
+function normTicket(x){ return Object.assign({id:uid(), inv:'', svc:'', ref:'', labor:'', parts:'', misc:'', cost:'', costManual:false, pay:'credit', split:{}, acct:'', note:''}, x, {split: Object.assign({cash:'',credit:'',check:'',house:''}, x.split||{})}); }
+function getWeek(ws){ const w = DB.weeks[ws] || {}; return { payroll: arr(w.payroll), deducts: arr(w.deducts), startCash: w.startCash ?? '', cashHave: w.cashHave ?? '', note: w.note || '' }; }
+
+/* ---------- calculations (one place, mirrors the spreadsheet) ---------- */
+function svcCost(name, labor){
+  const vs = S().services.filter(s => norm(s.name) === norm(name) && norm(name));
+  if (!vs.length) return 0;
+  const exact = vs.find(s => r2(s.price) === r2(labor));
+  if (exact) return num(exact.cost);
+  if (vs.length === 1) return num(vs[0].cost);
+  return num(vs.slice().sort((a,b)=>Math.abs(num(a.price)-num(labor))-Math.abs(num(b.price)-num(labor)))[0].cost);
+}
+function isOil(name){ const n = norm(name); if (!n) return false; const v = S().services.find(s => norm(s.name) === n); return v ? !!v.oil : /OIL|SOC|ROC/.test(n); }
+function autoCost(tk){ const m = num(S().markup); return r2(svcCost(tk.svc, num(tk.labor)) + num(tk.parts) / (1 + m/100)); }
+function calcTicket(tk){
+  const labor = num(tk.labor), parts = num(tk.parts), misc = num(tk.misc);
+  const tax = parts * num(S().taxRate) / 100;   // not rounded per ticket — same as the sheet
+  const total = labor + parts + misc + tax;
+  const cost = tk.costManual ? num(tk.cost) : autoCost(tk);
+  const p = {cash:0, credit:0, check:0, house:0};
+  if (tk.pay === 'split') { for (const k in p) p[k] = num(tk.split[k]); }
+  else if (p[tk.pay] !== undefined) p[tk.pay] = total;
+  const paid = p.cash + p.credit + p.check + p.house;
+  const unpaid = total - paid;
+  return { labor, parts, misc, tax, total, cost, p, paid, unpaid: Math.abs(unpaid) < 0.01 ? 0 : unpaid };
+}
+function calcDay(k){
+  const d = getDay(k), s = S();
+  const o = { labor:0, parts:0, misc:0, tax:0, total:0, cost:0, unpaid:0, p:{cash:0,credit:0,check:0,house:0},
+              invoices:0, oil:0, svc:{}, inspN:0, inspAmt:0, inspCost:0, mv:{miscin:0,partout:0,expense:0,food:0,deposit:0}, collections:0, tickets:d.tickets.length, house:[] };
+  d.tickets.forEach(tk => {
+    const c = calcTicket(tk);
+    o.labor += c.labor; o.parts += c.parts; o.misc += c.misc; o.tax += c.tax; o.total += c.total; o.cost += c.cost; o.unpaid += c.unpaid;
+    for (const m in o.p) o.p[m] += c.p[m];
+    if (String(tk.inv).trim()) o.invoices++;
+    if (isOil(tk.svc)) o.oil++;
+    const key = String(tk.svc).trim().toUpperCase() || (String(tk.inv).trim() ? 'INVOICE' : '');
+    if (key) { o.svc[key] = o.svc[key] || {n:0, rev:0, cost:0}; o.svc[key].n++; o.svc[key].rev += c.total; o.svc[key].cost += c.cost; }
+    if (c.p.house > 0) o.house.push({date:k, acct: tk.acct || '', inv: tk.inv || tk.svc || '', amount: c.p.house, src:'ticket'});
+  });
+  const ip = num(s.inspPrice), ic = num(s.inspCost);
+  const hn = d.insp.house.reduce((a,h)=>a+num(h.n),0);
+  o.inspN = d.insp.cash + d.insp.credit + d.insp.check + hn;
+  o.inspAmt = o.inspN * ip; o.inspCost = o.inspN * ic;
+  o.p.cash += d.insp.cash*ip; o.p.credit += d.insp.credit*ip; o.p.check += d.insp.check*ip; o.p.house += hn*ip;
+  d.insp.house.forEach(h => { if (num(h.n)) o.house.push({date:k, acct:h.acct||'', inv:t('insp')+' ×'+num(h.n), amount:num(h.n)*ip, src:'insp'}); });
+  d.moves.forEach(m => { if (o.mv[m.type] !== undefined) o.mv[m.type] += num(m.amount); });
+  Object.values(DB.house.payments||{}).forEach(p => { if (p && p.date === k && p.type === 'cash') o.collections += num(p.amount); });
+  o.paidTotal = o.p.cash + o.p.credit + o.p.check + o.p.house;
+  o.gross = o.total - o.tax - o.cost;
+  o.cashDelta = o.p.cash + o.collections + o.mv.miscin - o.mv.partout - o.mv.expense - o.mv.food - o.mv.deposit;
+  return o;
+}
+function calcWeek(ws){
+  const days = weekDays(ws).map(k => ({k, c: calcDay(k)}));
+  const w = getWeek(ws);
+  const o = { labor:0, parts:0, misc:0, tax:0, total:0, cost:0, unpaid:0, p:{cash:0,credit:0,check:0,house:0}, invoices:0, oil:0, svc:{}, inspN:0, inspAmt:0, inspCost:0,
+              mv:{miscin:0,partout:0,expense:0,food:0,deposit:0}, collections:0, tickets:0, days };
+  days.forEach(({c}) => {
+    ['labor','parts','misc','tax','total','cost','unpaid','invoices','oil','inspN','inspAmt','inspCost','collections','tickets'].forEach(f => o[f] += c[f]);
+    for (const m in o.p) o.p[m] += c.p[m];
+    for (const m in o.mv) o.mv[m] += c.mv[m];
+    for (const s in c.svc) { o.svc[s] = o.svc[s] || {n:0,rev:0,cost:0}; o.svc[s].n += c.svc[s].n; o.svc[s].rev += c.svc[s].rev; o.svc[s].cost += c.svc[s].cost; }
+  });
+  o.payroll = w.payroll.reduce((a,p)=>a+num(p.amount),0);
+  o.payrollCash = w.payroll.reduce((a,p)=>a+(p.cash?num(p.amount):0),0);
+  o.deducts = w.deducts.reduce((a,p)=>a+num(p.amount),0);
+  o.profit = o.total + o.mv.miscin - o.cost - o.tax - o.payroll - o.deducts;
+  o.inspProfit = o.inspAmt - o.inspCost;
+  o.startCash = w.startCash === '' ? defaultStartCash(ws) : num(w.startCash);
+  o.startCashAuto = w.startCash === '';
+  o.cashShould = o.startCash + o.p.cash + o.mv.miscin + o.collections - o.mv.partout - o.mv.expense - o.mv.food - o.mv.deposit - o.payrollCash;
+  o.cashHave = w.cashHave === '' ? null : num(w.cashHave);
+  o.diff = o.cashHave === null ? null : o.cashHave - o.cashShould;
+  return o;
+}
+function defaultStartCash(ws){
+  const pw = getWeek(addDays(ws,-7));
+  return pw.cashHave === '' ? 0 : num(pw.cashHave);
+}
+/* House charges: every charge (tickets paid "house", house inspections, manual charges) and every payment, per account */
+function houseLedger(){
+  const charges = [], payments = [];
+  Object.keys(DB.days).forEach(k => calcDay(k).house.forEach(h => charges.push(h)));
+  Object.entries(DB.house.charges||{}).forEach(([id,c]) => c && charges.push({id, date:c.date, acct:c.acct||'', inv:c.inv||c.desc||'', amount:num(c.amount), src:'manual', desc:c.desc||''}));
+  Object.entries(DB.house.payments||{}).forEach(([id,p]) => p && payments.push({id, date:p.date, acct:p.acct||'', amount:num(p.amount), type:p.type||'check', note:p.note||''}));
+  return { charges, payments };
+}
+function houseWeek(ws){
+  const we = addDays(ws,6), {charges, payments} = houseLedger();
+  const names = new Map();
+  const add = n => { const key = norm(n) || '_'; if (!names.has(key)) names.set(key, n || ''); return key; };
+  S().accounts.forEach(add); charges.forEach(c=>add(c.acct)); payments.forEach(p=>add(p.acct));
+  const rows = [...names.entries()].map(([key,name]) => {
+    const ch = charges.filter(c => (norm(c.acct)||'_') === key), py = payments.filter(p => (norm(p.acct)||'_') === key);
+    const sum = (a,f) => a.filter(f).reduce((s,x)=>s+x.amount,0);
+    const before = sum(ch, c=>c.date < ws) - sum(py, p=>p.date < ws);
+    const thisWeek = sum(ch, c=>c.date>=ws && c.date<=we);
+    const paid = sum(py, p=>p.date>=ws && p.date<=we);
+    const pw = py.filter(p=>p.date>=ws && p.date<=we);
+    const after = sum(ch, c=>c.date>we) - sum(py, p=>p.date>we);
+    return { key, name, pastDue: before, thisWeek, totalDue: before + thisWeek, paid, outstanding: before + thisWeek - paid, allTime: before + thisWeek - paid + after,
+             weekCharges: ch.filter(c=>c.date>=ws && c.date<=we), weekPays: pw, lastPay: pw[pw.length-1] };
+  });
+  return rows.filter(r => r.key !== '_' || Math.abs(r.allTime) > 0.0099 || r.thisWeek || r.paid);
+}
+
+/* ---------- storage / sync ---------- */
+const fbUrl = p => `${FB}/closing/${p}.json`;
+async function fbGet(p){ const r = await fetch(fbUrl(p)); if (!r.ok) throw new Error(r.status); return r.json(); }
+async function fbPut(p, d){ const r = await fetch(fbUrl(p), {method: d===null?'DELETE':'PUT', headers:{'Content-Type':'application/json'}, body: d===null?undefined:JSON.stringify(d)}); if (!r.ok) throw new Error(r.status); }
+const pending = new Map(); let saveT = null, editing = 0;
+function saveLocal(){ lsSet('autoshop_closing', JSON.stringify(DB)); }
+function queue(path){
+  pending.set(path, true); saveLocal(); setSync('saving');
+  clearTimeout(saveT); saveT = setTimeout(flush, 600);
+}
+function valueAt(path){ const parts = path.split('/'); let v = DB; for (const p of parts) v = v == null ? undefined : v[p]; return v === undefined ? null : v; }
+async function flush(){
+  if (!FB) { pending.clear(); setSync('local'); return; }
+  const paths = [...pending.keys()]; pending.clear();
+  try { for (const p of paths) await fbPut(p, clean(valueAt(p))); setSync('synced'); }
+  catch(e){ paths.forEach(p=>pending.set(p,true)); setSync('offline'); clearTimeout(saveT); saveT = setTimeout(flush, 5000); }
+}
+function clean(v){ return v == null ? null : JSON.parse(JSON.stringify(v)); }
+async function pull(){
+  if (!FB || pending.size || editing) return;
+  try {
+    const data = await fbGet('');
+    if (pending.size || editing) return;
+    const next = mergeRemote(data || {});
+    const changed = JSON.stringify(next) !== JSON.stringify(DB);
+    DB = next; saveLocal(); setSync('synced');
+    if (changed && !document.activeElement?.matches('input,select,textarea')) render();
+  } catch(e){ setSync('offline'); }
+}
+function mergeRemote(d){
+  return { settings: Object.assign(JSON.parse(JSON.stringify(DEFAULT_SETTINGS)), d.settings || {}), days: d.days || {}, weeks: d.weeks || {},
+           house: { charges: (d.house && d.house.charges) || {}, payments: (d.house && d.house.payments) || {} } };
+}
+function setSync(st){
+  syncState = st;
+  const dot = document.getElementById('sync-dot'), tx = document.getElementById('sync-txt');
+  dot.className = 'dot ' + (st==='synced'?'on':st==='offline'?'off':'');
+  tx.textContent = t(st);
+}
+async function boot(){
+  try { const local = JSON.parse(lsGet('autoshop_closing') || 'null'); if (local) DB = mergeRemote(local); } catch(e){}
+  render();
+  if (FB) {
+    try { const data = await fbGet(''); if (data) { DB = mergeRemote(data); saveLocal(); }
+          else if (Object.keys(DB.days).length) { pending.set('settings',1); pending.set('days',1); pending.set('weeks',1); pending.set('house',1); flush(); } // first upload of local data
+          setSync('synced'); } catch(e){ setSync('offline'); }
+    render();
+    setInterval(pull, 8000);
+  } else setSync('local');
+}
+document.addEventListener('focusin', e => { if (e.target.matches('input,select,textarea')) editing++; });
+document.addEventListener('focusout', e => { if (e.target.matches('input,select,textarea')) editing = Math.max(0, editing-1); });
+
+/* ---------- mutations ---------- */
+function putDay(k, d){ DB.days[k] = { tickets:d.tickets, insp:d.insp, moves:d.moves, note:d.note }; queue('days/'+k); }
+function putWeek(ws, w){ DB.weeks[ws] = w; queue('weeks/'+ws); }
+function putSettings(s){ DB.settings = s; queue('settings'); }
+
+/* ---------- render ---------- */
+function render(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+  document.getElementById('lang-btn').textContent = LANG === 'pt' ? 'EN' : 'PT';
+  const tabs = [['day','tabDay'],['week','tabWeek'],['house','tabHouse'],['set','tabSet']];
+  document.getElementById('tabs').innerHTML = tabs.map(([k,l]) => `<button class="tab ${TAB===k?'active':''}" onclick="go('${k}')">${t(l)}</button>`).join('');
+  const sy = window.scrollY;
+  const page = document.getElementById('page');
+  try {
+    page.innerHTML = TAB==='day' ? renderDay() : TAB==='week' ? renderWeek() : TAB==='house' ? renderHouse() : renderSettings();
+  } catch(e) {
+    console.error(e);
+    page.innerHTML = `<div class="note">Erro ao montar a tela: ${esc(e.message)}. Seus dados estão salvos — tente recarregar.</div>`;
+  }
+  window.scrollTo(0, sy);
+  setSync(syncState);
+}
+function renderSoon(){
+  setTimeout(() => {
+    const page = document.getElementById('page');
+    const els = [...page.querySelectorAll('input,select,textarea,button')];
+    const idx = els.indexOf(document.activeElement);
+    render();
+    if (idx >= 0) { const n = page.querySelectorAll('input,select,textarea,button')[idx]; if (n) { n.focus(); if (n.select && n.tagName==='INPUT' && n.type!=='checkbox' && n.type!=='date') try{ n.select(); }catch(e){} } }
+  }, 0);
+}
+function go(k){ TAB = k; lsSet('closing_tab', k); window.scrollTo(0,0); render(); }
+function toggleLang(){ LANG = LANG==='pt'?'en':'pt'; lsSet('closing_lang', LANG); render(); }
+
+/* ----- DAY ----- */
+function svcOptions(tk){
+  const s = S().services, cur = String(tk.svc||'');
+  const known = s.some(x => norm(x.name) === norm(cur));
+  let h = `<option value="">${t('none')}</option>`;
+  const same = s.filter(x => norm(x.name) === norm(cur) && norm(cur));
+  const pick = same.find(x => r2(x.price) === r2(num(tk.labor))) || same[0];
+  s.forEach(x => { h += `<option value="${esc(x.id)}" ${pick===x?'selected':''}>${esc(x.name)}${num(x.price)?' — '+money(x.price):''}</option>`; });
+  if (cur && !known) h += `<option value="__cur" selected>${esc(cur)}</option>`;
+  h += `<option value="__custom">${t('custom')}</option>`;
+  return h;
+}
+function acctOptions(cur){
+  let h = `<option value="">${t('noAcct')}</option>`;
+  const list = S().accounts.slice(); if (cur && !list.some(a=>norm(a)===norm(cur))) list.push(cur);
+  list.forEach(a => h += `<option ${norm(a)===norm(cur)?'selected':''}>${esc(a)}</option>`);
+  return h;
+}
+function payOptions(cur){ return ['cash','credit','check','house','split'].map(p=>`<option value="${p}" ${cur===p?'selected':''}>${t(p==='split'?'splitPay':p)}</option>`).join(''); }
+function renderTicket(tk, i){
+  const c = calcTicket(tk), bad = v => isBadNum(v) ? 'bad' : '';
+  const F = (f, ph='') => `<input class="num ${bad(tk[f])}" inputmode="decimal" value="${esc(tk[f])}" placeholder="${ph}" oninput="tkInput(${i},'${f}',this)">`;
+  return `<div class="trow" data-i="${i}">
+    <div class="n">${i+1}</div>
+    <div class="c-inv"><span class="lbl">${t('inv')}</span><input value="${esc(tk.inv)}" placeholder="—" oninput="tkInput(${i},'inv',this)"></div>
+    <div class="c-svc"><span class="lbl">${t('svc')}</span><select onchange="tkSvc(${i},this.value)">${svcOptions(tk)}</select></div>
+    <div><span class="lbl">${t('labor')}</span>${F('labor','0.00')}</div>
+    <div><span class="lbl">${t('parts')}</span>${F('parts','0.00')}</div>
+    <div><span class="lbl">${t('misc')}</span>${F('misc','0.00')}</div>
+    <div><span class="lbl">${t('tax')}</span><div class="calc" data-f="tax">${money(c.tax)}</div></div>
+    <div class="c-total"><span class="lbl">${t('total')}</span><div class="calc total" data-f="total">${money(c.total)}</div></div>
+    <div><span class="lbl">${t('cost')}</span><div class="cost-wrap"><input class="num ${tk.costManual?'':'auto'} ${bad(tk.cost)}" inputmode="decimal" data-f="cost" value="${tk.costManual?esc(tk.cost):c.cost.toFixed(2)}" oninput="tkInput(${i},'cost',this)" title="${tk.costManual?'':'auto'}">${tk.costManual?`<button class="reset" title="auto" onclick="tkCostAuto(${i})">↺</button>`:''}</div></div>
+    <div class="c-pay"><span class="lbl">${t('pay')}</span><select onchange="tkPay(${i},this.value)">${payOptions(tk.pay)}</select></div>
+    <div class="c-acct"><span class="lbl">${t('acct')}</span>${(tk.pay==='house'||(tk.pay==='split'&&num(tk.split.house)))?`<select onchange="tkSet(${i},'acct',this.value)">${acctOptions(tk.acct)}</select>`:`<span class="unpaid-flag" data-f="unpaid">${c.unpaid>0.0099?t('unpaid')+' '+money(c.unpaid):''}</span>`}</div>
+    <div class="del"><button class="btn icon" onclick="tkDel(${i})" title="Delete">✕</button></div>
+    ${tk.pay==='split'?`<div class="split">${['cash','credit','check','house'].map(m=>`<div><label>${t(m)}</label><input class="num ${bad(tk.split[m])}" inputmode="decimal" value="${esc(tk.split[m])}" oninput="tkSplit(${i},'${m}',this)"></div>`).join('')}<div><label>${t('unpaid')}</label><div class="calc" data-f="unpaid2" style="text-align:left;padding-top:6px">${money(c.unpaid)}</div></div></div>`:''}
+  </div>`;
+}
+function renderDay(){
+  const d = getDay(CUR), c = calcDay(CUR), s = S(), ws = weekStart(CUR);
+  const wc = calcWeek(ws);
+  // cash "up to date" = start cash + cash deltas from Monday through this day
+  let upTo = wc.startCash; weekDays(ws).forEach(k => { if (k <= CUR) upTo += calcDay(k).cashDelta; });
+  const insRow = (m) => `<div class="row" style="justify-content:space-between;margin-bottom:6px"><span>${t(m)}</span><span class="counter"><button onclick="inspAdd('${m}',-1)">−</button><input inputmode="numeric" value="${d.insp[m]||0}" onchange="inspSet('${m}',this.value)"><button onclick="inspAdd('${m}',1)">+</button></span></div>`;
+  return `
+  <div class="datebar">
+    <button class="btn" onclick="setDay(addDays(CUR,-1))">‹</button>
+    <input type="date" value="${CUR}" onchange="if(this.value)setDay(this.value)">
+    <button class="btn" onclick="setDay(addDays(CUR,1))">›</button>
+    <button class="btn" onclick="setDay(todayKey())">${t('today')}</button>
+    <span class="big">${esc(fmtDate(CUR))}</span>
+    <span class="spacer"></span>
+    <button class="btn" onclick="printDay()">${t('exportDayPdf')}</button>
+    <button class="btn dark" onclick="CURW=weekStart(CUR);go('week')">${t('viewWeek')}</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="l">${t('totalInvoice')}</div><div class="v">${money(c.total)}</div><div class="s">${c.tickets} tickets · ${c.invoices} ${t('invoices').toLowerCase()}</div></div>
+    <div class="kpi red"><div class="l">${t('partCost')}</div><div class="v">${money(c.cost)}</div></div>
+    <div class="kpi green"><div class="l">${t('grossDay')}</div><div class="v">${money(c.gross)}</div></div>
+    <div class="kpi"><div class="l">${t('inspections')}</div><div class="v">${c.inspN}</div><div class="s">${money(c.inspAmt)}</div></div>
+    <div class="kpi"><div class="l">${t('oilChanges')}</div><div class="v">${c.oil}</div></div>
+  </div>
+  <div class="card">
+    <h3>${t('tickets')}<span class="spacer"></span><button class="btn primary sm" onclick="tkAdd(1)">${t('addTicket')}</button></h3>
+    ${d.tickets.length ? `<div class="tscroll"><div class="tscroll-inner">
+      <div class="thead"><div>#</div><div>${t('inv')}</div><div>${t('svc')}</div><div class="right">${t('labor')}</div><div class="right">${t('parts')}</div><div class="right">${t('misc')}</div><div class="right">${t('tax')}</div><div class="right">${t('total')}</div><div class="right">${t('cost')}</div><div>${t('pay')}</div><div></div><div></div></div>
+      ${d.tickets.map(renderTicket).join('')}
+    </div></div>` : `<div class="muted" style="padding:14px 0">${t('noTickets')}</div>`}
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="tkAdd(1)">${t('addTicket')}</button><button class="btn" onclick="tkAdd(3)">${t('add3')}</button></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h3>${t('insp')} <span class="muted" style="text-transform:none;letter-spacing:0">${money(s.inspPrice)} / ${t('costShort')} ${money(s.inspCost)}</span></h3>
+        ${insRow('cash')}${insRow('credit')}${insRow('check')}
+        <div style="margin-top:10px"><div class="muted" style="margin-bottom:6px">${t('inspHouse')}</div>
+          ${d.insp.house.map((h,i)=>`<div class="row" style="margin-bottom:6px;flex-wrap:nowrap"><select onchange="inspHouse(${i},'acct',this.value)">${acctOptions(h.acct)}</select><input style="width:64px" class="num" inputmode="numeric" value="${num(h.n)}" onchange="inspHouse(${i},'n',this.value)"><button class="btn icon" onclick="inspHouseDel(${i})">✕</button></div>`).join('')}
+          <button class="btn sm" onclick="inspHouseAdd()">${t('addAcct')}</button></div>
+        <p class="muted" style="margin-top:10px">${t('inspNote')}</p>
+      </div>
+      <div class="card">
+        <h3>${t('moves')}<span class="spacer"></span><button class="btn sm" onclick="mvAdd()">${t('addMove')}</button></h3>
+        ${d.moves.map((m,i)=>`<div class="list-row">
+          <select onchange="mvSet(${i},'type',this.value)">${['miscin','partout','expense','food','deposit'].map(x=>`<option value="${x}" ${m.type===x?'selected':''}>${t('mv_'+x)}</option>`).join('')}</select>
+          <input value="${esc(m.desc)}" placeholder="${t('desc')}" onchange="mvSet(${i},'desc',this.value)">
+          <input class="num ${isBadNum(m.amount)?'bad':''}" inputmode="decimal" value="${esc(m.amount)}" placeholder="0.00" onchange="mvSet(${i},'amount',this.value)">
+          <button class="btn icon" onclick="mvDel(${i})">✕</button></div>`).join('') || `<div class="muted">—</div>`}
+        ${c.collections ? `<div class="row" style="margin-top:8px"><span class="muted">${t('collections')}</span><span class="spacer"></span><b class="mono">${money(c.collections)}</b></div>` : ''}
+      </div>
+      <div class="card"><h3>${t('dayNote')}</h3><textarea rows="3" onchange="dayNote(this.value)">${esc(d.note)}</textarea></div>
+    </div>
+    <div class="card" id="day-totals">${dayTotalsHTML(c, upTo)}</div>
+  </div>`;
+}
+function dayTotalsHTML(c, upTo){
+  const R = (l,v,cls='') => `<tr class="${cls}"><td>${l}</td><td class="v">${money(v)}</td></tr>`;
+  return `<h3>${t('dayTotals')}</h3><table class="t">
+    ${R(t('labor'),c.labor)}${R(t('parts'),c.parts)}${R(t('misc'),c.misc)}${R(t('tax')+' ('+S().taxRate+'%)',c.tax)}
+    ${R(t('totalInvoice'),c.total,'tot')}
+    ${R(t('partCost'),c.cost,'hl')}
+    <tr><td colspan="2" style="padding-top:12px" class="muted">${t('payments')} (+ ${t('insp').toLowerCase()})</td></tr>
+    ${R(t('cash'),c.p.cash,'sub')}${R(t('credit'),c.p.credit,'sub')}${R(t('check'),c.p.check,'sub')}${R(t('house'),c.p.house,'sub')}
+    ${R(t('unpaidBal'),c.unpaid, Math.abs(c.unpaid)>0.0099?'hl':'')}
+    <tr><td colspan="2" style="padding-top:12px" class="muted">${t('insp')}: ${c.inspN}</td></tr>
+    ${R(t('inspAmt'),c.inspAmt,'sub')}${R(t('inspCost'),c.inspCost,'sub')}
+    <tr><td colspan="2" style="padding-top:12px" class="muted">Cash</td></tr>
+    ${R(t('mv_miscin'),c.mv.miscin,'sub')}${R(t('collections').split(' (')[0],c.collections,'sub')}${R(t('mv_partout'),-c.mv.partout,'sub')}${R(t('mv_expense'),-c.mv.expense,'sub')}${R(t('mv_food'),-c.mv.food,'sub')}${R(t('mv_deposit'),-c.mv.deposit,'sub')}
+    ${R(t('cashToday'),c.cashDelta,'tot')}
+    ${R(t('cashUpTo'),upTo,'hl')}
+  </table>`;
+}
+function refreshDayTotals(){
+  const c = calcDay(CUR), ws = weekStart(CUR), wc = calcWeek(ws);
+  let upTo = wc.startCash; weekDays(ws).forEach(k => { if (k <= CUR) upTo += calcDay(k).cashDelta; });
+  const el = document.getElementById('day-totals'); if (el) el.innerHTML = dayTotalsHTML(c, upTo);
+  const k = document.querySelectorAll('.kpi .v');
+  if (k.length >= 5) { k[0].textContent = money(c.total); k[1].textContent = money(c.cost); k[2].textContent = money(c.gross); }
+}
+function setDay(k){ CUR = k; render(); }
+function tkAdd(n){ const d = getDay(CUR); for (let i=0;i<n;i++) d.tickets.push(normTicket({id:uid()})); putDay(CUR,d); render();
+  setTimeout(()=>{ const rows = document.querySelectorAll('.trow'); const r = rows[rows.length-n]; r && r.querySelector('input')?.focus(); }, 30); }
+function tkDel(i){ const d = getDay(CUR); const tk = d.tickets[i]; const c = calcTicket(tk);
+  if ((c.total || tk.inv || tk.svc) && !confirm(t('delConfirm'))) return; d.tickets.splice(i,1); putDay(CUR,d); render(); }
+function tkInput(i,f,el){
+  const d = getDay(CUR), tk = d.tickets[i]; if (!tk) return;
+  tk[f] = el.value; if (f === 'cost') tk.costManual = el.value.trim() !== '';
+  el.classList.toggle('bad', f!=='inv' && isBadNum(el.value));
+  if (f === 'cost') { el.classList.toggle('auto', !tk.costManual); const w = el.parentNode; if (tk.costManual && !w.querySelector('.reset')) w.insertAdjacentHTML('beforeend', `<button class="reset" title="auto" onclick="tkCostAuto(${i})">↺</button>`); }
+  putDay(CUR,d);
+  const c = calcTicket(tk), row = el.closest('.trow');
+  row.querySelector('[data-f=tax]').textContent = money(c.tax);
+  row.querySelector('[data-f=total]').textContent = money(c.total);
+  const ce = row.querySelector('[data-f=cost]'); if (f !== 'cost' && !tk.costManual) ce.value = c.cost.toFixed(2);
+  const u = row.querySelector('[data-f=unpaid]'); if (u) u.textContent = c.unpaid>0.0099 ? t('unpaid')+' '+money(c.unpaid) : '';
+  const u2 = row.querySelector('[data-f=unpaid2]'); if (u2) u2.textContent = money(c.unpaid);
+  refreshDayTotals();
+}
+function tkSplit(i,m,el){ const d = getDay(CUR), tk = d.tickets[i]; tk.split[m] = el.value; el.classList.toggle('bad', isBadNum(el.value)); putDay(CUR,d);
+  const c = calcTicket(tk), u2 = el.closest('.trow').querySelector('[data-f=unpaid2]'); if (u2) u2.textContent = money(c.unpaid); refreshDayTotals(); }
+function tkSet(i,f,v){ const d = getDay(CUR); d.tickets[i][f] = v; putDay(CUR,d); renderSoon(); }
+function tkCostAuto(i){ const d = getDay(CUR); d.tickets[i].costManual = false; d.tickets[i].cost = ''; putDay(CUR,d); render(); }
+function tkPay(i,v){ const d = getDay(CUR), tk = d.tickets[i];
+  if (v === 'split' && tk.pay !== 'split') { const c = calcTicket(tk); tk.split = {cash:'',credit:'',check:'',house:''}; if (tk.pay in tk.split) tk.split[tk.pay] = c.total ? c.total.toFixed(2) : ''; }
+  tk.pay = v; putDay(CUR,d); render(); }
+function tkSvc(i,v){
+  const d = getDay(CUR), tk = d.tickets[i];
+  if (v === '__custom') { const n = prompt(t('svcName'), tk.svc || ''); if (n === null) { render(); return; } tk.svc = n.trim().toUpperCase(); }
+  else if (v === '__cur') return;
+  else if (!v) tk.svc = '';
+  else { const s = S().services.find(x => x.id === v); if (s) { tk.svc = s.name; if (num(s.price) && (!num(tk.labor) || S().services.some(y => r2(y.price) === r2(num(tk.labor))))) tk.labor = String(s.price); } }
+  putDay(CUR,d); render();
+}
+function inspAdd(m,n){ const d = getDay(CUR); d.insp[m] = Math.max(0, num(d.insp[m]) + n); putDay(CUR,d); render(); }
+function inspSet(m,v){ const d = getDay(CUR); d.insp[m] = Math.max(0, Math.round(num(v))); putDay(CUR,d); renderSoon(); }
+function inspHouseAdd(){ const d = getDay(CUR); d.insp.house.push({acct:'', n:1}); putDay(CUR,d); render(); }
+function inspHouse(i,f,v){ const d = getDay(CUR); d.insp.house[i][f] = f==='n' ? Math.max(0,Math.round(num(v))) : v; putDay(CUR,d); renderSoon(); }
+function inspHouseDel(i){ const d = getDay(CUR); d.insp.house.splice(i,1); putDay(CUR,d); render(); }
+function mvAdd(){ const d = getDay(CUR); d.moves.push({id:uid(), type:'expense', desc:'', amount:''}); putDay(CUR,d); render(); }
+function mvSet(i,f,v){ const d = getDay(CUR); d.moves[i][f] = v; putDay(CUR,d); renderSoon(); }
+function mvDel(i){ const d = getDay(CUR); d.moves.splice(i,1); putDay(CUR,d); render(); }
+function dayNote(v){ const d = getDay(CUR); d.note = v; putDay(CUR,d); }
+
+/* ----- WEEK ----- */
+function svcRows(w){
+  const rows = Object.entries(w.svc).sort((a,b)=>b[1].n-a[1].n || a[0].localeCompare(b[0]));
+  return rows;
+}
+function renderWeek(){
+  const ws = CURW, we = addDays(ws,6), w = calcWeek(ws), wk = getWeek(ws), s = S();
+  const R = (l,v,cls='') => `<tr class="${cls}"><td>${l}</td><td class="v">${money(v)}</td></tr>`;
+  return `
+  <div class="datebar">
+    <button class="btn" onclick="CURW=addDays(CURW,-7);render()">${t('prevW')}</button>
+    <input type="date" value="${ws}" onchange="if(this.value){CURW=weekStart(this.value);render()}">
+    <button class="btn" onclick="CURW=addDays(CURW,7);render()">${t('nextW')}</button>
+    <span class="big">${t('weekOf')} ${esc(fmtDate(ws,{month:'short',day:'numeric'}))} ${t('to')} ${esc(fmtDate(we,{month:'short',day:'numeric',year:'numeric'}))}</span>
+    <span class="spacer"></span>
+    <button class="btn primary" onclick="printWeek()">${t('exportPdf')}</button>
+    <button class="btn dark" onclick="exportWeekXlsx()">${t('exportXls')}</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi green"><div class="l">${t('profit')}</div><div class="v ${w.profit<0?'neg':''}">${money(w.profit)}</div><div class="s">${t('profitAll')}: ${money(w.profit + w.inspProfit)}</div></div>
+    <div class="kpi"><div class="l">${t('totalInvoice')}</div><div class="v">${money(w.total)}</div></div>
+    <div class="kpi red"><div class="l">${t('partCost')}</div><div class="v">${money(w.cost)}</div></div>
+    <div class="kpi red"><div class="l">${t('payroll')}</div><div class="v">${money(w.payroll)}</div></div>
+    <div class="kpi"><div class="l">${t('invoices')}</div><div class="v">${w.invoices}</div><div class="s">${w.tickets} tickets</div></div>
+    <div class="kpi"><div class="l">${t('inspections')}</div><div class="v">${w.inspN}</div><div class="s">${money(w.inspAmt)} · ${t('inspProfit').toLowerCase()} ${money(w.inspProfit)}</div></div>
+    <div class="kpi"><div class="l">${t('oilChanges')}</div><div class="v">${w.oil}</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card"><h3>${t('profitCalc')}</h3><table class="t">
+        ${R(t('totalInvoice'),w.total)}${R(t('plusMisc'),w.mv.miscin)}${R(t('minusCost'),-w.cost)}${R(t('minusTax')+' ('+s.taxRate+'%)',-w.tax)}${R(t('minusPay'),-w.payroll)}${R(t('minusDed'),-w.deducts)}
+        ${R(t('profit'),w.profit,'tot')}
+        <tr><td colspan="2" style="padding-top:12px" class="muted">${t('inspections')}: ${w.inspN} × ${money(s.inspPrice)}</td></tr>
+        ${R(t('inspAmt'),w.inspAmt,'sub')}${R(t('inspCost')+' ('+w.inspN+' × '+money(s.inspCost)+')',-w.inspCost,'sub')}${R(t('inspProfit'),w.inspProfit,'hl')}
+        ${R(t('profitAll'),w.profit+w.inspProfit,'tot')}
+      </table></div>
+      <div class="card"><h3>${t('payroll')}<span class="spacer"></span><button class="btn sm" onclick="prAdd()">${t('addPay')}</button></h3>
+        ${wk.payroll.map((p,i)=>`<div class="list-row" style="grid-template-columns:1fr 110px 120px 30px">
+          <input value="${esc(p.name)}" list="emp-list" placeholder="${t('employee')}" onchange="prSet(${i},'name',this.value)">
+          <input class="num ${isBadNum(p.amount)?'bad':''}" inputmode="decimal" value="${esc(p.amount)}" placeholder="0.00" onchange="prSet(${i},'amount',this.value)">
+          <label class="muted" style="display:flex;gap:4px;align-items:center;white-space:nowrap"><input type="checkbox" style="width:auto" ${p.cash?'checked':''} onchange="prSet(${i},'cash',this.checked)">${t('fromCash')}</label>
+          <button class="btn icon" onclick="prDel(${i})">✕</button></div>`).join('')}
+        <datalist id="emp-list">${s.employees.map(e=>`<option value="${esc(e)}">`).join('')}</datalist>
+        ${!wk.payroll.length && s.employees.length ? `<button class="btn sm" onclick="prFill()">+ ${esc(s.employees.join(', '))}</button>` : ''}
+        <div class="row" style="margin-top:8px"><b>${t('payroll')}</b><span class="spacer"></span><b class="mono">${money(w.payroll)}</b></div>
+      </div>
+      <div class="card"><h3>${t('deducts')}<span class="spacer"></span><button class="btn sm" onclick="dedAdd()">${t('addDed')}</button></h3>
+        <p class="muted" style="margin-bottom:8px">${t('dedNote')}</p>
+        ${wk.deducts.map((p,i)=>`<div class="list-row">
+          <input type="date" value="${esc(p.date)}" onchange="dedSet(${i},'date',this.value)">
+          <input value="${esc(p.desc)}" placeholder="${t('desc')}" onchange="dedSet(${i},'desc',this.value)">
+          <input class="num" inputmode="decimal" value="${esc(p.amount)}" placeholder="0.00" onchange="dedSet(${i},'amount',this.value)">
+          <button class="btn icon" onclick="dedDel(${i})">✕</button></div>`).join('')}
+      </div>
+    </div>
+    <div>
+      <div class="card"><h3>${t('svcCount')}</h3><table class="t">
+        <tr><th>${t('svc')}</th><th class="v">${t('qty')}</th><th class="v">${t('revenue')}</th><th class="v">${t('cost')}</th></tr>
+        ${svcRows(w).map(([k,v])=>`<tr><td>${esc(k)}${isOil(k)?' <span class="chip red">'+t('oilChip')+'</span>':''}</td><td class="v">${v.n}</td><td class="v">${money(v.rev)}</td><td class="v">${money(v.cost)}</td></tr>`).join('')}
+        <tr><td>${t('inspections').toUpperCase()}</td><td class="v">${w.inspN}</td><td class="v">${money(w.inspAmt)}</td><td class="v">${money(w.inspCost)}</td></tr>
+        <tr class="tot"><td>${t('oilChanges')}</td><td class="v">${w.oil}</td><td></td><td></td></tr>
+      </table></div>
+      <div class="card"><h3>${t('dayTotals')} — ${t('week').toLowerCase()}</h3><table class="t">
+        ${R(t('labor'),w.labor)}${R(t('parts'),w.parts)}${R(t('misc'),w.misc)}${R(t('tax'),w.tax)}${R(t('totalInvoice'),w.total,'tot')}${R(t('partCost'),w.cost,'hl')}
+        <tr><td colspan="2" style="padding-top:12px" class="muted">${t('payments')}</td></tr>
+        ${R(t('cash'),w.p.cash,'sub')}${R(t('credit'),w.p.credit,'sub')}${R(t('check'),w.p.check,'sub')}${R(t('house'),w.p.house,'sub')}${R(t('unpaidBal'),w.unpaid,Math.abs(w.unpaid)>0.0099?'hl':'')}
+      </table></div>
+      <div class="card"><h3>${t('cashRec')}</h3><table class="t">
+        <tr><td>${t('startCash')}</td><td class="v" style="width:120px"><input class="num ${w.startCashAuto?'auto':''}" inputmode="decimal" value="${w.startCashAuto?w.startCash.toFixed(2):esc(wk.startCash)}" onchange="wkSet('startCash',this.value)"></td></tr>
+        ${R(t('cashIn'),w.p.cash)}${R(t('cashMisc'),w.mv.miscin+w.collections)}${R(t('cashOut'),-(w.mv.partout+w.mv.expense+w.mv.food))}${R(t('cashDep'),-w.mv.deposit)}${R(t('cashPay'),-w.payrollCash)}
+        ${R(t('cashShould'),w.cashShould,'tot')}
+        <tr><td>${t('cashHave')}</td><td class="v"><input class="num" inputmode="decimal" value="${esc(wk.cashHave)}" placeholder="0.00" onchange="wkSet('cashHave',this.value)"></td></tr>
+        ${w.diff===null?'':`<tr class="tot"><td>${t('diff')}</td><td class="v ${Math.abs(w.diff)>0.0099?(w.diff<0?'neg':'pos'):''}">${money(w.diff)}</td></tr>`}
+      </table></div>
+    </div>
+  </div>
+  <div class="card"><h3>${t('byDay')}</h3><div style="overflow-x:auto"><table class="t" style="min-width:760px">
+    <tr><th>${t('day')}</th><th class="v">Tickets</th><th class="v">${t('invoices')}</th><th class="v">${t('labor')}</th><th class="v">${t('parts')}</th><th class="v">${t('tax')}</th><th class="v">${t('totalInvoice')}</th><th class="v">${t('partCost')}</th><th class="v">${t('insp')}</th><th class="v">${t('oilChanges')}</th><th class="v">${t('unpaid')}</th></tr>
+    ${w.days.map(({k,c})=>`<tr style="cursor:pointer" onclick="CUR='${k}';go('day')"><td>${esc(fmtShort(k))}</td><td class="v">${c.tickets}</td><td class="v">${c.invoices}</td><td class="v">${money(c.labor)}</td><td class="v">${money(c.parts)}</td><td class="v">${money(c.tax)}</td><td class="v">${money(c.total)}</td><td class="v">${money(c.cost)}</td><td class="v">${c.inspN}</td><td class="v">${c.oil}</td><td class="v ${Math.abs(c.unpaid)>0.0099?'neg':''}">${money(c.unpaid)}</td></tr>`).join('')}
+    <tr class="tot"><td>${t('total')}</td><td class="v">${w.tickets}</td><td class="v">${w.invoices}</td><td class="v">${money(w.labor)}</td><td class="v">${money(w.parts)}</td><td class="v">${money(w.tax)}</td><td class="v">${money(w.total)}</td><td class="v">${money(w.cost)}</td><td class="v">${w.inspN}</td><td class="v">${w.oil}</td><td class="v">${money(w.unpaid)}</td></tr>
+  </table></div></div>`;
+}
+function wkMut(fn, soon){ const wk = getWeek(CURW); fn(wk); putWeek(CURW, wk); soon ? renderSoon() : render(); }
+function prAdd(){ wkMut(w => w.payroll.push({id:uid(), name:'', amount:'', cash:false})); }
+function prFill(){ wkMut(w => S().employees.forEach(e => w.payroll.push({id:uid(), name:e, amount:'', cash:false}))); }
+function prSet(i,f,v){ wkMut(w => w.payroll[i][f] = v, true); }
+function prDel(i){ wkMut(w => w.payroll.splice(i,1)); }
+function dedAdd(){ wkMut(w => w.deducts.push({id:uid(), date:CURW, desc:'', amount:''})); }
+function dedSet(i,f,v){ wkMut(w => w.deducts[i][f] = v, true); }
+function dedDel(i){ wkMut(w => w.deducts.splice(i,1)); }
+function wkSet(f,v){ wkMut(w => w[f] = String(v).trim() === '' ? '' : String(num(v)), true); }
+
+/* ----- HOUSE ----- */
+function renderHouse(){
+  const ws = CURW, we = addDays(ws,6), rows = houseWeek(ws);
+  const T = rows.reduce((a,r)=>{ ['pastDue','thisWeek','totalDue','paid','outstanding','allTime'].forEach(f=>a[f]=(a[f]||0)+r[f]); return a; },{});
+  const pays = Object.entries(DB.house.payments||{}).filter(([,p])=>p && p.date>=ws && p.date<=we).sort((a,b)=>a[1].date.localeCompare(b[1].date));
+  const chs = Object.entries(DB.house.charges||{}).filter(([,c])=>c).sort((a,b)=>String(b[1].date).localeCompare(a[1].date));
+  return `
+  <div class="datebar">
+    <button class="btn" onclick="CURW=addDays(CURW,-7);render()">${t('prevW')}</button>
+    <input type="date" value="${ws}" onchange="if(this.value){CURW=weekStart(this.value);render()}">
+    <button class="btn" onclick="CURW=addDays(CURW,7);render()">${t('nextW')}</button>
+    <span class="big">${t('weekOf')} ${esc(fmtDate(ws,{month:'short',day:'numeric'}))} ${t('to')} ${esc(fmtDate(we,{month:'short',day:'numeric',year:'numeric'}))}</span>
+    <span class="spacer"></span>
+    <button class="btn primary" onclick="printHouse()">${t('exportPdf')}</button>
+    <button class="btn dark" onclick="exportWeekXlsx()">${t('exportXls')}</button>
+  </div>
+  <div class="card"><h3>${t('houseTitle')}</h3>
+    <p class="muted" style="margin-bottom:8px">${t('houseWeekHint')}</p>
+    <div style="overflow-x:auto"><table class="t" style="min-width:720px">
+    <tr><th>${t('account')}</th><th class="v">${t('thisWeek')}</th><th class="v">${t('pastDue')}</th><th class="v">${t('totalDue')}</th><th class="v">${t('amtPaid')}</th><th>${t('date')} / ${t('payType')}</th><th class="v">${t('outstanding')}</th><th></th></tr>
+    ${rows.map(r=>`<tr class="${r.outstanding>0.0099?'':'sub'}"><td><b>${esc(r.name||t('noAcct'))}</b></td><td class="v">${money(r.thisWeek)}</td><td class="v">${money(r.pastDue)}</td><td class="v">${money(r.totalDue)}</td><td class="v">${money(r.paid)}</td>
+      <td class="muted">${r.weekPays.map(p=>esc(fmtDate(p.date,{month:'2-digit',day:'2-digit'}))+' '+t(p.type)).join(', ')}</td><td class="v ${r.outstanding>0.0099?'neg':''}"><b>${money(r.outstanding)}</b></td>
+      <td><button class="btn sm" onclick="hpOpen('${esc(r.name)}')">$</button> <button class="btn sm" onclick="ledgerOpen('${esc(r.name)}')">${t('ledger')}</button></td></tr>`).join('')}
+    <tr class="tot"><td>Grand total</td><td class="v">${money(T.thisWeek)}</td><td class="v">${money(T.pastDue)}</td><td class="v">${money(T.totalDue)}</td><td class="v">${money(T.paid)}</td><td></td><td class="v">${money(T.outstanding)}</td><td></td></tr>
+    </table></div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" onclick="hpOpen('')">${t('addHousePay')}</button><button class="btn" onclick="hcOpen()">${t('addCharge')}</button></div>
+    <p class="muted" style="margin-top:8px">${t('cashNote')}</p>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>${t('houseInv')} — ${t('week').toLowerCase()}</h3><table class="t">
+      <tr><th>${t('date')}</th><th>${t('account')}</th><th>${t('inv')}</th><th class="v">${t('amount')}</th></tr>
+      ${rows.flatMap(r=>r.weekCharges.map(c=>({...c,name:r.name}))).sort((a,b)=>a.date.localeCompare(b.date)).map(c=>`<tr><td>${esc(fmtShort(c.date))}</td><td>${esc(c.name||t('noAcct'))}</td><td>${esc(c.inv)}</td><td class="v">${money(c.amount)}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">${t('noData')}</td></tr>`}
+    </table></div>
+    <div class="card"><h3>${t('amtPaid')}</h3><table class="t">
+      <tr><th>${t('date')}</th><th>${t('account')}</th><th>${t('payType')}</th><th class="v">${t('amount')}</th><th></th></tr>
+      ${pays.map(([id,p])=>`<tr><td>${esc(fmtShort(p.date))}</td><td>${esc(p.acct||t('noAcct'))}</td><td>${t(p.type)}${p.note?' · '+esc(p.note):''}</td><td class="v">${money(p.amount)}</td><td><button class="btn icon" onclick="hpDel('${id}')">✕</button></td></tr>`).join('') || `<tr><td colspan="5" class="muted">${t('noData')}</td></tr>`}
+    </table></div>
+  </div>
+  ${chs.length?`<div class="card"><h3>${t('openBal')}</h3><table class="t">
+    <tr><th>${t('date')}</th><th>${t('account')}</th><th>${t('desc')}</th><th class="v">${t('amount')}</th><th></th></tr>
+    ${chs.map(([id,c])=>`<tr><td>${esc(fmtShort(c.date))}</td><td>${esc(c.acct)}</td><td>${esc(c.inv||c.desc||'')}</td><td class="v">${money(c.amount)}</td><td><button class="btn icon" onclick="hcDel('${id}')">✕</button></td></tr>`).join('')}
+  </table></div>`:''}`;
+}
+function modal(html){ document.getElementById('modal-box').innerHTML = html; document.getElementById('modal').classList.add('show'); }
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+function hpOpen(acct){
+  const today = todayKey(), dflt = today >= CURW && today <= addDays(CURW,6) ? today : CURW;
+  modal(`<h2>${t('addHousePay')}</h2>
+    <div class="field"><label>${t('account')}</label><select id="hp-acct">${acctOptions(acct)}</select></div><br>
+    <div class="row" style="flex-wrap:nowrap"><div class="field" style="flex:1"><label>${t('date')}</label><input type="date" id="hp-date" value="${dflt}"></div>
+    <div class="field" style="flex:1"><label>${t('amount')}</label><input id="hp-amt" class="num" inputmode="decimal" placeholder="0.00"></div>
+    <div class="field" style="flex:1"><label>${t('payType')}</label><select id="hp-type">${['check','cash','credit'].map(p=>`<option value="${p}">${t(p)}</option>`).join('')}</select></div></div><br>
+    <div class="field"><label>${t('note')}</label><input id="hp-note" placeholder="Check #…"></div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" onclick="closeModal()">${t('cancel')}</button><button class="btn primary" onclick="hpSave()">${t('ok')}</button></div>`);
+  setTimeout(()=>document.getElementById('hp-amt').focus(),50);
+}
+function hpSave(){
+  const amt = num(document.getElementById('hp-amt').value), date = document.getElementById('hp-date').value;
+  if (!amt || !date) { document.getElementById('hp-amt').classList.add('bad'); return; }
+  const id = uid(); DB.house.payments[id] = { date, acct: document.getElementById('hp-acct').value, amount: amt, type: document.getElementById('hp-type').value, note: document.getElementById('hp-note').value };
+  queue('house/payments/'+id); closeModal(); render(); toast('✓');
+}
+function hpDel(id){ if (!confirm(t('delConfirm'))) return; delete DB.house.payments[id]; queue('house/payments/'+id); render(); }
+function hcOpen(){
+  modal(`<h2>${t('openBal')}</h2>
+    <div class="field"><label>${t('account')}</label><select id="hc-acct">${acctOptions('')}</select></div><br>
+    <div class="row" style="flex-wrap:nowrap"><div class="field" style="flex:1"><label>${t('date')}</label><input type="date" id="hc-date" value="${addDays(CURW,-1)}"></div>
+    <div class="field" style="flex:1"><label>${t('amount')}</label><input id="hc-amt" class="num" inputmode="decimal" placeholder="0.00"></div></div><br>
+    <div class="field"><label>${t('desc')} / ${t('inv')}</label><input id="hc-desc" placeholder="${t('pastDue')}"></div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" onclick="closeModal()">${t('cancel')}</button><button class="btn primary" onclick="hcSave()">${t('ok')}</button></div>`);
+}
+function hcSave(){
+  const amt = num(document.getElementById('hc-amt').value), date = document.getElementById('hc-date').value;
+  if (!amt || !date) { document.getElementById('hc-amt').classList.add('bad'); return; }
+  const id = uid(); DB.house.charges[id] = { date, acct: document.getElementById('hc-acct').value, amount: amt, inv: document.getElementById('hc-desc').value || t('pastDue') };
+  queue('house/charges/'+id); closeModal(); render();
+}
+function hcDel(id){ if (!confirm(t('delConfirm'))) return; delete DB.house.charges[id]; queue('house/charges/'+id); render(); }
+function ledgerOpen(acct){
+  const {charges, payments} = houseLedger(), key = norm(acct) || '_';
+  const items = [...charges.filter(c=>(norm(c.acct)||'_')===key).map(c=>({d:c.date, desc:c.inv, ch:c.amount, py:0})),
+                 ...payments.filter(p=>(norm(p.acct)||'_')===key).map(p=>({d:p.date, desc:t(p.type)+(p.note?' · '+p.note:''), ch:0, py:p.amount}))].sort((a,b)=>a.d.localeCompare(b.d));
+  let bal = 0;
+  modal(`<h2>${t('ledger')} — ${esc(acct||t('noAcct'))}</h2><table class="t">
+    <tr><th>${t('date')}</th><th>${t('desc')}</th><th class="v">${t('charges')}</th><th class="v">${t('paid')}</th><th class="v">Saldo</th></tr>
+    ${items.map(i=>{ bal += i.ch - i.py; return `<tr><td>${esc(fmtShort(i.d))}</td><td>${esc(i.desc)}</td><td class="v">${i.ch?money(i.ch):''}</td><td class="v">${i.py?money(i.py):''}</td><td class="v">${money(bal)}</td></tr>`; }).join('') || `<tr><td colspan="5" class="muted">${t('noData')}</td></tr>`}
+    <tr class="tot"><td colspan="4">${t('allTime')}</td><td class="v">${money(bal)}</td></tr></table>
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" onclick="closeModal()">${t('close')}</button></div>`);
+}
+
+/* ----- SETTINGS ----- */
+function renderSettings(){
+  const s = S();
+  return `
+  <div class="grid2">
+    <div>
+      <div class="card"><h3>${t('settings')}</h3>
+        ${[['taxRate','taxRate'],['markup','markup'],['inspPrice','inspPrice'],['inspCost','inspCostS']].map(([f,l])=>`<div class="row" style="margin-bottom:8px;flex-wrap:nowrap"><span style="flex:1">${t(l)}</span><input class="num" style="width:100px" inputmode="decimal" value="${esc(s[f])}" onchange="setNum('${f}',this.value)"></div>`).join('')}
+        <p class="muted">${t('partCost')}: $100 ${t('parts').toLowerCase()} → ${money(100/(1+num(s.markup)/100))}</p>
+      </div>
+      <div class="card"><h3>${t('accounts')}<span class="spacer"></span><button class="btn sm" onclick="listAdd('accounts')">${t('addAccount')}</button></h3>
+        ${s.accounts.map((a,i)=>`<div class="row" style="margin-bottom:6px;flex-wrap:nowrap"><input value="${esc(a)}" onchange="listSet('accounts',${i},this.value)"><button class="btn icon" onclick="listDel('accounts',${i})">✕</button></div>`).join('')}
+      </div>
+      <div class="card"><h3>${t('employees')}<span class="spacer"></span><button class="btn sm" onclick="listAdd('employees')">${t('addEmp')}</button></h3>
+        ${s.employees.map((a,i)=>`<div class="row" style="margin-bottom:6px;flex-wrap:nowrap"><input value="${esc(a)}" onchange="listSet('employees',${i},this.value)"><button class="btn icon" onclick="listDel('employees',${i})">✕</button></div>`).join('')}
+      </div>
+    </div>
+    <div>
+      <div class="card"><h3>${t('svcCatalog')}<span class="spacer"></span><button class="btn sm" onclick="svcAdd()">${t('addSvc')}</button></h3>
+        <div class="list-row" style="grid-template-columns:1fr 80px 80px 60px 30px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase"><span>${t('name')}</span><span class="right">${t('price')}</span><span class="right">${t('cost')}</span><span>${t('isOil')}</span><span></span></div>
+        ${s.services.map((x,i)=>`<div class="list-row" style="grid-template-columns:1fr 80px 80px 60px 30px">
+          <input value="${esc(x.name)}" onchange="svcSet(${i},'name',this.value.toUpperCase())">
+          <input class="num" inputmode="decimal" value="${esc(x.price)}" onchange="svcSet(${i},'price',num(this.value))">
+          <input class="num" inputmode="decimal" value="${esc(x.cost)}" onchange="svcSet(${i},'cost',num(this.value))">
+          <input type="checkbox" style="width:auto" ${x.oil?'checked':''} onchange="svcSet(${i},'oil',this.checked)">
+          <button class="btn icon" onclick="svcDel(${i})">✕</button></div>`).join('')}
+      </div>
+      <div class="card"><h3>${t('backup')}</h3>
+        <div class="row"><button class="btn dark" onclick="exportBackup()">${t('exportJson')}</button><button class="btn" onclick="document.getElementById('file-json').click()">${t('importJson')}</button></div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+        <p class="muted" style="margin-bottom:8px">${t('importHelp')}</p>
+        <button class="btn primary" onclick="document.getElementById('file-xls').click()">${t('importXls')}</button>
+      </div>
+      <div class="card"><h3>${t('db')}</h3>
+        <div class="field"><label>${t('dbUrl')}</label><input id="db-url" value="${esc(FB)}" placeholder="https://…firebaseio.com"></div>
+        <div class="row" style="margin-top:8px"><button class="btn" onclick="saveDb()">${t('saveDb')}</button><span class="muted">${t(syncState)}</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+function setMut(fn, soon){ const s = Object.assign({}, DB.settings, S()); fn(s); putSettings(s); soon ? renderSoon() : render(); }
+function setNum(f,v){ setMut(s => s[f] = num(v), true); }
+function listAdd(k){ setMut(s => s[k].push('')); }
+function listSet(k,i,v){ setMut(s => s[k][i] = v.trim().toUpperCase(), true); }
+function listDel(k,i){ if (!confirm(t('delConfirm'))) return; setMut(s => s[k].splice(i,1)); }
+function svcAdd(){ setMut(s => s.services.push({id:uid(), name:'', price:0, cost:0, oil:false})); }
+function svcSet(i,f,v){ setMut(s => s.services[i][f] = v, true); }
+function svcDel(i){ if (!confirm(t('delConfirm'))) return; setMut(s => s.services.splice(i,1)); }
+function saveDb(){
+  const u = document.getElementById('db-url').value.trim().replace(/\/$/,'');
+  if (u && !u.includes('firebaseio.com') && !u.includes('firebasedatabase.app')) { alert('URL inválida'); return; }
+  FB = u; lsSet('autoshop_fb_url', u); location.reload();
+}
+
+/* ---------- reports: PDF (print) ---------- */
+function repHead(title, sub){ return `<h1>Planet Automotive — ${esc(title)}</h1><div>${esc(sub)}</div><div style="color:#777;font-size:9px">${t('generated')} ${new Date().toLocaleString(LANG==='pt'?'pt-BR':'en-US')}</div>`; }
+function doPrint(html){ const pa = document.getElementById('print-area'); pa.innerHTML = `<div class="rep">${html}</div>`; setTimeout(()=>window.print(), 50); }
+function weekReportHTML(ws){
+  const we = addDays(ws,6), w = calcWeek(ws), wk = getWeek(ws), s = S(), hw = houseWeek(ws);
+  const R = (l,v,cls='') => `<tr class="${cls}"><td>${l}</td><td class="v">${money(v)}</td></tr>`;
+  const tickets = weekDays(ws).flatMap(k => getDay(k).tickets.map(tk => ({k, tk, c: calcTicket(tk)})));
+  return repHead(t('reportTitle'), `${fmtDate(ws)} — ${fmtDate(we)}`) + `
+  <div class="kp"><div>${t('profit')}<b>${money(w.profit)}</b></div><div>${t('totalInvoice')}<b>${money(w.total)}</b></div><div>${t('partCost')}<b>${money(w.cost)}</b></div><div>${t('payroll')}<b>${money(w.payroll)}</b></div>
+  <div>${t('invoices')}<b>${w.invoices}</b></div><div>${t('inspections')}<b>${w.inspN}</b></div><div>${t('oilChanges')}<b>${w.oil}</b></div><div>${t('inspProfit')}<b>${money(w.inspProfit)}</b></div></div>
+  <div class="cols"><div>
+    <h2>${t('dayTotals')}</h2><table>${R(t('labor'),w.labor)}${R(t('parts'),w.parts)}${R(t('misc'),w.misc)}${R(t('tax'),w.tax)}${R(t('totalInvoice'),w.total,'tot')}${R(t('partCost'),w.cost)}
+      ${R(t('cash'),w.p.cash)}${R(t('credit'),w.p.credit)}${R(t('check'),w.p.check)}${R(t('house'),w.p.house)}${R(t('unpaidBal'),w.unpaid)}</table>
+    <h2>${t('profitCalc')}</h2><table>${R(t('totalInvoice'),w.total)}${R(t('plusMisc'),w.mv.miscin)}${R(t('minusCost'),-w.cost)}${R(t('minusTax'),-w.tax)}${R(t('minusPay'),-w.payroll)}${R(t('minusDed'),-w.deducts)}${R(t('profit'),w.profit,'tot')}
+      ${R(t('inspAmt')+' ('+w.inspN+')',w.inspAmt)}${R(t('inspCost'),-w.inspCost)}${R(t('inspProfit'),w.inspProfit,'tot')}${R(t('profitAll'),w.profit+w.inspProfit,'tot')}</table>
+  </div><div>
+    <h2>${t('svcCount')}</h2><table><tr><th>${t('svc')}</th><th class="v">${t('qty')}</th><th class="v">${t('revenue')}</th><th class="v">${t('cost')}</th></tr>
+      ${svcRows(w).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="v">${v.n}</td><td class="v">${money(v.rev)}</td><td class="v">${money(v.cost)}</td></tr>`).join('')}
+      <tr><td>${t('inspections').toUpperCase()}</td><td class="v">${w.inspN}</td><td class="v">${money(w.inspAmt)}</td><td class="v">${money(w.inspCost)}</td></tr>
+      <tr class="tot"><td>${t('oilChanges')}</td><td class="v">${w.oil}</td><td></td><td></td></tr></table>
+    <h2>${t('payroll')}</h2><table>${wk.payroll.map(p=>R(esc(p.name||'—'),num(p.amount))).join('')}${wk.deducts.map(p=>R(esc(p.desc||t('deducts').split(' (')[0]),num(p.amount))).join('')}${R(t('payroll'),w.payroll,'tot')}</table>
+    <h2>${t('cashRec')}</h2><table>${R(t('startCash'),w.startCash)}${R(t('cashIn'),w.p.cash)}${R(t('cashMisc'),w.mv.miscin+w.collections)}${R(t('cashOut'),-(w.mv.partout+w.mv.expense+w.mv.food))}${R(t('cashDep'),-w.mv.deposit)}${R(t('cashPay'),-w.payrollCash)}${R(t('cashShould'),w.cashShould,'tot')}
+      ${w.cashHave===null?'':R(t('cashHave'),w.cashHave)+R(t('diff'),w.diff,'tot')}</table>
+  </div></div>
+  <h2>${t('byDay')}</h2><table><tr><th>${t('day')}</th><th class="v">Tickets</th><th class="v">${t('invoices')}</th><th class="v">${t('labor')}</th><th class="v">${t('parts')}</th><th class="v">${t('tax')}</th><th class="v">${t('total')}</th><th class="v">${t('cost')}</th><th class="v">${t('insp')}</th><th class="v">${t('oilChanges')}</th></tr>
+    ${w.days.map(({k,c})=>`<tr><td>${esc(fmtShort(k))}</td><td class="v">${c.tickets}</td><td class="v">${c.invoices}</td><td class="v">${money(c.labor)}</td><td class="v">${money(c.parts)}</td><td class="v">${money(c.tax)}</td><td class="v">${money(c.total)}</td><td class="v">${money(c.cost)}</td><td class="v">${c.inspN}</td><td class="v">${c.oil}</td></tr>`).join('')}
+    <tr class="tot"><td>${t('total')}</td><td class="v">${w.tickets}</td><td class="v">${w.invoices}</td><td class="v">${money(w.labor)}</td><td class="v">${money(w.parts)}</td><td class="v">${money(w.tax)}</td><td class="v">${money(w.total)}</td><td class="v">${money(w.cost)}</td><td class="v">${w.inspN}</td><td class="v">${w.oil}</td></tr></table>
+  <h2>${t('houseTitle')}</h2>${houseTableHTML(hw)}
+  <h2>Tickets</h2>${ticketsTableHTML(tickets)}`;
+}
+function houseTableHTML(hw){
+  const T = hw.reduce((a,r)=>{ ['thisWeek','pastDue','totalDue','paid','outstanding'].forEach(f=>a[f]=(a[f]||0)+r[f]); return a; },{});
+  return `<table><tr><th>${t('account')}</th><th class="v">${t('thisWeek')}</th><th class="v">${t('pastDue')}</th><th class="v">${t('totalDue')}</th><th class="v">${t('amtPaid')}</th><th>${t('date')}/${t('payType')}</th><th class="v">${t('outstanding')}</th></tr>
+    ${hw.map(r=>`<tr><td>${esc(r.name||t('noAcct'))}</td><td class="v">${money(r.thisWeek)}</td><td class="v">${money(r.pastDue)}</td><td class="v">${money(r.totalDue)}</td><td class="v">${money(r.paid)}</td><td>${r.weekPays.map(p=>esc(fmtDate(p.date,{month:'2-digit',day:'2-digit'}))+' '+t(p.type)).join(', ')}</td><td class="v">${money(r.outstanding)}</td></tr>`).join('')}
+    <tr class="tot"><td>Grand total</td><td class="v">${money(T.thisWeek||0)}</td><td class="v">${money(T.pastDue||0)}</td><td class="v">${money(T.totalDue||0)}</td><td class="v">${money(T.paid||0)}</td><td></td><td class="v">${money(T.outstanding||0)}</td></tr></table>`;
+}
+function ticketsTableHTML(list){
+  return `<table><tr><th>${t('day')}</th><th>${t('inv')}</th><th>${t('svc')}</th><th class="v">${t('labor')}</th><th class="v">${t('parts')}</th><th class="v">${t('misc')}</th><th class="v">${t('tax')}</th><th class="v">${t('total')}</th><th class="v">${t('cost')}</th><th>${t('pay')}</th></tr>
+    ${list.map(({k,tk,c})=>`<tr><td>${esc(fmtShort(k))}</td><td>${esc(tk.inv)}</td><td>${esc(tk.svc)}</td><td class="v">${money(c.labor)}</td><td class="v">${money(c.parts)}</td><td class="v">${money(c.misc)}</td><td class="v">${money(c.tax)}</td><td class="v">${money(c.total)}</td><td class="v">${money(c.cost)}</td><td>${payLabel(tk,c)}</td></tr>`).join('') || `<tr><td colspan="10">${t('noData')}</td></tr>`}</table>`;
+}
+function payLabel(tk,c){ const parts = Object.entries(c.p).filter(([,v])=>v).map(([m,v])=> tk.pay==='split' ? `${t(m)} ${money(v)}` : t(m)); let s = parts.join(' + ') || t('unpaid'); if (c.p.house && tk.acct) s += ' · ' + tk.acct; if (c.unpaid>0.0099 && parts.length) s += ` · ${t('unpaid')} ${money(c.unpaid)}`; return esc(s); }
+function printWeek(){ doPrint(weekReportHTML(CURW)); }
+function printHouse(){ doPrint(repHead(t('houseTitle'), `${fmtDate(CURW)} — ${fmtDate(addDays(CURW,6))}`) + `<h2>${t('houseTitle')}</h2>` + houseTableHTML(houseWeek(CURW))); }
+function printDay(){
+  const c = calcDay(CUR), d = getDay(CUR);
+  const R = (l,v,cls='') => `<tr class="${cls}"><td>${l}</td><td class="v">${money(v)}</td></tr>`;
+  doPrint(repHead(t('dayReport'), fmtDate(CUR)) + `
+    <div class="kp"><div>${t('totalInvoice')}<b>${money(c.total)}</b></div><div>${t('partCost')}<b>${money(c.cost)}</b></div><div>${t('invoices')}<b>${c.invoices}</b></div><div>${t('inspections')}<b>${c.inspN}</b></div></div>
+    <h2>Tickets</h2>${ticketsTableHTML(d.tickets.map(tk=>({k:CUR, tk, c:calcTicket(tk)})))}
+    <div class="cols"><div><h2>${t('dayTotals')}</h2><table>${R(t('labor'),c.labor)}${R(t('parts'),c.parts)}${R(t('misc'),c.misc)}${R(t('tax'),c.tax)}${R(t('totalInvoice'),c.total,'tot')}${R(t('partCost'),c.cost)}${R(t('grossDay'),c.gross,'tot')}</table></div>
+    <div><h2>${t('payments')}</h2><table>${R(t('cash'),c.p.cash)}${R(t('credit'),c.p.credit)}${R(t('check'),c.p.check)}${R(t('house'),c.p.house)}${R(t('unpaidBal'),c.unpaid)}${R(t('inspAmt')+' ('+c.inspN+')',c.inspAmt)}</table>
+    <h2>Cash</h2><table>${d.moves.map(m=>R(t('mv_'+m.type)+(m.desc?' — '+esc(m.desc):''),num(m.amount))).join('')}${R(t('collections').split(' (')[0],c.collections)}${R(t('cashToday'),c.cashDelta,'tot')}</table></div></div>
+    ${d.note?`<h2>${t('dayNote')}</h2><div>${esc(d.note)}</div>`:''}`);
+}
+
+/* ---------- reports: Excel ---------- */
+function exportWeekXlsx(){
+  if (typeof XLSX === 'undefined') { alert('Excel library not loaded'); return; }
+  const ws = CURW, w = calcWeek(ws), wk = getWeek(ws), s = S(), r = v => r2(v);
+  const wb = XLSX.utils.book_new();
+  const add = (name, rows, widths) => { const sh = XLSX.utils.aoa_to_sheet(rows); if (widths) sh['!cols'] = widths.map(wch=>({wch})); XLSX.utils.book_append_sheet(wb, sh, name.slice(0,31)); };
+  add(LANG==='pt'?'Resumo':'Summary', [
+    ['Planet Automotive', t('reportTitle')], [t('week'), ws + ' — ' + addDays(ws,6)], [],
+    [t('labor'), r(w.labor)], [t('parts'), r(w.parts)], [t('misc'), r(w.misc)], [t('tax'), r(w.tax)], [t('totalInvoice'), r(w.total)], [t('partCost'), r(w.cost)], [],
+    [t('cash'), r(w.p.cash)], [t('credit'), r(w.p.credit)], [t('check'), r(w.p.check)], [t('house'), r(w.p.house)], [t('unpaidBal'), r(w.unpaid)], [],
+    [t('totalInvoice'), r(w.total)], [t('plusMisc'), r(w.mv.miscin)], [t('minusCost'), -r(w.cost)], [t('minusTax'), -r(w.tax)], [t('minusPay'), -r(w.payroll)], [t('minusDed'), -r(w.deducts)], [t('profit'), r(w.profit)], [],
+    [t('invoices'), w.invoices], ['Tickets', w.tickets], [t('oilChanges'), w.oil], [t('inspections'), w.inspN], [t('inspAmt'), r(w.inspAmt)], [t('inspCost'), r(w.inspCost)], [t('inspProfit'), r(w.inspProfit)], [t('profitAll'), r(w.profit + w.inspProfit)], [],
+    [t('startCash'), r(w.startCash)], [t('cashShould'), r(w.cashShould)], [t('cashHave'), w.cashHave===null?'':r(w.cashHave)], [t('diff'), w.diff===null?'':r(w.diff)]
+  ], [44,16]);
+  add(LANG==='pt'?'Por dia':'By day', [[t('day'),'Tickets',t('invoices'),t('labor'),t('parts'),t('misc'),t('tax'),t('totalInvoice'),t('partCost'),t('cash'),t('credit'),t('check'),t('house'),t('unpaid'),t('inspections'),t('oilChanges')],
+    ...w.days.map(({k,c})=>[k,c.tickets,c.invoices,r(c.labor),r(c.parts),r(c.misc),r(c.tax),r(c.total),r(c.cost),r(c.p.cash),r(c.p.credit),r(c.p.check),r(c.p.house),r(c.unpaid),c.inspN,c.oil]),
+    [t('total'),w.tickets,w.invoices,r(w.labor),r(w.parts),r(w.misc),r(w.tax),r(w.total),r(w.cost),r(w.p.cash),r(w.p.credit),r(w.p.check),r(w.p.house),r(w.unpaid),w.inspN,w.oil]], [12,8,9,11,11,11,10,13,12,11,11,11,11,11,10,10]);
+  add('Tickets', [[t('date'),t('inv'),t('svc'),t('labor'),t('parts'),t('misc'),t('tax'),t('total'),t('cost'),t('cash'),t('credit'),t('check'),t('house'),t('acct'),t('unpaid')],
+    ...weekDays(ws).flatMap(k => getDay(k).tickets.map(tk => { const c = calcTicket(tk); return [k, tk.inv, tk.svc, r(c.labor), r(c.parts), r(c.misc), r(c.tax), r(c.total), r(c.cost), r(c.p.cash), r(c.p.credit), r(c.p.check), r(c.p.house), tk.acct||'', r(c.unpaid)]; }))], [11,10,14,10,10,10,9,11,11,10,10,10,10,20,10]);
+  add(LANG==='pt'?'Serviços':'Services', [[t('svc'),t('qty'),t('revenue'),t('cost')], ...svcRows(w).map(([k,v])=>[k,v.n,r(v.rev),r(v.cost)]), [t('inspections').toUpperCase(), w.inspN, r(w.inspAmt), r(w.inspCost)], [], [t('oilChanges'), w.oil], [t('invoices'), w.invoices]], [22,8,12,12]);
+  add('Payroll', [[t('employee'),t('amount'),t('fromCash')], ...wk.payroll.map(p=>[p.name, r(num(p.amount)), p.cash?'X':'']), [t('payroll'), r(w.payroll)], [], [t('deducts')], ...wk.deducts.map(p=>[p.desc, r(num(p.amount)), p.date])], [30,12,12]);
+  const hw = houseWeek(ws);
+  add('In House', [[t('account'),t('thisWeek'),t('pastDue'),t('totalDue'),t('amtPaid'),t('date')+' / '+t('payType'),t('outstanding')],
+    ...hw.map(h=>[h.name||t('noAcct'), r(h.thisWeek), r(h.pastDue), r(h.totalDue), r(h.paid), h.weekPays.map(p=>p.date+' '+t(p.type)).join(', '), r(h.outstanding)]),
+    ['GRAND TOTAL', ...['thisWeek','pastDue','totalDue','paid'].map(f=>r(hw.reduce((a,h)=>a+h[f],0))), '', r(hw.reduce((a,h)=>a+h.outstanding,0))], [],
+    [t('houseInv')], [t('date'), t('account'), t('inv'), t('amount')], ...hw.flatMap(h=>h.weekCharges.map(c=>[c.date, h.name, c.inv, r(c.amount)]))], [24,14,14,14,14,24,16]);
+  add('Cash', [[t('date'),t('desc'),t('amount')], ...weekDays(ws).flatMap(k => getDay(k).moves.map(m => [k, t('mv_'+m.type)+(m.desc?' — '+m.desc:''), r(num(m.amount))])),
+    ...Object.values(DB.house.payments||{}).filter(p=>p&&p.type==='cash'&&p.date>=ws&&p.date<=addDays(ws,6)).map(p=>[p.date, 'Collections H.C. — '+(p.acct||''), r(p.amount)])], [12,40,12]);
+  XLSX.writeFile(wb, `Planet-Fechamento-${ws}.xlsx`);
+}
+
+/* ---------- backup ---------- */
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(DB, null, 1)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `planet-closing-backup-${todayKey()}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+function importBackup(inp){
+  const f = inp.files[0]; inp.value = ''; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { try { const d = JSON.parse(rd.result); if (!d || typeof d !== 'object' || !('days' in d)) throw new Error('formato'); if (!confirm(t('confirmOverwrite'))) return;
+    DB = mergeRemote(d); ['settings','days','weeks','house'].forEach(p=>queue(p)); render(); toast('✓ '+t('imported')); } catch(e){ alert('Backup inválido: '+e.message); } };
+  rd.readAsText(f);
+}
+
+/* ---------- import old spreadsheet (DAY(1)…DAY(7) + TOTALS) ---------- */
+function importSheet(inp){
+  const f = inp.files[0]; inp.value = ''; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { try { doImport(XLSX.read(new Uint8Array(rd.result), {type:'array'})); } catch(e){ console.error(e); alert('Não consegui ler a planilha: ' + e.message); } };
+  rd.readAsArrayBuffer(f);
+}
+function doImport(wb){
+  const daySheets = wb.SheetNames.filter(n => /^DAY\s*\(\s*\d+\s*\)$/i.test(n.trim()));
+  if (!daySheets.length) throw new Error('DAY(1)…DAY(7) não encontradas');
+  const V = (sh,a) => { const c = sh[a]; return c ? c.v : undefined; };
+  const N = (sh,a) => num(V(sh,a));
+  const toKey = v => { if (typeof v === 'number') { const p = XLSX.SSF.parse_date_code(v); return `${p.y}-${pad(p.m)}-${pad(p.d)}`; } if (v instanceof Date) return dkey(v); const d = new Date(v); return isNaN(d) ? null : dkey(d); };
+  const cols = 'DEFGHIJKLM'.split(''), mcols = 'DEFGHI'.split(''), pairs = [['D','E'],['F','G'],['H','I'],['J','K'],['L','M'],['N','O']];
+  const result = {}; let first = null, payroll = [];
+  const s = Object.assign({}, DB.settings, S());
+  const ensureAcct = n => { n = String(n||'').trim().toUpperCase(); if (n && n !== '-' && !s.accounts.some(a => norm(a) === norm(n))) s.accounts.push(n); return n; };
+  const extraCharges = [];
+  daySheets.forEach((name, idx) => {
+    const sh = wb.Sheets[name];
+    let k = toKey(V(sh,'B2')); if (!k) k = first ? addDays(first, idx) : null; if (!k) return;
+    if (!first) first = k;
+    const d = { tickets:[], insp:{cash:0,credit:0,check:0,house:[]}, moves:[], note:'' };
+    cols.forEach(c => {
+      const label = V(sh,c+'5'), labor = N(sh,c+'7'), parts = N(sh,c+'8'), misc = N(sh,c+'9');
+      const pc = {cash:N(sh,c+'16'), credit:N(sh,c+'17'), check:N(sh,c+'18'), house:N(sh,c+'19')};
+      if (!labor && !parts && !misc && (label === undefined || label === '')) return;
+      const lab = String(label ?? '').trim();
+      const isInv = /^\d+$/.test(lab);
+      const tk = normTicket({ id:uid(), inv: isInv ? lab : '', svc: isInv ? '' : lab.toUpperCase(), ref: V(sh,c+'6') != null ? String(V(sh,c+'6')) : '',
+        labor: labor ? String(labor) : '', parts: parts ? String(parts) : '', misc: misc ? String(misc) : '', cost: String(r2(N(sh,c+'14'))), costManual: true });
+      const used = Object.entries(pc).filter(([,v]) => v);
+      const total = calcTicket(tk).total;
+      if (used.length === 1 && Math.abs(used[0][1] - total) < 0.02) tk.pay = used[0][0];
+      else { tk.pay = 'split'; for (const m in pc) tk.split[m] = pc[m] ? String(pc[m]) : ''; }
+      d.tickets.push(tk);
+    });
+    d.insp.cash = N(sh,'O5'); d.insp.credit = N(sh,'O7'); d.insp.check = N(sh,'O8');
+    if (N(sh,'O9')) d.insp.house.push({acct:'', n:N(sh,'O9')});
+    const mrow = {27:'miscin', 29:'partout', 31:'expense'};
+    Object.entries(mrow).forEach(([r,type]) => mcols.forEach(c => { const v = N(sh,c+r); if (v) d.moves.push({id:uid(), type, desc:'', amount:String(v)}); }));
+    // row 32 = food P.O. amounts (text there = payroll names for row 33)
+    mcols.forEach(c => { const v = V(sh,c+'32'); if (typeof v === 'number' && v) d.moves.push({id:uid(), type:'food', desc:'', amount:String(v)}); });
+    mcols.forEach(c => { const v = N(sh,c+'33'); if (v) { const nm = V(sh,c+'32'); payroll.push({name: typeof nm === 'string' ? nm.trim().toUpperCase() : 'PAYROLL', amount:v}); } });
+    mcols.forEach(c => { const v = N(sh,c+'26'); if (v) extraCharges.push({payment:true, date:k, amount:v}); }); // collections H.C. (cash)
+    if (N(sh,'Q5')) d.moves.push({id:uid(), type:'deposit', desc:'', amount:String(N(sh,'Q5'))});
+    // house charge table (rows 48–62): account + (invoice #, amount) per slot
+    for (let r = 48; r <= 62; r++) {
+      const acct = ensureAcct(V(sh,'B'+r)); if (!acct || acct === '-' || acct === '0') continue;
+      pairs.forEach(([ci,ca]) => {
+        const amt = N(sh,ca+r); if (!amt) return; const invn = String(V(sh,ci+r) ?? '').trim();
+        const tk = d.tickets.find(x => !x.acct && calcTicket(x).p.house > 0 && ((invn && String(x.inv) === invn) || Math.abs(calcTicket(x).p.house - amt) < 0.02));
+        if (tk) tk.acct = acct; else extraCharges.push({date:k, acct, inv:invn, amount:amt});
+      });
+    }
+    result[k] = d;
+  });
+  if (!first) throw new Error('datas não encontradas');
+  const ws = weekStart(first);
+  if (Object.keys(result).some(k => getDay(k).tickets.length) && !confirm(t('confirmOverwrite'))) return;
+  Object.entries(result).forEach(([k,d]) => { DB.days[k] = d; queue('days/'+k); });
+  // weekly part (TOTALS sheet)
+  const tot = wb.Sheets[wb.SheetNames.find(n => /^TOTALS?$/i.test(n.trim()))];
+  const wk = getWeek(ws);
+  // "TAX" lines in the old payroll row are the sales tax — the new system subtracts tax automatically, so skip them
+  wk.payroll = payroll.filter(p => !/^(SALES\s*)?TAX$/.test(p.name)).map(p => ({id:uid(), name:p.name, amount:String(r2(p.amount)), cash:false}));
+  if (tot) {
+    if (V(tot,'F20') !== undefined) wk.startCash = String(r2(N(tot,'F20')));
+    if (V(tot,'F10') !== undefined && V(tot,'F10') !== '') wk.cashHave = String(r2(N(tot,'F10')));
+    if (N(tot,'H7')) wk.deducts = [{id:uid(), date:ws, desc:'Labour checks', amount:String(N(tot,'H7'))}];
+    for (let r = 56; r <= 70; r++) {
+      const acct = ensureAcct(V(tot,'B'+r)); if (!acct || acct === '-' || acct === '0') continue;
+      const past = N(tot,'F'+r);
+      if (past) {
+        // only add the difference not already known from earlier weeks
+        const known = houseWeek(ws).find(h => norm(h.name) === norm(acct));
+        const diff = r2(past - (known ? known.pastDue : 0));
+        if (Math.abs(diff) > 0.0099) extraCharges.push({date:addDays(ws,-1), acct, inv:t('pastDue')+' (import)', amount:diff});
+      }
+      const paid = N(tot,'J'+r);
+      if (paid) { const dv = V(tot,'L'+r); const type = String(V(tot,'N'+r)||'check').toLowerCase(); extraCharges.push({payment:true, date: toKey(dv) || addDays(ws,6), acct, amount:paid, type: /cash/.test(type)?'cash':/card|credit/.test(type)?'credit':'check'}); }
+    }
+  }
+  putWeek(ws, wk);
+  extraCharges.forEach(c => { const id = uid(); if (c.payment) { DB.house.payments[id] = {date:c.date, acct:c.acct||'', amount:c.amount, type:c.type||'cash', note:'import'}; queue('house/payments/'+id); }
+                              else { DB.house.charges[id] = {date:c.date, acct:c.acct, inv:c.inv, amount:c.amount}; queue('house/charges/'+id); } });
+  putSettings(s);
+  CUR = first; CURW = ws; go('week');
+  toast('✓ ' + t('importDone') + ': ' + Object.keys(result).length + ' dias');
+}
+
+boot();
+</script>
+</body>
+</html>
